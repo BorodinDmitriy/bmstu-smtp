@@ -20,5 +20,8 @@ struct Controller
 };
 
 void InitController();
+void Run();
+void Stop();
+void Dispose();
 
 #endif // CONTROLLER_H
