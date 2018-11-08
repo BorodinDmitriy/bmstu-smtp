@@ -6,7 +6,7 @@ RFLAGS= -Wall -O
 
 DFLAGS= -Wall -g 
 
-all: server test_client
+all: clean server test_client
 
 server: 
 	$(CC) $(STD) $(RFLAGS) server.c -o server
