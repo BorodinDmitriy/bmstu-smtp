@@ -11,7 +11,7 @@ all: server test_client
 server: 
 	$(CC) $(STD) $(RFLAGS) server.c -o server
 
-debug_client: 
+test_client: 
 	$(CC) $(STD) $(DFLAGS) test_client.c -o test_client
 	
 
