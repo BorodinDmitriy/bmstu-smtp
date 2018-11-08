@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == 0) {
 		perror("socket() failed"); 
-        exit(EXIT_FAILURE);
+        exit(SERVER_EXIT_FAILURE);
 	}
 
 	// принудительное связывание сокета с портом (8080)
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 	// SO_REUSEPORT - 
 	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEPORT | SO_REUSEADDR, &opt, sizeof(opt))) {
 		perror("setsockopt() failed"); 
-        exit(EXIT_FAILURE);
+        exit(SERVER_EXIT_FAILURE);
 	};
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
@@ -37,14 +37,14 @@ int main(int argc, char **argv) {
 	if (bind(server_fd, (struct sockaddr *) &address, sizeof(address)) < 0) 
     { 
         perror("bind() failed"); 
-        exit(EXIT_FAILURE); 
+        exit(SERVER_EXIT_FAILURE); 
     } 
 
     // говорим, что "слушаем" соединения на связанном порту 
     if (listen(server_fd, SERVER_BACKLOG_SIZE) < 0) 
     { 
         perror("listen() failed"); 
-        exit(EXIT_FAILURE); 
+        exit(SERVER_EXIT_FAILURE); 
     } 
 
     // принимаем соединение
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     if (new_socket < 0) 
     { 
         perror("accept() failed"); 
-        exit(EXIT_FAILURE); 
+        exit(SERVER_EXIT_FAILURE); 
     } 
 
     // соединение принято - можно делать read-write

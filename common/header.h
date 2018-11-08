@@ -14,7 +14,7 @@
 
 #define TEST_CLIENT_BUFFER_SIZE 1024
 
-#define EXIT_FAILURE -1
+#define SERVER_EXIT_FAILURE -1
 #define TEST_CLIENT_EXIT_FAILURE -2
 
 #endif
