@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,6 +13,7 @@
 struct smtpSocket
 {
     int fd;
+    struct sockaddr_in dest;
 };
 
 struct ListSocket 
@@ -21,8 +23,9 @@ struct ListSocket
 };
 
 void InitSmtpSocket(struct FileDescSet * fdSet);
-int Send();
+int SendMail(int fd, struct Mail letter);
 void Revoke();
+void Dispose();
 
 #define BUFFER 4096
 #define SOCK_COUNT 4
