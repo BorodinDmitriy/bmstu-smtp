@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include "structs.h"
 #include "smtp_socket.h"
+#include "file_viewer.h"
 
 #define INIT_FD_SET_COUNT 10
 
@@ -19,5 +20,8 @@ struct Controller
 };
 
 void InitController();
+void Run();
+void Stop();
+void Dispose();
 
 #endif // CONTROLLER_H

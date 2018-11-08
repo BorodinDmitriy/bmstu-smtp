@@ -4,6 +4,6 @@
 int main(int argc, char *argv[])
 {
     InitController();
-    
+    Run();
     return 0;
 }
