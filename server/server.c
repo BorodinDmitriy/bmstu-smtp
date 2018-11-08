@@ -1,17 +1,18 @@
 #include "../common/header.h"
+#include "smtp.h"
 
 int main(int argc, char **argv) {
 
 	int server_fd;								// файловый дескриптор для серверного сокета
 	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
-	int read_bytes;								// число считанных байт
+	// int read_bytes;								// число считанных байт
 
 	struct sockaddr_in address;					// структура для обработки интернет-адресов
 	int opt = 1;
 	size_t addrlen = sizeof(address);
-	char buffer[SERVER_BUFFER_SIZE];			// принимающий буфер
+	//char buffer[SERVER_BUFFER_SIZE];			// принимающий буфер
 
-	char *stub_message = "Hello from server";   // серверная заглушка-ответ
+	//char *stub_message = "Hello from server";   // серверная заглушка-ответ
 
 	// создание файлового дескриптора серверного сокета
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -55,11 +56,10 @@ int main(int argc, char **argv) {
         exit(SERVER_EXIT_FAILURE); 
     } 
 
-    // соединение принято - можно делать read-write
-    read_bytes = read(new_socket, buffer, SERVER_BUFFER_SIZE); 
-    printf("%s\n", buffer); 
-    send(new_socket, stub_message, strlen(stub_message), 0); 
-    printf("Hello message sent\n"); 
-    
+    // соединение принято - можно делать обработку smtp
+    int *sock_fd = (int *) malloc(sizeof(int));
+    *sock_fd = new_socket;
+    smtp_handler(sock_fd);
+
 	return 0;
 }

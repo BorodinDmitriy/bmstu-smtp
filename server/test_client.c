@@ -6,10 +6,11 @@ int main(int argc, char **argv) {
 	char buffer[TEST_CLIENT_BUFFER_SIZE];
 	int read_bytes;
 
-	struct sockaddr_in address; 
+	//struct sockaddr_in address; 
     struct sockaddr_in serv_addr; 
 
-    char *client_stub = "Hello from client"; 
+    //char *client_stub = "Hello from client"; 
+    char helo_stub[] = "HELO mysmtpserver.com\r\n"; 
     
     // создаем файловый дескриптор сокета
     client_sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -40,8 +41,7 @@ int main(int argc, char **argv) {
     } 
 
     // установили соединение - можно общаться с помощью send/recv
-    send(client_sock_fd, client_stub, strlen(client_stub), 0); 
-    printf("Hello message sent by client\n"); 
+    send(client_sock_fd, helo_stub, strlen(helo_stub), 0); 
     read_bytes = read(client_sock_fd, buffer, TEST_CLIENT_BUFFER_SIZE ); 
     printf("%s\n", buffer); 
 
