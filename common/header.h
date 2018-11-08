@@ -7,6 +7,8 @@
 #include <stdlib.h> 
 #include <netinet/in.h> 
 #include <string.h> 
+#include <sys/types.h>
+#include <arpa/inet.h>
 
 #define SERVER_PORT 8080
 #define SERVER_BUFFER_SIZE 1024
