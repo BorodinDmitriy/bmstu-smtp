@@ -9,6 +9,9 @@
 #include <sys/time.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include "./../common/header.h"
+
+#define SMTP_PORT 2525
 
 struct FileDescSet
 {
