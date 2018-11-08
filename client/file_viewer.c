@@ -1,14 +1,25 @@
 #include "file_viewer.h"
 
-void InitFileViewer() 
-{
+//==========================//
+//    PRIVATE ATTRIBUTES    //
+//==========================//
 
+//==========================//
+//  DEFINES PRIVATE METHOD  //
+//==========================//
+
+//==========================//
+//      PUBLIC METHODS      //
+//==========================//
+
+void InitFileViewer()
+{
 }
 
-struct Mail ReadDataFromFile(int fd) 
+struct Mail ReadDataFromFile(int fd)
 {
     //  fake
-    struct Mail letter = { (char *)calloc(100, sizeof(char)), 100, (char *)calloc(100, sizeof(char)), 100, (char *)calloc(100, sizeof(char)), 100};
+    struct Mail letter;
 
     letter.from = "IU7.2@yandex.ru";
     letter.to = "IU7.2@yandex.ru";
@@ -16,3 +27,18 @@ struct Mail ReadDataFromFile(int fd)
 
     return letter;
 }
+
+void RevokeLetter(struct Mail letter)
+{
+    return;
+}
+
+void DisposeFileViewer()
+{
+    //  fake
+    return;
+}
+
+//==========================//
+//      PRIVATE METHODS     //
+//==========================//
