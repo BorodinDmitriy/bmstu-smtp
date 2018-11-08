@@ -1,3 +1,6 @@
+#ifndef HEADER_H
+#define HEADER_H
+
 #include <stdio.h>
 #include <unistd.h> 
 #include <sys/socket.h> 
@@ -13,3 +16,5 @@
 
 #define EXIT_FAILURE -1
 #define TEST_CLIENT_EXIT_FAILURE -2
+
+#endif
