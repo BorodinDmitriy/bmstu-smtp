@@ -22,10 +22,9 @@ struct ListSocket
     struct smtpSocket * sockets;
 };
 
-void InitSmtpSocket(struct FileDescSet * fdSet);
+void InitSmtpSockets(struct FileDescSet * fdSet);
 int SendMail(int fd, struct Mail letter);
-void Revoke();
-void Dispose();
+void DisposeSmtpSockets();
 
 #define BUFFER 4096
 #define SOCK_COUNT 4
