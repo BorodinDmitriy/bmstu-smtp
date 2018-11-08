@@ -9,10 +9,10 @@ DFLAGS= -Wall -g
 all: server test_client
 
 server: 
-	$(CC) $(STD) $(RFLAGS) server.c test_client.c -o server
+	$(CC) $(STD) $(RFLAGS) server.c -o server
 
 debug_client: 
-	$(CC) $(STD) $(DFLAGS) server.c test_client.c -o test_client
+	$(CC) $(STD) $(DFLAGS) test_client.c -o test_client
 	
 
 clean: 
