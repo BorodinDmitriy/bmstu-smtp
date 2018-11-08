@@ -28,17 +28,19 @@ void InitController()
     InitFileViewer(& Manager.readers);
     
     int readyFD = -1;
-    struct timespec timer;
-    timer.tv_sec = 10;
-    timer.tv_nsec = 0;
+    struct timespec timer_spec;
+    timer_spec.tv_sec = 10;
+    timer_spec.tv_nsec = 0;
     
     while (1)
     {
         int n = Manager.writers.count + Manager.readers.count + Manager.handlers.count + 1;
-        readyFD = pselect(n, Manager.readers.set, Manager.writers.set, timer, NULL);
+        readyFD = pselect(n, &Manager.readers.set, &Manager.writers.set, &Manager.handlers.set, &timer_spec, NULL);
 
-        if (readyFD < 0) 
+        if (readyFD <= 0) 
         {
+            struct Mail letter = ReadDataFromFile(00);
+            SendMail(readyFD, letter);
             continue;
         }
 
@@ -47,21 +49,20 @@ void InitController()
         if (FD_ISSET(readyFD, &Manager.readers.set)) 
         {
             //  client ready to read from file
-
+            struct Mail letter = ReadDataFromFile(0);
+            SendMail(readyFD, letter);
             continue;
         }
 
         if (FD_ISSET(readyFD, &Manager.writers.set)) 
         {
             //  client ready to send data 
-
             continue;
         }
 
         if (FD_ISSET(readyFD, &Manager.handlers.set)) 
         {
-            //  client receive interupt
-
+            //  client receive interrupt
             break;
         }
         
