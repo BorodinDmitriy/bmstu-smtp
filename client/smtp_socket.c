@@ -1,19 +1,12 @@
 #include "smtp_socket.h"
 
 struct smtpSocket clientSocket;
-struct smtpSocket *Sockets;
+struct ListSocket socketList;
 
-void InitSmtpSocket(int *fdSet, int *pointer, int limit)
+void InitSmtpSocket(struct FileDescSet * fdSet)
 {
-    int countSocket = SOCK_COUNT;
-    if (limit - SOCK_COUNT < 0)
-    {
-        printf("Lack of memory for create any sockets");
-        exit(-2);
-    }
-
-    Sockets = (struct Socket *)calloc(countSocket, sizeof(struct smtpSocket));
-    if (Sockets == NULL)
+    socketList.sockets = (struct Socket *)calloc(SOCK_COUNT, sizeof(struct smtpSocket));
+    if (socketList.sockets == NULL)
     {
         printf("Failure of memory allocations");
         exit(-2);
@@ -21,14 +14,16 @@ void InitSmtpSocket(int *fdSet, int *pointer, int limit)
 
     for (int i = 0; i < SOCK_COUNT; i++)
     {
-        Sockets[i].fd = socket(AF_INET, SOCK_STREAM, 0);
-        fdSet[*pointer] = Sockets[i].fd;
-        if (Sockets[i].fd < 0 || pointer + 1 > limit)
+        socketList.sockets[i].fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (socketList.sockets[i].fd < 0 )
         {
             printf("Failure to create socket[%d]", i);
             exit(-2);
         }
-        *pointer++;
+        fd_set r;
+
+        FD_SET(socketList.sockets[i].fd, &(*fdSet).set);
+        socketList.count++;
     }
 
     return;
