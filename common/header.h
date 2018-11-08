@@ -19,4 +19,13 @@
 #define SERVER_EXIT_FAILURE -1
 #define TEST_CLIENT_EXIT_FAILURE -2
 
+struct Mail {
+	char * from;
+	int from_len;
+	char * to;
+	int to_Len;
+	char * message;
+	int m_len;
+};
+
 #endif
