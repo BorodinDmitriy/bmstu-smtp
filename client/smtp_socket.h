@@ -7,13 +7,20 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "structs.h"
 
 struct smtpSocket
 {
     int fd;
 };
 
-void InitSmtpSocket(int *fdSet, int *pointer, int len);
+struct ListSocket 
+{
+    int count;
+    struct smtpSocket * sockets;
+};
+
+void InitSmtpSocket(struct FileDescSet * fdSet);
 int Send();
 void Revoke();
 
