@@ -1,17 +1,25 @@
 #ifndef HEADER_H
 #define HEADER_H
 
+#include <assert.h>
+#include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
-#include <unistd.h> 
-#include <sys/socket.h> 
-#include <stdlib.h> 
-#include <netinet/in.h> 
-#include <string.h> 
-#include <sys/types.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+#include <netdb.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 // данные сервера
 #define SERVER_PORT 8080
+#define SERVER_PORT_STRING "8080"
 #define SERVER_BUFFER_SIZE 1024
 #define SERVER_BACKLOG_SIZE 3
 
