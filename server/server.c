@@ -59,7 +59,21 @@ int main(int argc, char **argv) {
     // соединение принято - можно делать обработку smtp
     int *sock_fd = (int *) malloc(sizeof(int));
     *sock_fd = new_socket;
-    smtp_handler(sock_fd);
+
+    // создание дочернего процесса, где будет происходить обработка
+    pid_t pid;
+    switch (pid = fork()) {
+    	case -1:
+    		perror("accept() failed"); 
+        	exit(SERVER_EXIT_FAILURE); 
+        case 0:  // процесс - потомок
+        	printf("child process forked with pid: %d\n", getpid());
+        	printf("parent pid: %d\n", getppid());
+        	smtp_handler(sock_fd);
+        default: // процесс - родитель
+        	continue;
+    }
+    
 
 	return 0;
 }
