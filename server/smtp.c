@@ -86,7 +86,8 @@ void smtp_handler(int *socket_fd) {
 				sprintf(buffer_output, "221 Ok\r\n");
 				printf("Server: %d, message: %s", client_socket_fd, buffer_output);
 				send(client_socket_fd, buffer_output, strlen(buffer_output), 0);
-				break;
+				close(client_socket_fd);
+				exit(0);
 			} else { 
 				// метод не был определен
 				sprintf(buffer_output, "502 Command Not Implemented\r\n");

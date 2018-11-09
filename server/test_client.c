@@ -10,7 +10,8 @@ int main(int argc, char **argv) {
     struct sockaddr_in serv_addr; 
 
     //char *client_stub = "Hello from client"; 
-    char helo_stub[] = "HELO mysmtpserver.com\r\n"; 
+    char helo_stub[] = "HELO mysmtpserver.com\r\n" \
+    					"QUIT mysmtpserver.com\r\n" ; 
     
     // создаем файловый дескриптор сокета
     client_sock_fd = socket(AF_INET, SOCK_STREAM, 0);
