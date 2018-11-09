@@ -73,7 +73,7 @@ int SendMail(int fd, struct Mail letter)
         return -1;
     }
 
-    sendHelo(cur, "127.0.0.1");
+    sendHelo(cur, "IU7.2@yandex.ru");
 
     //  close connection
     shutdown(fd, 1);
@@ -120,20 +120,31 @@ int findIndex(int fd)
 //  send "HELO" message of SMTP
 int sendHelo(int index, char *address)
 {
+    char *message = (char *)calloc(100, sizeof(char));
+    int state;
+
+    state = recv(socketList.sockets[index].fd, message, 100, NULL);
+    if (state <= 0) {
+        printf("\nFail to receive 'HELO' from server");
+        free(message);
+    }
+
+    free(message);
     int address_len = strlen(address);
     int message_len = 5 + address_len + 5;
-    char *message = (char *)calloc(address_len, sizeof(char));
+    *message = (char *)calloc(address_len, sizeof(char));
 
+    memset(message, ' ', address_len)
     strcpy(message, "HELO ");
     strcat(message, address);
-    strcat(message, " CRLF");
+    strcat(message, " \r\n");
 
-    int state;
     state = send(socketList.sockets[index].fd, message, message_len, 0);
 
     if (state < 0)
     {
         printf("\nFail to send 'HELO' to %s", address);
+        free(message);
         return state;
     }
     printf("\nSend HELO from %d socket", index);
