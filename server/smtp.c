@@ -65,7 +65,7 @@ void smtp_handler(int *socket_fd) {
 			memmove(buffer, eol + 2, SERVER_BUFFER_SIZE - (eol + 2 - buffer));
 
 		}
-
+		break;
 	}
 	// обработка команды кончилась - закрываем сокет
 	close(client_socket_fd);
