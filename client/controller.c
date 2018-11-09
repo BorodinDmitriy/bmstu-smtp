@@ -21,7 +21,7 @@ void InitController()
     FD_ZERO(&Manager.readers.set);
     Manager.readers.count = 0;
 
-    InitSmtpSocket(&Manager.writers);
+    InitSmtpSockets(&Manager.writers);
     InitFileViewer(&Manager.readers);
 
     return;
