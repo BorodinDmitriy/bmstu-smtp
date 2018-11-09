@@ -57,15 +57,48 @@ void smtp_handler(int *socket_fd) {
 			// обработка ключевых слов
 			printf("Client: %d, message: %s\n", client_socket_fd, buffer);
 
-			sprintf(buffer_output, "250 Ok\r\n");
+			// конец строки для сравнения (потом переделать под разделение на данные и команды)
+			buffer[4] = '\0';
+
+			if (STR_EQUAL(buffer, "HELO")) { 
+				// начальное приветствие
+				sprintf(buffer_output, "250 Ok\r\n");
+			} else if (STR_EQUAL(buffer, "EHLO")) { 
+				// улучшенное начальное приветствие
+				sprintf(buffer_output, "250 Ok\r\n");
+			} else if (STR_EQUAL(buffer, "MAIL")) { 
+				// получено новое письмо от
+				sprintf(buffer_output, "250 Ok\r\n");
+			} else if (STR_EQUAL(buffer, "RCPT")) { 
+				// письмо направлено ... 
+				sprintf(buffer_output, "250 Ok recipient\r\n");
+			} else if (STR_EQUAL(buffer, "DATA")) { 
+				// содержимое письма
+				sprintf(buffer_output, "354 Continue\r\n");
+			} else if (STR_EQUAL(buffer, "RSET")) { 
+				// сброс соединения
+				sprintf(buffer_output, "250 Ok reset\r\n");
+			} else if (STR_EQUAL(buffer, "NOOP")) { 
+				// ничего не делать
+				sprintf(buffer_output, "250 Ok noop\r\n");
+			} else if (STR_EQUAL(buffer, "QUIT")) { 
+				// закрыть соединение
+				sprintf(buffer_output, "221 Ok\r\n");
+				printf("Server: %d, message: %s", client_socket_fd, buffer_output);
+				send(client_socket_fd, buffer_output, strlen(buffer_output), 0);
+				break;
+			} else { 
+				// метод не был определен
+				sprintf(buffer_output, "502 Command Not Implemented\r\n");
+			}
 			printf("Server: %d, message: %s", client_socket_fd, buffer_output);
 			send(client_socket_fd, buffer_output, strlen(buffer_output), 0);
+
 
 			// смещаем буфер для обработки следующей команды
 			memmove(buffer, eol + 2, SERVER_BUFFER_SIZE - (eol + 2 - buffer));
 
 		}
-		break;
 	}
 	// обработка команды кончилась - закрываем сокет
 	close(client_socket_fd);
