@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <signal.h>
 
+#define STR_EQUAL(a,b)	(strcmp(a, b) == 0)
 // данные сервера
 #define SERVER_PORT 8080
 #define SERVER_PORT_STRING "8080"

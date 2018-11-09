@@ -1,6 +1,7 @@
 #ifndef SMTP_H
 #define SMTP_H
 
+#include "../common/header.h"
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -12,7 +13,7 @@
 // #include <syslog.h>
 
 
-#define STR_EQUAL(a,b)	(strcmp(a, b) == 0)
+
 
 void smtp_handler(int *socket_fd, const int pid);
 
