@@ -69,5 +69,5 @@ void smtp_handler(int *socket_fd) {
 	}
 	// обработка команды кончилась - закрываем сокет
 	close(client_socket_fd);
-
+	exit(0);
 }
