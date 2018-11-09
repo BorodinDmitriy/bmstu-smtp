@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
         	printf("parent pid: %d\n", getppid());
         	smtp_handler(sock_fd);
         default: // процесс - родитель
-        	continue;
+        	printf("here should be continue statement later\n");
     }
     
 
