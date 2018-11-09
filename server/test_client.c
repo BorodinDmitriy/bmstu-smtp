@@ -1,5 +1,14 @@
 #include "../common/header.h"
 
+void recv_msg_handler() {
+   
+}
+
+void str_overwrite_stdout() {
+    printf("\r%s", "> ");
+    fflush(stdout);
+}
+
 int main(int argc, char **argv) {
 	
 	int client_sock_fd = 0;
@@ -43,8 +52,25 @@ int main(int argc, char **argv) {
 
     // установили соединение - можно общаться с помощью send/recv
     send(client_sock_fd, helo_stub, strlen(helo_stub), 0); 
-    read_bytes = read(client_sock_fd, buffer, TEST_CLIENT_BUFFER_SIZE ); 
-    printf("%s\n", buffer); 
+    //read_bytes = read(client_sock_fd, buffer, TEST_CLIENT_BUFFER_SIZE ); 
+    //printf("%s\n", buffer); 
+
+    char receive_message[TEST_CLIENT_BUFFER_SIZE] = {};
+    while (1) {
+        int receive = recv(client_sock_fd, receive_message, TEST_CLIENT_BUFFER_SIZE, 0);
+        if (receive > 0) {
+            printf("%s", receive_message);
+            receive_message[3] = '\0';
+            if (STR_EQUAL(receive_message, "221")) {
+            	break;
+            }
+            memset(receive_message, 0, TEST_CLIENT_BUFFER_SIZE * sizeof(char));
+        } else if (receive == 0) {
+            break;
+        } else { 
+            // -1 
+        }
+    }
 
     return 0; 
 }
