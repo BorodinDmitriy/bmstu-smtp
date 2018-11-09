@@ -1,5 +1,6 @@
 #include "../common/header.h"
 #include "smtp.h"
+#include "socket.h"
 
 int main(int argc, char **argv) {
 
@@ -10,12 +11,17 @@ int main(int argc, char **argv) {
 	struct sockaddr_in address;					// структура для обработки интернет-адресов
 	int opt = 1;
 	size_t addrlen = sizeof(address);
+
+	struct fd_linked_list *sockets;
+	sockets = init_sockets();
+	printf("%p\n",sockets);
+	exit(SERVER_EXIT_FAILURE);
 	//char buffer[SERVER_BUFFER_SIZE];			// принимающий буфер
 
 	//char *stub_message = "Hello from server";   // серверная заглушка-ответ
 
 	// создание файлового дескриптора серверного сокета
-	server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	/*server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == 0) {
 		perror("socket() failed"); 
         exit(SERVER_EXIT_FAILURE);
@@ -46,7 +52,7 @@ int main(int argc, char **argv) {
     { 
         perror("listen() failed"); 
         exit(SERVER_EXIT_FAILURE); 
-    } 
+    } */
 
     // принимаем соединение
     new_socket = accept(server_fd, (struct sockaddr *) &address,  (socklen_t*) &addrlen);
