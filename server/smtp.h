@@ -14,6 +14,6 @@
 
 #define STR_EQUAL(a,b)	(strcmp(a, b) == 0)
 
-void smtp_handler(int *socket_fd);
+void smtp_handler(int *socket_fd, const int pid);
 
 #endif

@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
         			case 0:  // процесс - потомок
         				printf("child process forked with pid: %d\n", getpid());
         				printf("parent pid: %d\n", getppid());
-        				smtp_handler(sock_fd);
+        				smtp_handler(sock_fd, getpid());
         			default: // процесс - родитель
         				continue;
     			}

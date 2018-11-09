@@ -1,7 +1,7 @@
 #include "../common/header.h"
 #include "smtp.h"
 
-void smtp_handler(int *socket_fd) {
+void smtp_handler(int *socket_fd, const int pid) {
 	printf("SMTP handler start");
 
 	int client_socket_fd = *socket_fd;		// клентский сокет, полученный после select()
@@ -103,5 +103,5 @@ void smtp_handler(int *socket_fd) {
 	}
 	// обработка команды кончилась - закрываем сокет
 	close(client_socket_fd);
-	exit(0);
+	kill(pid, SIGTERM);
 }

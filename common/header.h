@@ -16,6 +16,7 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <signal.h>
 
 // данные сервера
 #define SERVER_PORT 8080
