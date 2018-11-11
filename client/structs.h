@@ -11,12 +11,18 @@
 #include <unistd.h>
 #include "./../common/header.h"
 
-#define SMTP_PORT 2525
+#define SMTP_PORT 8080
 
 struct FileDescSet
 {
     fd_set set;
+    struct FileDescList *list;
     int count;
+};
+
+struct FileDescList {
+    int fd;
+    struct FileDescList* next;
 };
 
 #endif //  STRUCTS_H
