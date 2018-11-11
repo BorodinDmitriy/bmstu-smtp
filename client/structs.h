@@ -11,7 +11,22 @@
 #include <unistd.h>
 #include "./../common/header.h"
 
-#define SMTP_PORT 8080
+//======================//
+//      FD TYPES        //
+//======================//
+#define SOCKET_FD 0
+#define FILE_FD 1
+
+//======================//
+//       CONTEXT        //
+//======================//
+
+#define START_WORK 0
+//  HELO
+#define HELO 000
+#define RECEIVE_HELO_MESSAGE 001
+#define SEND_HELO_MESSAGE 002
+#define RECEIVE_HELO_CONNECT 003
 
 struct FileDescSet
 {
@@ -20,9 +35,18 @@ struct FileDescSet
     int count;
 };
 
-struct FileDescList {
-    int fd;
-    struct FileDescList* next;
+struct FileDescList
+{
+    struct FileDesc fd;
+    struct FileDescList *next;
+};
+
+struct FileDesc
+{
+    int id;
+    int type;
+    int context;
+    int goal;
 };
 
 #endif //  STRUCTS_H
