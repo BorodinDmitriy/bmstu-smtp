@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include "states.h"
 #include "./../common/header.h"
 
 //======================//
@@ -19,30 +20,11 @@
 #define SOCKET_FD 0
 #define FILE_FD 1
 
-//======================//
-//       CONTEXT        //
-//======================//
-
-#define START_WORK 0
-//  INIT
-#define INIT_SOCKET 000
-//  HELO
-#define HELO 001
-#define RECEIVE_HELO_MESSAGE 011
-#define SEND_HELO_MESSAGE 012
-#define RECEIVE_HELO_CONNECT 013
-
 struct FileDescSet
 {
     fd_set set;
     struct FileDescList *list;
     int count;
-};
-
-struct FileDescList
-{
-    struct FileDesc fd;
-    struct FileDescList *next;
 };
 
 struct FileDesc
@@ -53,5 +35,13 @@ struct FileDesc
     int context;
     int goal;
 };
+
+struct FileDescList
+{
+    struct FileDesc fd;
+    struct FileDescList *next;
+};
+
+
 
 #endif //  STRUCTS_H
