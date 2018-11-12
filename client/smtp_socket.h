@@ -11,7 +11,8 @@
 #include "structs.h"
 
 int GiveControlToSocket(struct FileDesc *fd);
-void CloseAll();
+int SmtpInitSocket(char *domain, struct FileDesc *fd);
+int CloseConnection(struct FileDesc fd);
 
 #define BUFFER 4096
 
