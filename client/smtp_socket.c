@@ -15,25 +15,82 @@
 int GiveControlToSocket(struct FileDesc *fd)
 {
     int state = 0;
-    switch ((*fd).context) 
+    switch ((*fd).context)
     {
-        case RECEIVE_HELO_MESSAGE:
-            state = smtpHELO(fd, 0);
-            break;
-        
-        case SEND_HELO_MESSAGE:
-            state = smtpHELO(fd, 1);
-            break;
-
-        case RECEIVE_HELO_CONNECT:
-            state = smtpHELO(fd, 2);
-            break;
-        
-        default: 
-            return -1;
+    case RECEIVE_HELO_MESSAGE:
+    {
+        state = smtpHELO(fd, 0);
+        break;
+    }
+    case SEND_HELO_MESSAGE:
+    {
+        state = smtpHELO(fd, 1);
+        break;
+    }
+    case RECEIVE_HELO_CONNECT:
+    {
+        state = smtpHELO(fd, 2);
+        break;
+    }
+    default:
+        return -1;
     }
 
     return state;
+}
+
+int SmtpInitSocket(char *domain, struct FileDesc *fd)
+{
+    int state = 0;
+
+    struct FileDesc connection;
+
+    connection.id = socket(AF_INET, SOCK_STREAM, 0);
+    connection.type = SOCKET_FD;
+
+    int opt_val = 1;
+    socklen_t opt_len = sizeof(opt_val);
+
+    state = setsockopt(connection.id, SOL_SOCKET, SO_REUSEADDR, opt_val, opt_len);
+    if (state)
+    {
+        printf("Fail to set socket option 'SO_REUSEADDR'\r\n");
+        return state;
+    }
+
+    state = setsockopt(connection.id, SOL_SOCKET, SO_REUSEPORT, opt_val, opt_len);
+    if (state)
+    {
+        printf("Fail to set socket option 'SO_REUSEPORT'\r\n");
+        return state;
+    }
+
+    int file_flags = fcntl(connection.id, F_GETFL, 0);
+    if (file_flags == -1) 
+    {
+        printf("Fail to receive socket flags");
+        return file_flags;
+    }
+
+    state = fcntl(connection.id, F_SETFL, file_flags | O_NONBLOCK);
+    if (state) {
+        printf("Fail to set flag 'O_NONBLOCK' for socket");
+        return state;
+    }
+    
+    connection.addr.sin_family = AF_INET;
+    connection.addr.sin_port = htons(SERVER_PORT);
+
+    state = inet_pton(AF_INET, domain, &connection.addr.sin_addr);
+    if (state) 
+    {
+        printf("Fail to inet_pton");
+        return state;
+    }
+
+    *fd = connection;
+    
+    return 0;
 }
 
 //  Send letter
@@ -112,6 +169,33 @@ int findIndex(int fd)
     }
 
     return find;
+}
+
+int smtpHelo(struct FileDesc *fd, int process_state)
+{
+    int state = 0;
+    if (process_state <= 0 && state == 0)
+    {
+        state = recvCommand(fd);
+    }
+
+    if (process_state <= 1 && state == 0)
+    {
+        state = sendCommand(fd, "HELO", "");
+    }
+
+    if (process_state <= 2 && state == 0)
+    {
+        state = recvCommand(fd);
+    }
+
+    return state;
+}
+
+int sendCommand(struct FileDesc *fd, char *command, char *data)
+{
+    char *message = (char *)calloc(100, sizeof(char));
+    int state = 0;
 }
 
 //  send "HELO" message of SMTP
