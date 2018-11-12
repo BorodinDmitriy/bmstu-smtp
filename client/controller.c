@@ -65,6 +65,20 @@ void Run()
 
         if (readyFD == 0)
         {
+            //  fake 
+            Manager.readers.list = (struct FileDescList *)calloc(1, sizeof(struct FileDescList));
+            if (Manager.readers.list == NULL)
+            {
+                printf("Fail to create element on list\r\n");
+            }
+
+            int state = SmtpInitSocket("127.0.0.1", &Manager.readers.list->fd);
+            if (state) 
+            {
+                printf("Socket not create\r\n");
+                free(Manager.readers.list);
+            }
+            state = GiveControlToSocket(&Manager.readers.list->fd);
             continue;
         }
 
@@ -90,12 +104,14 @@ void Run()
                 int fdState = 0;
                 if (tempFD.type == SOCKET_FD)
                 {
-                    fdState = GiveControllToSocket(tempFD);
+                    fdState = GiveControlToSocket(&tempFD);
                 }
                 else 
                 {
-                    fdState = GiveControllToFile(tempFD);
+                    fdState = GiveControlToFile(&tempFD);
                 }
+
+                fdState++;
 
                 processedFD++;
                 if (processedFD == readyFD)
@@ -127,8 +143,6 @@ void Run()
         //     }
         // }
     }
-
-    Dispose();
 }
 
 //  Stop work method
@@ -140,7 +154,6 @@ void Stop()
 void Dispose()
 {
     DisposeFileViewer();
-    DisposeSmtpSockets();
 }
 
 //==========================//
