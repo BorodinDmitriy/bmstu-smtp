@@ -3,7 +3,6 @@
 //==========================//
 //    PRIVATE ATTRIBUTES    //
 //==========================//
-struct ListSocket socketList;
 
 //==========================//
 //  DEFINES PRIVATE METHOD  //
@@ -13,31 +12,28 @@ struct ListSocket socketList;
 //      PUBLIC METHODS      //
 //==========================//
 
-//  Init SMTP sockets
-void InitSmtpSockets(struct FileDescSet *fdSet)
+int GiveControlToSocket(struct FileDesc *fd)
 {
-    socketList.sockets = (struct Socket *)calloc(SOCK_COUNT, sizeof(struct smtpSocket));
-    if (socketList.sockets == NULL)
+    int state = 0;
+    switch ((*fd).context) 
     {
-        printf("Failure of memory allocations");
-        exit(-2);
+        case RECEIVE_HELO_MESSAGE:
+            state = smtpHELO(fd, 0);
+            break;
+        
+        case SEND_HELO_MESSAGE:
+            state = smtpHELO(fd, 1);
+            break;
+
+        case RECEIVE_HELO_CONNECT:
+            state = smtpHELO(fd, 2);
+            break;
+        
+        default: 
+            return -1;
     }
 
-    for (int i = 0; i < SOCK_COUNT; i++)
-    {
-        socketList.sockets[i].fd = socket(AF_INET, SOCK_STREAM, 0);
-        if (socketList.sockets[i].fd < 0)
-        {
-            printf("Failure to create socket[%d]", i);
-            exit(-2);
-        }
-        fd_set r;
-
-        FD_SET(socketList.sockets[i].fd, &(*fdSet).set);
-        socketList.count++;
-    }
-
-    return;
+    return state;
 }
 
 //  Send letter
@@ -59,7 +55,8 @@ int SendMail(int fd, struct Mail letter)
 
     int state = 0;
 
-    state = inet_pton(AF_INET, "94.100.180.160", &socketList.sockets[cur].dest.sin_addr);
+    // state = inet_pton(AF_INET, "94.100.180.160", &socketList.sockets[cur].dest.sin_addr);
+    state = inet_pton(AF_INET, "127.0.0.1", &socketList.sockets[cur].dest.sin_addr);
     if (state <= 0)
     {
         printf("\nFail to convert address");
@@ -76,8 +73,8 @@ int SendMail(int fd, struct Mail letter)
     sendHelo(cur, "IU7.2@yandex.ru");
 
     //  close connection
-    shutdown(fd, 1);
-
+    shutdown(fd, 2);
+    close(fd);
     return 0;
 }
 
@@ -85,7 +82,7 @@ int SendMail(int fd, struct Mail letter)
 void DisposeSmtpSockets()
 {
     printf("\n\nDispose SMTP sockets\n");
-    for (int i = 0; i < socketList.count; i++) 
+    for (int i = 0; i < socketList.count; i++)
     {
         close(socketList.sockets[i].fd);
         free(socketList.sockets);
@@ -124,7 +121,8 @@ int sendHelo(int index, char *address)
     int state;
 
     state = recv(socketList.sockets[index].fd, message, 100, NULL);
-    if (state <= 0) {
+    if (state <= 0)
+    {
         printf("\nFail to receive 'HELO' from server");
         free(message);
     }
@@ -134,7 +132,7 @@ int sendHelo(int index, char *address)
     int message_len = 5 + address_len + 5;
     *message = (char *)calloc(address_len, sizeof(char));
 
-    memset(message, ' ', address_len)
+    memset(message, ' ', address_len);
     strcpy(message, "HELO ");
     strcat(message, address);
     strcat(message, " \r\n");
@@ -147,8 +145,28 @@ int sendHelo(int index, char *address)
         free(message);
         return state;
     }
+    memset(message, '\0', address_len);
     printf("\nSend HELO from %d socket", index);
     int readed = recv(socketList.sockets[index].fd, message, message_len, NULL);
+
+    printf("\nReceive response from HELO: %s", message);
+
+    memset(message, ' ', address_len);
+    strcpy(message, "QUIT ");
+    strcat(message, "\r\n");
+
+    state = send(socketList.sockets[index].fd, message, message_len, 0);
+
+    if (state < 0)
+    {
+        printf("\nFail to send 'QUIT' to %s", address);
+        free(message);
+        return state;
+    }
+
+    memset(message, '\0', address_len);
+    printf("\nSend HELO from %d socket", index);
+    readed = recv(socketList.sockets[index].fd, message, message_len, NULL);
 
     printf("\nReceive response from HELO: %s", message);
     free(message);
