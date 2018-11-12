@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
+#include <fcntl.h>
+#include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/select.h>
@@ -22,11 +24,13 @@
 //======================//
 
 #define START_WORK 0
+//  INIT
+#define INIT_SOCKET 000
 //  HELO
-#define HELO 000
-#define RECEIVE_HELO_MESSAGE 001
-#define SEND_HELO_MESSAGE 002
-#define RECEIVE_HELO_CONNECT 003
+#define HELO 001
+#define RECEIVE_HELO_MESSAGE 011
+#define SEND_HELO_MESSAGE 012
+#define RECEIVE_HELO_CONNECT 013
 
 struct FileDescSet
 {
@@ -45,6 +49,7 @@ struct FileDesc
 {
     int id;
     int type;
+    struct sockaddr_in addr;
     int context;
     int goal;
 };
