@@ -44,6 +44,7 @@ void Run()
     int processedFD = 0;
 
     struct FileDescList *listViewer;
+    struct FileDesc tempFD;
 
     struct timespec timer_spec;
     timer_spec.tv_sec = 10;
@@ -85,7 +86,16 @@ void Run()
                 //  remove current FD from fd_set
                 FD_CLR(currentFD, &Manager.readers.set);
 
-                // GiveControll(&Manager.readers);
+                tempFD = listViewer->fd;
+                int fdState = 0;
+                if (tempFD.type == SOCKET_FD)
+                {
+                    fdState = GiveControllToSocket(tempFD);
+                }
+                else 
+                {
+                    fdState = GiveControllToFile(tempFD);
+                }
 
                 processedFD++;
                 if (processedFD == readyFD)
@@ -95,30 +105,30 @@ void Run()
             }
         }
 
-    //     if ()
-    //     {
-    //         //  client ready to read from file
-    //         struct Mail letter = ReadDataFromFile(0);
-    //         SendMail(readyFD, letter);
-    //         RevokeLetter(letter);
-    //         continue;
-    //     }
+        //     if ()
+        //     {
+        //         //  client ready to read from file
+        //         struct Mail letter = ReadDataFromFile(0);
+        //         SendMail(readyFD, letter);
+        //         RevokeLetter(letter);
+        //         continue;
+        //     }
 
-    //     if (FD_ISSET(readyFD, &Manager.writers.set))
-    //     {
-    //         //  client ready to send data
-    //         continue;
-    //     }
+        //     if (FD_ISSET(readyFD, &Manager.writers.set))
+        //     {
+        //         //  client ready to send data
+        //         continue;
+        //     }
 
-    //     if (FD_ISSET(readyFD, &Manager.handlers.set))
-    //     {
-    //         //  client receive interrupt
-    //         break;
-    //     }
-    // }
-}
+        //     if (FD_ISSET(readyFD, &Manager.handlers.set))
+        //     {
+        //         //  client receive interrupt
+        //         break;
+        //     }
+        // }
+    }
 
-Dispose();
+    Dispose();
 }
 
 //  Stop work method
