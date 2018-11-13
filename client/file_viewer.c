@@ -39,6 +39,11 @@ void DisposeFileViewer()
     return;
 }
 
+int GiveControlToFile(struct FileDesc *fd) 
+{
+    return 0;
+}
+
 //==========================//
 //      PRIVATE METHODS     //
 //==========================//

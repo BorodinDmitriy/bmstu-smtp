@@ -7,6 +7,7 @@
 void InitFileViewer();
 struct Mail ReadDataFromFile(int fd);
 void RevokeLetter(struct Mail letter);
+int GiveControlToFile(struct FileDesc *fd);
 void DisposeFileViewer();
 
 #endif //FILE_VIEWER_H

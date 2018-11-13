@@ -5,18 +5,43 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
+#include <fcntl.h>
+#include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include "states.h"
 #include "./../common/header.h"
 
-#define SMTP_PORT 2525
+//======================//
+//      FD TYPES        //
+//======================//
+#define SOCKET_FD 0
+#define FILE_FD 1
 
 struct FileDescSet
 {
     fd_set set;
+    struct FileDescList *list;
     int count;
 };
+
+struct FileDesc
+{
+    int id;
+    int type;
+    struct sockaddr_in addr;
+    int context;
+    int goal;
+};
+
+struct FileDescList
+{
+    struct FileDesc fd;
+    struct FileDescList *next;
+};
+
+
 
 #endif //  STRUCTS_H

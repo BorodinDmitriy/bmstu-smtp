@@ -10,23 +10,10 @@
 #include <stdio.h>
 #include "structs.h"
 
-struct smtpSocket
-{
-    int fd;
-    struct sockaddr_in dest;
-};
-
-struct ListSocket 
-{
-    int count;
-    struct smtpSocket * sockets;
-};
-
-void InitSmtpSockets(struct FileDescSet * fdSet);
-int SendMail(int fd, struct Mail letter);
-void DisposeSmtpSockets();
+int GiveControlToSocket(struct FileDesc *fd);
+int SmtpInitSocket(char *domain, struct FileDesc *fd);
+int CloseConnection(struct FileDesc fd);
 
 #define BUFFER 4096
-#define SOCK_COUNT 4
 
 #endif //SMTP_SOCKET_H
