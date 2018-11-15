@@ -87,7 +87,7 @@ void smtp_handler(int *socket_fd, const int pid) {
 				printf("Server: %d, message: %s", client_socket_fd, buffer_output);
 				send(client_socket_fd, buffer_output, strlen(buffer_output), 0);
 				close(client_socket_fd);
-				exit(0);
+				kill(pid, SIGTERM);
 			} else { 
 				// метод не был определен
 				sprintf(buffer_output, HEADER_502_NOT_IMPLEMENTED);
