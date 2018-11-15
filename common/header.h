@@ -17,6 +17,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <fcntl.h>
 
 #define STR_EQUAL(a,b)	(strcmp(a, b) == 0)
 // данные сервера

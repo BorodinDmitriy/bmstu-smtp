@@ -59,6 +59,19 @@ struct fd_linked_list * init_sockets(void) {
         	continue;
 		}
 
+		int file_flags = fcntl(socket_fd, F_GETFL, 0);
+    	if (file_flags == -1)
+    	{
+        	printf("Fail to receive socket flags");
+        	continue;
+    	}
+
+    	if (fcntl(socket_fd, F_SETFL, file_flags | O_NONBLOCK))
+    	{	
+        	printf("Fail to set flag 'O_NONBLOCK' for socket");
+        	continue;
+    	}
+
 		// непосредственное связывание сокета с портом
 		if (bind(socket_fd, p->ai_addr, p->ai_addrlen) < 0) 
     	{ 

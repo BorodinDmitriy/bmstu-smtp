@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
         } else if (receive == 0) {
             break;
         } else { 
-            // -1 
+            break;
         }
     }
 
