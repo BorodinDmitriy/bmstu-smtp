@@ -1,5 +1,92 @@
 #include "../common/header.h"
 #include "smtp.h"
+#include "process.h"
+
+void run_process(struct process *pr) {
+	struct mesg_buffer message;
+
+	printf("SMTP run process start");
+
+	int received_bytes_count;				// число прочитанных байт
+	char buffer_output[SERVER_BUFFER_SIZE];	// выходной буфер для записи ответа
+
+	char smtp_stub[SERVER_BUFFER_SIZE] = "Hi, you've come to smtp server";
+
+	while (1) {
+		// msgrcv to receive message 
+    	if (msgrcv(pr->msgid, &message, sizeof(message), 1, 0) >= 0) {
+    		// display the message 
+    		printf("Data Received is : %d \n", message.fd); 
+
+    		struct client_socket cl_sock;
+    		cl_sock.fd = message.fd;
+    		cl_sock.buffer = (char *) malloc(SERVER_BUFFER_SIZE);
+    		cl_sock.state = 0;
+
+    		// добавить новый сокет в список сокетов процесса
+    		struct client_socket_list *new_socket = malloc(sizeof(struct client_socket_list));
+    		new_socket->c_sock = cl_sock;
+    		new_socket->next = pr->sock_list;
+    		pr->sock_list = new_socket;
+
+    		if (pr->max_fd < cl_sock.fd) {
+    			pr->max_fd = cl_sock.fd;
+    		}
+
+    		/*struct client_socket_list *p;
+    		for (p = pr->sock_list; p != NULL; p = p->next) {
+    			printf("%d\n", p->c_sock.fd);
+    		}*/
+    		sprintf(buffer_output, "%s\n", smtp_stub);
+			printf("%s\n", smtp_stub);
+			send(cl_sock.fd, buffer_output, strlen(buffer_output), 0);
+    	}
+  
+    
+		/*struct timeval tv; // timeval используется внутри select для выхода из ожидания по таймауту
+		tv.tv_sec = 15;
+		tv.tv_usec = 0;
+
+		if (pr->sock_list != NULL) {
+			struct client_socket_list *p;
+    		for (p = pr->sock_list; p != NULL; p = p->next) {
+    			FD_SET(p->c_sock.fd, &(pr->socket_set));
+    			//printf("%d\n", p->c_sock.fd);
+    		}
+
+    		// ожидаем select-ом возможности писать в сокет сервером в течение 15с
+			select(pr->max_fd + 1,  &(pr->socket_set), NULL, NULL, &tv);
+			
+			p = pr->sock_list;
+			while (p != NULL) {
+				// если так и не дождались возможности писать - ошибка
+				if (!FD_ISSET(p->c_sock.fd,  &(pr->socket_set))) {
+					sprintf(buffer_output, "socket is not available for 15s\n");
+					printf("socket is not available for 15s\n");
+					send(p->c_sock.fd, buffer_output, strlen(buffer_output), 0);
+					struct client_socket_list *temp = p;
+					p->next = temp->next;
+					free(temp);
+					close(p->c_sock.fd);
+				} else {
+					// читаем, что прислал клиент, во входной буфер
+					received_bytes_count = recv(p->c_sock.fd, p->c_sock.buffer, SERVER_BUFFER_SIZE, 0);
+					// считали 0 байт - клиент перестал отправлять данные
+					if (received_bytes_count == 0) {
+						printf("remote host closed socket %d\n", p->c_sock.fd);
+						break;
+					}
+					if (received_bytes_count == -1) {
+						printf("problems with socket %d\n", p->c_sock.fd);
+						break;
+					}
+					printf("%s\n",p->c_sock.buffer);
+				}
+				p = p->next;
+			}
+		}*/
+	}
+}
 
 void smtp_handler(int *socket_fd, const int pid) {
 	printf("SMTP handler start");

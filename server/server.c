@@ -9,6 +9,7 @@ int server_init() {
 	serv.socket_fd_max = -1;
 	serv.addrlen = sizeof(serv.address);
 	serv.socket_fds = init_sockets();
+	serv.prcs = init_processes(1);
 	if (serv.socket_fds == NULL) {
 		printf("SERVER INIT FAILED\n");
 		serv.state = SERVER_FAIL_INIT;
@@ -57,8 +58,14 @@ int server_run() {
     			int *sock_fd = (int *) malloc(sizeof(int));
     			*sock_fd = new_socket;
 
+    			struct mesg_buffer message;
+    			message.fd = new_socket;
+    			message.mesg_type = 1;
+
+    			msgsnd(serv.prcs->msgid, &message, sizeof(message), 0); 
+
     			// создание дочернего процесса, где будет происходить обработка
-    			pid_t pid;
+    			/*pid_t pid;
     			switch (pid = fork()) {
     				case -1:
     					perror("accept() failed"); 
@@ -69,7 +76,7 @@ int server_run() {
         				smtp_handler(sock_fd, getpid());
         			default: // процесс - родитель
         				continue;
-    			}
+    			}*/
 			}
 		}
 	}
@@ -81,6 +88,7 @@ int main(int argc, char **argv) {
 	if (server_init() == SERVER_FINISH_INIT) {
 		server_run();
 	}
+	//init_process(getpid());
 	
 	return 0;
 }

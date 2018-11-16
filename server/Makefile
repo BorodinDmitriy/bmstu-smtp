@@ -9,7 +9,7 @@ DFLAGS= -Wall -g
 all: clean server test_client
 
 server: 
-	$(CC) $(STD) $(RFLAGS) socket.c smtp.c server.c -o server
+	$(CC) $(STD) $(RFLAGS) socket.c smtp.c server.c process.c -o server
 
 test_client: 
 	$(CC) $(STD) $(DFLAGS) test_client.c -o test_client

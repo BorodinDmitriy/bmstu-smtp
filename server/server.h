@@ -4,6 +4,7 @@
 #include "../common/header.h"
 #include "smtp.h"
 #include "socket.h"
+#include "process.h"
 
 #define SERVER_START_INIT 1
 #define SERVER_FINISH_INIT 2
@@ -22,6 +23,7 @@ struct server {
 	size_t addrlen;
 	char *domain;
 	int state;
+	struct process *prcs;
 };
 
 #endif

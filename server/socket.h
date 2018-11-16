@@ -12,5 +12,16 @@ struct fd_linked_list {
 	struct fd_linked_list *next;
 };
 
+struct client_socket {
+	int fd;
+	char *buffer;
+	int state;
+};
+
+struct client_socket_list {
+	struct client_socket c_sock;
+	struct client_socket_list *next;
+};
+
 struct fd_linked_list * init_sockets(void);
 #endif
