@@ -79,6 +79,9 @@ void Run()
                 free(Manager.readers.list);
             }
             state = GiveControlToSocket(&Manager.readers.list->fd);
+            if (state == EWOULDBLOCK) {
+                FD_SET(Manager.readers.list->fd.id, &Manager.readers.set);
+            }
             continue;
         }
 
