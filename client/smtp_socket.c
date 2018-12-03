@@ -20,6 +20,9 @@ int GiveControlToSocket(struct FileDesc *fd)
     switch ((*fd).context)
     {
     case START_WORK:
+    {
+        //state = smtpConnection(fd);
+    }
     case RECEIVE_HELO_MESSAGE:
     {
         state = smtpHELO(fd, 0);
@@ -99,6 +102,11 @@ int SmtpInitSocket(char *domain, struct FileDesc *fd)
     return 0;
 }
 
+int smtpConnection(struct FileDesc fd) 
+{
+ //   int state = connect(fd.id, &fd.addr, sizeof(.dest));
+}
+
 int CloseConnection(struct FileDesc fd)
 {
     int state = 0;
@@ -176,7 +184,7 @@ int sendCommand(struct FileDesc *fd, char *command, char *data)
     strcat(message, " ");
     strcat(message, data);
     strcat(message, " \r\n");
-    
+
     free(message);
     return state;
 }
@@ -189,19 +197,31 @@ int recvCommand(struct FileDesc *fd)
 int smtpHELO(struct FileDesc *fd, int process_state)
 {
     int state = 0;
-    if (process_state <= 0 && state == 0)
+    if (process_state <= 0 && state >= 0)
     {
         state = recvCommand(fd);
+        if (state == EWOULDBLOCK)
+        {
+            return state;
+        }
     }
 
-    if (process_state <= 1 && state == 0)
+    if (process_state <= 1 && state >= 0)
     {
         state = sendCommand(fd, "HELO", "");
+        if (state == EWOULDBLOCK)
+        {
+            return state;
+        }
     }
 
-    if (process_state <= 2 && state == 0)
+    if (process_state <= 2 && state >= 0)
     {
         state = recvCommand(fd);
+        if (state == EWOULDBLOCK)
+        {
+            return state;
+        }
     }
 
     return state;
