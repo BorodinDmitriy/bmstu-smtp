@@ -4,6 +4,6 @@
 int main(int argc, char *argv[])
 {
     InitController();
-    Run();
+    WatchMailDir();
     return 0;
 }
