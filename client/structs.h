@@ -20,6 +20,7 @@
 #define SOCKET_FD 0
 #define FILE_FD 1
 
+
 struct FileDescSet
 {
     fd_set set;
@@ -40,6 +41,12 @@ struct FileDescList
 {
     struct FileDesc fd;
     struct FileDescList *next;
+};
+
+struct domain_record
+{
+    char* domain;
+    int workerId;
 };
 
 
