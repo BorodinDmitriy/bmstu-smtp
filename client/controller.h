@@ -27,6 +27,7 @@ struct Controller
 };
 
 void InitController();
+void WatchMailDir();
 void Run();
 void Stop();
 void Dispose();
