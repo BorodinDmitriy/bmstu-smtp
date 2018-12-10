@@ -34,6 +34,10 @@ void InitController()
     return;
 }
 
+void WatchMailDir() {
+    SearchNewFiles();
+}
+
 void Run()
 {
     Manager.currentState = STATE_START_WORK;
