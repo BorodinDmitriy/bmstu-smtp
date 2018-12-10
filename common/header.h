@@ -19,6 +19,7 @@
 #include <signal.h>
 #include <fcntl.h>
 
+#define CLIENT_MAIL_DIR_PATH "./maildir/"
 #define STR_EQUAL(a,b)	(strcmp(a, b) == 0)
 // данные сервера
 #define SERVER_PORT 8080
