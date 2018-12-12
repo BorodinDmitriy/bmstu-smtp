@@ -22,7 +22,7 @@
 #define CLIENT_MAIL_DIR_PATH "./maildir/"
 #define STR_EQUAL(a,b)	(strcmp(a, b) == 0)
 // данные сервера
-#define SERVER_PORT 8080
+#define SERVER_PORT 15565
 #define SERVER_PORT_STRING "8080"
 #define SERVER_BUFFER_SIZE 1024
 #define SERVER_BACKLOG_SIZE 3
