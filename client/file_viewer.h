@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
+#include <semaphore.h>
 #include "structs.h"
 
 
@@ -15,7 +16,7 @@ struct files_record
     struct files_record * next;
 };
 
-void InitFileViewer();
+int InitFileViewer();
 void SearchNewFiles();
 struct Mail ReadDataFromFile(int fd);
 void RevokeLetter(struct Mail letter);
