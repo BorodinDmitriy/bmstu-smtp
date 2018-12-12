@@ -21,7 +21,7 @@ int GiveControlToSocket(struct FileDesc *fd)
     {
     case START_WORK:
     {
-        //state = smtpConnection(fd);
+        // state = smtpConnection(fd);
     }
     case RECEIVE_HELO_MESSAGE:
     {
@@ -92,6 +92,12 @@ int SmtpInitSocket(char *domain, struct FileDesc *fd)
     if (state <= 0)
     {
         printf("Fail to inet_pton");
+        return state;
+    }
+
+    state = connect(connection.id, (struct sockaddr *)&connection.addr, sizeof(connection.addr));
+    if (state < 0) {
+        printf("Fail connection");
         return state;
     }
 
@@ -185,6 +191,7 @@ int sendCommand(struct FileDesc *fd, char *command, char *data)
     strcat(message, data);
     strcat(message, " \r\n");
 
+    state = send(fd->id, message, strlen(message), 0);
     free(message);
     return state;
 }
