@@ -5,6 +5,7 @@
 //==========================//
 
 static struct domain_record *Dictionary;
+static sem_t lock;
 
 //==========================//
 //  DEFINES PRIVATE METHOD  //
@@ -12,11 +13,42 @@ static struct domain_record *Dictionary;
 
 void setUserDirectory(char *dest, char *directory_name);
 void processingLetters(struct files_record *files);
-char *getDomainFromFile(FILE *file);
+int setDomainFromFile(char *domain, FILE *file);
+int setPathInTempDirectory(char *dest, char *path);
+int moveLetter(char *from, char *to);
+struct worker_task *createTaskForLetter(char *domain, char *path);
+void destroyTask(struct worker_task *task);
+
+//  Dictionary methods
+void freeDicrionary();
+int addRecordToDictionary(char *domain);
 
 //==========================//
 //      PUBLIC METHODS      //
 //==========================//
+
+int InitFileViewer()
+{
+    Dictionary = NULL;
+    int err;
+    err = sem_init(&lock, 0, 1);
+    if (err != 0)
+    {
+        printf("FileViewer: initialization fail. Exit...");
+        return -1;
+    }
+}
+
+void DestroyFileViewer()
+{
+    int err;
+    err = sem_destroy(&lock);
+    if (err != 0)
+    {
+        printf("FileViewer: fail to destroy semaphore.");
+    }
+    return;
+}
 
 void SearchNewFiles()
 {
@@ -127,6 +159,7 @@ void SearchNewFiles()
                 queue_item->next = NULL;
                 file_pointer->next = queue_item;
                 file_pointer = queue_item;
+                continue;
             }
 
             printf("Fail state");
@@ -146,6 +179,22 @@ void SearchNewFiles()
 
     processingLetters(file_queue);
     return;
+}
+
+int FindDomainInDictionary(char *domain)
+{
+    sem_wait(&lock);
+    struct domain_record *pointer = Dictionary;
+    while (pointer != NULL)
+    {
+        if (strcmp(pointer->domain, domain) == 0)
+        {
+            return pointer->workerId;
+        }
+    }
+
+    sem_post(&lock);
+    return -1;
 }
 
 struct Mail ReadDataFromFile(int fd)
@@ -200,30 +249,62 @@ void processingLetters(struct files_record *files)
         if (!file)
         {
             printf("Fail to open file : %s", pointer->path);
+            pointer = pointer->next;
             continue;
         }
 
         char domain[200];
-        strcpy(domain, getDomainFromFile(file));
+        int state = setDomainFromFile(domain, file);
+        if (state)
+        {
+            printf("Fail to find domain in letter %s", files->path);
+            pointer = pointer->next;
+            continue;
+        }
 
         fclose(file);
 
+        //  create task for worker with index @workerId@ in pool
+        struct worker_task *task = createTaskForLetter(domain, pointer->path);
+
+        int workerId = FindDomainInDictionary(domain);
+        int tryes = 0;
+        while (workerId < 0 && tryes < 3)
+        {
+            //  worker not found
+            workerId = addRecordToDictionary(domain);
+            tryes++;
+        }
+
+        if (workerId < 0) 
+        {
+            destroyTask(task);
+            pointer = pointer->next;
+            continue;
+        }
+
+        moveLetter(pointer->path, task->path);
+        state = DelegateTaskToWorker(workerId, task);
+        if (state) 
+        {
+
+        }
         pointer = pointer->next;
     }
 
     return;
 }
 
-char *getDomainFromFile(FILE *file)
+//  get domain from letter by field "To:"
+int setDomainFromFile(char *domain, FILE *file)
 {
-    char buffer [LETTER_FRAME_SIZE];
-    char result [200];
-    char * pointer;
+    char buffer[LETTER_FRAME_SIZE];
+    char *pointer;
     int len;
     int state = 0;
-    while(state == 0) 
+    while (state == 0)
     {
-        if (fgets(buffer, LETTER_FRAME_SIZE, file) == NULL) 
+        if (fgets(buffer, LETTER_FRAME_SIZE, file) == NULL)
         {
             break;
         }
@@ -246,11 +327,147 @@ char *getDomainFromFile(FILE *file)
         }
 
         len = strlen(pointer);
-        strcpy(result, "smtp.");
-        strncat(result, pointer + 1, len - 3);
-        pointer = result;
-        return pointer;
-        
+        strcpy(domain, "smtp.");
+        strncat(domain, pointer + 1, len - 3);
+        return 0;
     }
-    return NULL;
+    return -1;
+}
+
+struct worker_task *createTaskForLetter(char *domain, char *path)
+{
+    struct worker_task *task = (struct worker_task *)malloc(sizeof(struct worker_task));
+    if (!task)
+    {
+        printf("Fail to create task by letter");
+        return NULL;
+    }
+
+    task->state = NEW_TASK;
+
+    int len = strlen(path) + 1;
+    task->path = (char *)calloc(len, sizeof(char));
+    if (!task->path) 
+    {
+        printf("\nFail to create path in task");
+        free(task);
+        return NULL;
+    }
+    
+    int state = setPathInTempDirectory(task->path, path);
+    if (state) 
+    {
+        printf("Fail to receive tmp place of file");
+        free(task);
+        return NULL;
+    }
+
+    printf("\ntask->path: %s", task->path);
+
+    len = strlen(domain) + 1;
+    task->domain = (char *)calloc(len, sizeof(char));
+    if (!task->domain)
+    {
+        printf("\nFail to create domain field in task");
+        free(task->path);
+        free(task);
+        return NULL;
+    }
+    
+    memset(task->domain, '\0', len);
+    strncpy(task->domain, domain, len);
+    printf("\ntask->domain: %s", task->domain);
+    return task;
+}
+
+void destroyTask(struct worker_task *task)
+{
+    free(task->domain);
+    free(task->path);
+    free(task);
+    return;
+}
+
+int setPathInTempDirectory(char *dest, char *path)
+{
+    char *pattern = "/new/";
+    char *pos = strstr(path, pattern);
+    int count = pos - path;
+    strncpy(dest, path, count);
+    strcat(dest, "/tmp/");
+    strcat(dest, path + count + 5);
+    return 0;
+}
+
+int moveLetter(char *from, char *to)
+{
+    int state = 0;
+    state = rename(from, to);
+    if (state < 0) 
+    {
+        printf("Fail to move file from %s to %s", from, to);   
+    }
+    return state;
+}
+
+//  Dictionary section
+int addRecordToDictionary(char *domain)
+{
+    sem_wait(&lock);
+    struct domain_record *pointer = Dictionary;
+
+    while (Dictionary && pointer->next != NULL)
+    {
+        pointer = pointer->next;
+    }
+
+    struct domain_record *new_record = (struct domain_record *)malloc(sizeof(struct domain_record));
+    if (new_record == NULL)
+    {
+        printf("FileView: fail to create new record for dictionary");
+        sem_post(&lock);
+        return -1;
+    }
+
+    int len = strlen(domain) + 1;
+    new_record->domain = (char *)calloc(len, sizeof(char));
+    if (new_record->domain == NULL)
+    {
+        printf("FileView: fail to allocate memory for domain\n");
+        free(new_record);
+        sem_post(&lock);
+        return -1;
+    }
+
+    memset(new_record->domain, '\0', len);
+    strcpy(new_record->domain, domain);
+    new_record->workerId = 0;
+    new_record->next = NULL;
+
+    if (Dictionary == NULL)
+    {    
+        Dictionary = new_record;
+    } 
+    else 
+    {
+        pointer->next = new_record;
+    }
+
+    sem_post(&lock);
+    return 0;
+}
+
+void freeDicrionary()
+{
+    sem_wait(&lock);
+    struct domain_record *pointer = Dictionary;
+    while (pointer != NULL)
+    {
+        pointer = pointer->next;
+        free(Dictionary);
+        Dictionary = pointer;
+    }
+    sem_post(&lock);
+
+    return;
 }
