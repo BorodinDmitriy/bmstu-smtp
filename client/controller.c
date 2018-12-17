@@ -3,26 +3,32 @@
 //==========================//
 //    PRIVATE ATTRIBUTES    //
 //==========================//
-static struct Controller Manager;
 static struct worker_pool Workers;
+static bool worked;
 
 //==========================//
 //  DEFINES PRIVATE METHOD  //
 //==========================//
+int createWorker(int index);
+void destroyWorker(int index);
+
 void destroyController();
 void watchMailDirLoop();
+void signalHandler(int signum);
+int initSignalHandler();
 
 //==========================//
 //      PUBLIC METHODS      //
 //==========================//
 
-void InitController() 
+void InitController()
 {
     printf("Init main thread\n");
-    printf("Init workers...");
+    printf("Init workers pool...");
+
     int err;
-    Workers.pool = (struct worker *)calloc(COUNT_THREADS - 1, sizeof(struct worker *));
-    if (Workers.pool == NULL) 
+    Workers.pool = (struct worker **)calloc(COUNT_THREADS - 1, sizeof(struct worker *));
+    if (Workers.pool == NULL)
     {
         printf("Fail\n\t Pool don't create.\n Exit");
         exit(-1);
@@ -30,40 +36,42 @@ void InitController()
 
     //  1-main, 1 logger
     Workers.count = COUNT_THREADS - 2;
-    if (Workers.count <= 0) {
+    if (Workers.count <= 0)
+    {
         Workers.count = 1;
     }
 
-    for (int I = 0; I < Workers.count; I++) 
+    for (int I = 0; I < Workers.count; I++)
     {
-        Workers.pool[I].tasks = NULL;
-        err = sem_init(&Workers.pool[I].lock, 0, 1);
-        if (err) 
-        {
-            printf("Fail to init semaphore of worker %d tasks", I);
-            Dispose();
-            return;
-        }
-
-        err = pthread_create(&Workers.pool[I].thread, NULL, InitWorker, NULL);
-        if (err) 
+        err = createWorker(I);
+        if (err)
         {
             printf("Fail\n\t Worker %d don't create.", I);
             Dispose();
             return;
         }
-        printf("\tWorker %d is running\n", I);
+        printf("\n\tWorker %d is running\n", I);
     }
 
     printf("\nInit workers...Success\n");
     printf("Init FileViewer...");
     err = InitFileViewer();
-    if (err != 0)  
+    if (err != 0)
     {
         printf("Fail\n\tErr: %d", err);
         Dispose();
+        return;
     }
     printf("Success\n");
+
+    printf("Init signal catcher...");
+    err = initSignalHandler();
+    if (err != 0)
+    {
+        printf("Fail\n\tErr: %d", err);
+    }
+    printf("Success\n");
+    worked = true;
     watchMailDirLoop();
     return;
 }
@@ -71,48 +79,153 @@ void InitController()
 //  Dispose resource
 void Dispose()
 {
-    for (int I = 0; I < Workers.count; I++) 
+    printf("Disposing.... \n");
+    if (!Workers.pool)
     {
-        pthread_cancel(Workers.pool[I].thread);
+        return;
     }
+
+    for (int I = 0; I < Workers.count; I++)
+    {
+        printf("\tWait worker %d\n", I);
+        Workers.pool[I]->worked = false;
+        pthread_kill(Workers.pool[I]->thread, SIGUSR1);
+        pthread_join(Workers.pool[I]->thread, NULL);
+        destroyWorker(I);
+        printf("\tWorker %d closing\n", I);
+    }
+
+    free(Workers.pool);
     // DisposeFileViewer();
 
+    printf("Success");
+    return;
 }
 
 struct worker_pool *GetWorkerPool()
 {
     return &Workers;
 }
+
+int MostFreeWorker()
+{
+    int min = Workers.pool[0]->count_task;
+    int res = 0;
+    for (int I = 1; I < Workers.count; I++)
+    {
+        if (min > Workers.pool[I]->count_task)
+        {
+            min = Workers.pool[I]->count_task;
+            res = I;
+        }
+    }
+
+    return res;
+}
+
+int DelegateTaskToWorker(int workerIndex, struct worker_task *task)
+{
+    if (workerIndex > Workers.count)
+    {
+        return -1;
+    }
+
+    sem_wait(&Workers.pool[workerIndex]->lock);
+    struct worker_task *pointer = Workers.pool[workerIndex]->tasks;
+    while (pointer && pointer->next != NULL)
+    {
+        pointer = pointer->next;
+    }
+
+    if (pointer != NULL)
+    {
+        pointer->next = task;
+    }
+    else
+    {
+        Workers.pool[workerIndex]->tasks = task;
+    }
+
+    Workers.pool[workerIndex]->count_task++;
+
+    sem_post(&Workers.pool[workerIndex]->lock);
+    return 0;
+}
+
 //==========================//
 //      PRIVATE METHODS     //
 //==========================//
 
-void destroyController() 
+int createWorker(int index)
 {
-    if (!Workers.pool)
+    int state = 0;
+    Workers.pool[index] = (struct worker *)malloc(sizeof(struct worker));
+    if (!Workers.pool[index])
     {
-        return 0;
+        printf("\nFail to allocate memory for record of worker");
+        return -1;
+    }
+    Workers.pool[index]->tasks = NULL;
+    Workers.pool[index]->workerId = index;
+    Workers.pool[index]->count_task = 0;
+    Workers.pool[index]->worked = true;
+    state = sem_init(&(Workers.pool[index]->lock), 0, 1);
+    if (state)
+    {
+        printf("Fail to init semaphore of worker %d tasks", index);
+        return -2;
     }
 
-    for (int I = 0; I < COUNT_THREADS - 1; I++)
+    state = pthread_create(&Workers.pool[index]->thread, NULL, InitWorker, (void *)Workers.pool[index]);
+    if (state)
     {
-        // Workers.pool[I].
+        printf("Fail to create thread of worker %d\n", index);
+        return -3;
     }
-
-    free(Workers.pool);
 
     return 0;
 }
 
-void watchMailDirLoop() {
+void destroyWorker(int index)
+{
+    free(Workers.pool[index]);
+    return;
+}
+
+void watchMailDirLoop()
+{
 
     printf("Start loop to search new files for send\n");
-    while (1) 
+    while (worked)
     {
         printf("loop start\n");
         SearchNewFiles();
         printf("loop ended\n");
         sleep(30);
+    }
+    Dispose();
+    printf("CANCEL PROGRAMM\n");
+    return;
+}
+
+int initSignalHandler()
+{
+    struct sigaction actions;
+    memset(&actions, 0, sizeof(actions));
+    actions.sa_handler = signalHandler;
+
+    sigemptyset(&actions.sa_mask);
+    sigaddset(&actions.sa_mask, SIGINT);
+    sigaction(SIGINT, &actions, NULL);
+    return 0;
+}
+
+void signalHandler(int signum)
+{
+    if (signum == SIGINT)
+    {
+        printf("\nCatch SIGINT\n");
+        worked = false;
     }
     return;
 }
