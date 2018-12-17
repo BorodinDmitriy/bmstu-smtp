@@ -3,9 +3,11 @@
         {
             "name": "Linux",
             "includePath": [
+                "/usr/include/linux/**",
+                "/usr/include/linux/signal.h",
                 "${workspaceFolder}/**"
             ],
-            "defines": [],
+            "defines": ["_XOPEN_SOURCE"],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
