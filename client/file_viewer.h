@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <semaphore.h>
 #include "structs.h"
+#include "logger.h"
 
 
 #define LETTER_FRAME_SIZE 200
@@ -17,10 +18,8 @@ struct files_record
 };
 
 int InitFileViewer();
+void DestroyFileViewer();
 void SearchNewFiles();
-struct Mail ReadDataFromFile(int fd);
-void RevokeLetter(struct Mail letter);
-int GiveControlToFile(struct FileDesc *fd);
-void DisposeFileViewer();
+void RemoveDomainRecordFromDictionary(int workerId, char *domain);
 
 #endif //FILE_VIEWER_H

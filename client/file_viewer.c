@@ -42,6 +42,7 @@ int InitFileViewer()
 void DestroyFileViewer()
 {
     int err;
+    freeDicrionary();
     err = sem_destroy(&lock);
     if (err != 0)
     {
@@ -102,7 +103,7 @@ void SearchNewFiles()
             continue;
         }
 
-        printf('fail state');
+        printf("fail state");
     }
 
     //  Close maildir for program;
@@ -117,7 +118,10 @@ void SearchNewFiles()
         directory = opendir(pointer->path);
         if (!directory)
         {
-            printf("fail to open directory");
+            Error("fail to open directory");
+            printf("fail to open directory\n");
+            closedir(directory);
+            pointer = pointer->next;
             continue;
         }
 
@@ -165,7 +169,7 @@ void SearchNewFiles()
             printf("Fail state");
         }
 
-        closedir(pointer->path);
+        closedir(directory);
         pointer = pointer->next;
     }
 
@@ -197,32 +201,9 @@ int FindDomainInDictionary(char *domain)
     return -1;
 }
 
-struct Mail ReadDataFromFile(int fd)
+void RemoveDomainRecordFromDictionary(int workerId, char *domain)
 {
-    //  fake
-    struct Mail letter;
-
-    letter.from = "IU7.2@yandex.ru";
-    letter.to = "IU7.2@yandex.ru";
-    letter.message = "Test SMTP";
-
-    return letter;
-}
-
-void RevokeLetter(struct Mail letter)
-{
-    return;
-}
-
-void DisposeFileViewer()
-{
-    //  fake
-    return;
-}
-
-int GiveControlToFile(struct FileDesc *fd)
-{
-    return 0;
+    
 }
 
 //==========================//
@@ -287,7 +268,8 @@ void processingLetters(struct files_record *files)
         state = DelegateTaskToWorker(workerId, task);
         if (state) 
         {
-
+            moveLetter(task->path, pointer->path);
+            destroyTask(task);
         }
         pointer = pointer->next;
     }
@@ -327,8 +309,7 @@ int setDomainFromFile(char *domain, FILE *file)
         }
 
         len = strlen(pointer);
-        strcpy(domain, "smtp.");
-        strncat(domain, pointer + 1, len - 3);
+        strncpy(domain, pointer + 1, len - 3);
         return 0;
     }
     return -1;
@@ -362,8 +343,6 @@ struct worker_task *createTaskForLetter(char *domain, char *path)
         return NULL;
     }
 
-    printf("\ntask->path: %s", task->path);
-
     len = strlen(domain) + 1;
     task->domain = (char *)calloc(len, sizeof(char));
     if (!task->domain)
@@ -376,7 +355,7 @@ struct worker_task *createTaskForLetter(char *domain, char *path)
     
     memset(task->domain, '\0', len);
     strncpy(task->domain, domain, len);
-    printf("\ntask->domain: %s", task->domain);
+    task->next = NULL;
     return task;
 }
 
@@ -441,7 +420,7 @@ int addRecordToDictionary(char *domain)
 
     memset(new_record->domain, '\0', len);
     strcpy(new_record->domain, domain);
-    new_record->workerId = 0;
+    new_record->workerId = MostFreeWorker();
     new_record->next = NULL;
 
     if (Dictionary == NULL)
