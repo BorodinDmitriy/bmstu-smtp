@@ -34,7 +34,7 @@ void InitController()
         printf("Fail\n\tFail to init logger. Exit");
         exit(err);
     }
-    printf("Success");
+    printf("Success\n");
     printf("Init workers pool...");
     Workers.pool = (struct worker **)calloc(COUNT_THREADS - 1, sizeof(struct worker *));
     if (Workers.pool == NULL)
@@ -42,6 +42,7 @@ void InitController()
         printf("Fail\n\t Pool don't create.\n Exit");
         exit(-1);
     }
+    printf("Success\n");
 
     //  1-main, 1 logger
     Workers.count = COUNT_THREADS - 2;
@@ -81,12 +82,6 @@ void InitController()
     }
     printf("Success\n");
     worked = true;
-    sleep(20);
-    for (int I = 0; I < 100; I++) {
-        Error("Error!");
-        printf("%d\n", I);
-        usleep(15);
-    }
     watchMailDirLoop();
     return;
 }
