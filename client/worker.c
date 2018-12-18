@@ -4,16 +4,18 @@
 //  DEFINES PRIVATE METHOD  //
 //==========================//
 
-void run(struct Controller manager);
+void run(struct network_controller manager);
+void handler(int sig);
 
 //==========================//
 //      PUBLIC METHODS      //
 //==========================//
-void InitWorker()
+void InitWorker(void *my_info)
 {
-    struct Controller manager;
+    struct worker *me = (struct worker *)my_info;
+
+    struct network_controller manager;
     manager.currentState = STATE_START_INIT;
-    manager.worked = false;
 
     FD_ZERO(&manager.writers.set);
     manager.writers.count = 0;
@@ -28,20 +30,30 @@ void InitWorker()
     manager.handlers.list = NULL;
 
     manager.currentState = STATE_FINISH_INIT;
-
-    while (1) {
-        sleep(60);
-    }
+    run(manager);
     pthread_exit(0);
 }
 
 //==========================//
 //      PRIVATE METHODS     //
 //==========================//
-void run(struct Controller manager)
+void run(struct network_controller manager)
 {
     manager.currentState = STATE_START_WORK;
-    manager.worked = true;
+    
+    sigset_t empty_sigs, blocked_sigs;
+
+    sigemptyset(&empty_sigs);
+    sigemptyset(&blocked_sigs);
+
+    sigaddset(&blocked_sigs, SIGUSR1);
+    sigaddset(&blocked_sigs, SIGINT);
+    pthread_sigmask(SIG_BLOCK, &blocked_sigs, &empty_sigs);
+    struct sigaction signals;
+    signals.sa_handler = handler;
+    signals.sa_flags = 0;
+    sigemptyset(&signals.sa_mask);
+    sigaction(SIGUSR1, &signals, NULL);
 
     int readyFD = -1;
     int currentFD = 0;
@@ -51,82 +63,87 @@ void run(struct Controller manager)
     struct FileDesc tempFD;
 
     struct timespec timer_spec;
-    timer_spec.tv_sec = 10;
+    timer_spec.tv_sec = 60;
     timer_spec.tv_nsec = 0;
 
     fd_set readers_temp;
     fd_set writers_temp;
     fd_set handlers_temp;
 
-    while (manager.worked)
+    while (true)
     {
         int fd_count = manager.writers.count + manager.readers.count + manager.handlers.count + 1;
         readers_temp = manager.readers.set;
         writers_temp = manager.writers.set;
         handlers_temp = manager.handlers.set;
 
-        readyFD = pselect(fd_count, &readers_temp, &writers_temp, &handlers_temp, &timer_spec, NULL);
-
-        if (readyFD == 0)
-        {
-            //  fake 
-            manager.readers.list = (struct FileDescList *)calloc(1, sizeof(struct FileDescList));
-            if (manager.readers.list == NULL)
-            {
-                printf("Fail to create element on list\r\n");
-            }
-
-            int state = SmtpInitSocket("127.0.0.1", &manager.readers.list->fd);
-            if (state) 
-            {
-                printf("Socket not create\r\n");
-                free(manager.readers.list);
-            }
-            state = GiveControlToSocket(&manager.readers.list->fd);
-            if (state == EWOULDBLOCK) {
-                FD_SET(manager.readers.list->fd.id, &manager.readers.set);
-            }
-            continue;
+        readyFD = pselect(fd_count, &readers_temp, &writers_temp, &handlers_temp, &timer_spec, &empty_sigs);
+        printf("Wait... pselect : %d\n", GetWorkerPool()->pool[0]->worked);
+        if (!GetWorkerPool()->pool[0]->worked) {
+            printf("WORKER EXIT\n");
+            break;
         }
+    
+        // if (readyFD == 0)
+        // {
+        //     //  fake
+        //     manager.readers.list = (struct FileDescList *)calloc(1, sizeof(struct FileDescList));
+        //     if (manager.readers.list == NULL)
+        //     {
+        //         printf("Fail to create element on list\r\n");
+        //     }
 
-        if (readyFD < 0)
-        {
-            manager.currentState = STATE_FAIL_WORK;
-            printf("\nFAIL TO PSELECT\n");
-            exit(-1);
-        }
+        //     int state = SmtpInitSocket("127.0.0.1", &manager.readers.list->fd);
+        //     if (state)
+        //     {
+        //         printf("Socket not create\r\n");
+        //         free(manager.readers.list);
+        //     }
+        //     state = GiveControlToSocket(&manager.readers.list->fd);
+        //     if (state == EWOULDBLOCK) {
+        //         FD_SET(manager.readers.list->fd.id, &manager.readers.set);
+        //     }
+        //     continue;
+        // }
 
-        processedFD = 0;
-        listViewer = manager.readers.list;
-        //  check readers
-        for (int i = 0; i < manager.readers.count; i++)
-        {
-            //  found ready file description
-            if (FD_ISSET(currentFD, &readers_temp))
-            {
-                //  remove current FD from fd_set
-                FD_CLR(currentFD, &manager.readers.set);
+        // if (readyFD < 0)
+        // {
+        //     manager.currentState = STATE_FAIL_WORK;
+        //     printf("\nFAIL TO PSELECT\n");
+        //     exit(-1);
+        // }
 
-                tempFD = listViewer->fd;
-                int fdState = 0;
-                if (tempFD.type == SOCKET_FD)
-                {
-                    fdState = GiveControlToSocket(&tempFD);
-                }
-                else 
-                {
-                    fdState = GiveControlToFile(&tempFD);
-                }
+        // processedFD = 0;
+        // listViewer = manager.readers.list;
+        // //  check readers
+        // for (int i = 0; i < manager.readers.count; i++)
+        // {
+        //     //  found ready file description
+        //     if (FD_ISSET(currentFD, &readers_temp))
+        //     {
+        //         //  remove current FD from fd_set
+        //         FD_CLR(currentFD, &manager.readers.set);
 
-                fdState++;
+        //         tempFD = listViewer->fd;
+        //         int fdState = 0;
+        //         if (tempFD.type == SOCKET_FD)
+        //         {
+        //             fdState = GiveControlToSocket(&tempFD);
+        //         }
+        //         else
+        //         {
+        //             // fdState = GiveControlToFile(&tempFD);
+        //         }
 
-                processedFD++;
-                if (processedFD == readyFD)
-                {
-                    break;
-                }
-            }
-        }
+        //         fdState++;
+
+        //         processedFD++;
+        //         if (processedFD == readyFD)
+        //         {
+        //             break;
+        //         }
+        //     }
+        // }
 
         //     if ()
         //     {
@@ -150,5 +167,11 @@ void run(struct Controller manager)
         //     }
         // }
     }
+    printf("Exit\n");
+    return;
 }
 
+void handler(int signum) {
+    if (signum == SIGUSR1)
+        printf("Main want to i kill self\n");
+}
