@@ -4,6 +4,7 @@
 //    PRIVATE ATTRIBUTES    //
 //==========================//
 static struct worker_pool Workers;
+static pthread_t logger;
 static bool worked;
 
 //==========================//
@@ -24,9 +25,17 @@ int initSignalHandler();
 void InitController()
 {
     printf("Init main thread\n");
-    printf("Init workers pool...");
-
+    printf("Init logger...");
     int err;
+    err = pthread_create(&logger, NULL, InitLogger, NULL);
+    if (err) 
+    {
+        Dispose();
+        printf("Fail\n\tFail to init logger. Exit");
+        exit(err);
+    }
+    printf("Success");
+    printf("Init workers pool...");
     Workers.pool = (struct worker **)calloc(COUNT_THREADS - 1, sizeof(struct worker *));
     if (Workers.pool == NULL)
     {
@@ -38,7 +47,7 @@ void InitController()
     Workers.count = COUNT_THREADS - 2;
     if (Workers.count <= 0)
     {
-        Workers.count = 1;
+        Workers.count = 0;
     }
 
     for (int I = 0; I < Workers.count; I++)
@@ -72,6 +81,12 @@ void InitController()
     }
     printf("Success\n");
     worked = true;
+    sleep(20);
+    for (int I = 0; I < 100; I++) {
+        Error("Error!");
+        printf("%d\n", I);
+        usleep(15);
+    }
     watchMailDirLoop();
     return;
 }
