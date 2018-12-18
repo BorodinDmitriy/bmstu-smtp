@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
 #include "structs.h"
 
 #define MAX_MSG_SIZE 1024

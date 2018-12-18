@@ -1,7 +1,7 @@
 #include "logger.h"
 
 static bool logger_worked;
-static mqd_t entry_pointer;
+static mqd_t message_queue;;
 
 void initSignalCatch(sigset_t *empty, sigset_t *block);
 void handlerForLogger(int signum);
@@ -10,7 +10,6 @@ void disposeLogger();
 int InitLogger()
 {
     logger_worked = true;
-    mqd_t message_queue;
     ssize_t bytes_read;
     struct mq_attr attr;
     char buffer[MAX_MSG_SIZE + 1];
@@ -19,25 +18,26 @@ int InitLogger()
     attr.mq_maxmsg = MAX_COUNT_MSG;
     attr.mq_msgsize = MAX_MSG_SIZE;
 
-    message_queue = mq_open(QUEUE_NAME, O_CREAT | O_RDONLY | O_NONBLOCK, 0644, &attr);
+    message_queue = mq_open(QUEUE_NAME, O_CREAT | O_RDWR | O_NONBLOCK, 0644, &attr);
     if (message_queue == -1) 
     {
         printf("Fail to init 'message queue'\n");
         pthread_exit(-1);
     }
+    
+    int ready = 1;
+    //  flush queue
 
-    entry_pointer = mq_open(QUEUE_NAME, O_WRONLY| O_NONBLOCK);
-    if (entry_pointer == -1) 
+    while (ready > 0) 
     {
-        printf("Fail to init entry pointer for message queue\n");
-        pthread_exit(-1);
+        ready = mq_receive(message_queue, buffer, MAX_MSG_SIZE, NULL);
     }
 
     sigset_t empty, block;
     initSignalCatch(&empty, &block);
 
-    int ready = 0;
 
+    ready = 0;
     fd_set readers, readers_temp;
     FD_ZERO(&readers);
     FD_ZERO(&readers_temp);
@@ -50,9 +50,8 @@ int InitLogger()
     while (logger_worked) 
     {
         readers_temp = readers;
-        ready = pselect(2, &readers_temp, NULL, NULL, NULL, &empty);
+        ready = pselect(message_queue + 1, &readers_temp, NULL, NULL, NULL, &empty);
 
-        printf("receive\n");
         if (ready == 0) {
             continue;
         }
@@ -79,10 +78,7 @@ int InitLogger()
                 opened = true;
             }
 
-            time_t current_time = time(NULL);
-            char * time_of_string = ctime(current_time);
-            time_of_string[strlen(time_of_string) - 1] = '\0';
-            fprintf(log, "[%s] ERROR: %s\n", time_of_string, buffer);
+            fprintf(log, "ERROR: %s\n", buffer);
             
         }
         fclose(log);      
@@ -99,16 +95,17 @@ void Error(char *message)
     if (len > MAX_MSG_SIZE) 
         return;
 
-    printf("Send\n");
-    mq_send(entry_pointer, message, MAX_MSG_SIZE, 0);
+    int ready;
+    ready = mq_send(message_queue, message, MAX_MSG_SIZE, 0);
+    if (ready == -1 && errno == 11) 
+    {
+        printf("Lost one record of logger\n");
+    }
     return;
 }
 
 void disposeLogger(mqd_t *queue)
 {
-
-    //  entry_pointer
-    mq_close(entry_pointer);
     //  logger
     mq_close((*queue));
     mq_unlink(QUEUE_NAME);
