@@ -17,6 +17,9 @@ int run_process(struct process *pr) {
 		sleep(50);
 	}
 
+	// TODO: select for sets + smtp_handler (base_version)
+	// TODO: states in smtp_handler (mid_version)
+
 	/*while (1) {
     
     	printf("asd\n");

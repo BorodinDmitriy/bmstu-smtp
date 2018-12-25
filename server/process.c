@@ -8,6 +8,7 @@ struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds) {
     result->max_fd = -1;
     FD_ZERO(&(result->socket_set));
     printf("serv_sock = %d\n", socket_fds);
+    // TODO: insert sockets into socket_sets
 
     return result;
 }
@@ -37,7 +38,7 @@ struct process * init_processes(int count, struct fd_linked_list *socket_fds) {
         		//smtp_handler(sock_fd, getpid());
         	default: // процесс - родитель
         		//return init_process(getpid(),socket_fds);
-                return NULL;
+                continue;
     	}
 	}
 }
