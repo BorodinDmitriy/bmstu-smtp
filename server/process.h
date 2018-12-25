@@ -16,7 +16,10 @@ struct mesg_buffer {
 struct process {
 	pid_t pid;
 
-	fd_set socket_set;
+	fd_set socket_set; // reader_set
+	fd_set writer_set; // writer_set
+	fd_set exception_set; // exception_set
+	
 	int max_fd;
 	struct client_socket_list *sock_list;
 };

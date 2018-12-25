@@ -7,8 +7,29 @@ struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds) {
     result->sock_list = NULL;
     result->max_fd = -1;
     FD_ZERO(&(result->socket_set));
+    FD_ZERO(&(result->writer_set));
+    FD_ZERO(&(result->exception_set));
+
     printf("serv_sock = %d\n", socket_fds);
-    // TODO: insert sockets into socket_sets
+    struct fd_linked_list *p;
+    for (p = socket_fds; p != NULL; p = p->next) {
+        printf("%d\n", p->fd);
+
+        struct client_socket cl_sock;
+        cl_sock.fd = p->fd;
+        cl_sock.buffer = (char *) malloc(SERVER_BUFFER_SIZE);
+        cl_sock.state = 0;
+
+        // добавить новый сокет в список сокетов процесса
+        struct client_socket_list *new_socket = malloc(sizeof(struct client_socket_list));
+        new_socket->c_sock = cl_sock;
+        new_socket->next = result->sock_list;
+        result->sock_list = new_socket;
+
+        if (result->max_fd < cl_sock.fd) {
+            result->max_fd = cl_sock.fd;
+        }
+    }
 
     return result;
 }
