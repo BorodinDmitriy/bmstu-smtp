@@ -9,7 +9,7 @@ int server_init() {
 	serv.socket_fd_max = -1;
 	serv.addrlen = sizeof(serv.address);
 	serv.socket_fds = init_sockets();
-	serv.prcs = init_processes(1);
+	serv.prcs = init_processes(1, serv.socket_fds);
 	if (serv.socket_fds == NULL) {
 		printf("SERVER INIT FAILED\n");
 		serv.state = SERVER_FAIL_INIT;
@@ -34,6 +34,7 @@ int server_run() {
 	// и создающий по процессу на каждое соединение
 	while (1) {
 		printf("SERVER_WORKS\n");
+		printf("serv_sock = %d\n", serv.socket_fds);
 		sleep(100);
 		/*fd_set socket_set;
 		FD_ZERO(&socket_set);

@@ -21,7 +21,7 @@ struct process {
 	struct client_socket_list *sock_list;
 };
 
-struct process * init_process(pid_t pid);
-struct process * init_processes(int count);
+struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds);
+struct process * init_processes(int count, struct fd_linked_list *socket_fds) ;
 
 #endif
