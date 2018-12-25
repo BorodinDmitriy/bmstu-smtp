@@ -3,11 +3,20 @@
 //==========================//
 //    PRIVATE ATTRIBUTES    //
 //==========================//
-static struct Controller Manager;
+static struct worker_pool Workers;
+static pthread_t logger;
+static bool worked;
 
 //==========================//
 //  DEFINES PRIVATE METHOD  //
 //==========================//
+int createWorker(int index);
+void destroyWorker(int index);
+
+void destroyController();
+void watchMailDirLoop();
+void signalHandler(int signum);
+int initSignalHandler();
 
 //==========================//
 //      PUBLIC METHODS      //
@@ -15,147 +24,218 @@ static struct Controller Manager;
 
 void InitController()
 {
-    Manager.currentState = STATE_START_INIT;
-    Manager.worked = false;
-
-    FD_ZERO(&Manager.writers.set);
-    Manager.writers.count = 0;
-    Manager.writers.list = NULL;
-
-    FD_ZERO(&Manager.readers.set);
-    Manager.readers.count = 0;
-    Manager.readers.list = NULL;
-
-    FD_ZERO(&Manager.handlers.set);
-    Manager.handlers.count = 0;
-    Manager.handlers.list = NULL;
-
-    Manager.currentState = STATE_FINISH_INIT;
-    return;
-}
-
-void Run()
-{
-    Manager.currentState = STATE_START_WORK;
-    Manager.worked = true;
-
-    int readyFD = -1;
-    int currentFD = 0;
-    int processedFD = 0;
-
-    struct FileDescList *listViewer;
-    struct FileDesc tempFD;
-
-    struct timespec timer_spec;
-    timer_spec.tv_sec = 10;
-    timer_spec.tv_nsec = 0;
-
-    fd_set readers_temp;
-    fd_set writers_temp;
-    fd_set handlers_temp;
-
-    while (Manager.worked)
+    printf("Init main thread\n");
+    printf("Init logger...");
+    int err;
+    err = pthread_create(&logger, NULL, InitLogger, NULL);
+    if (err) 
     {
-        int fd_count = Manager.writers.count + Manager.readers.count + Manager.handlers.count + 1;
-        readers_temp = Manager.readers.set;
-        writers_temp = Manager.writers.set;
-        handlers_temp = Manager.handlers.set;
-
-        readyFD = pselect(fd_count, &readers_temp, &writers_temp, &handlers_temp, &timer_spec, NULL);
-
-        if (readyFD == 0)
-        {
-            //  fake 
-            Manager.readers.list = (struct FileDescList *)calloc(1, sizeof(struct FileDescList));
-            if (Manager.readers.list == NULL)
-            {
-                printf("Fail to create element on list\r\n");
-            }
-
-            int state = SmtpInitSocket("127.0.0.1", &Manager.readers.list->fd);
-            if (state) 
-            {
-                printf("Socket not create\r\n");
-                free(Manager.readers.list);
-            }
-            state = GiveControlToSocket(&Manager.readers.list->fd);
-            continue;
-        }
-
-        if (readyFD < 0)
-        {
-            Manager.currentState = STATE_FAIL_WORK;
-            printf("\nFAIL TO PSELECT\n");
-            exit(-1);
-        }
-
-        processedFD = 0;
-        listViewer = Manager.readers.list;
-        //  check readers
-        for (int i = 0; i < Manager.readers.count; i++)
-        {
-            //  found ready file description
-            if (FD_ISSET(currentFD, &readers_temp))
-            {
-                //  remove current FD from fd_set
-                FD_CLR(currentFD, &Manager.readers.set);
-
-                tempFD = listViewer->fd;
-                int fdState = 0;
-                if (tempFD.type == SOCKET_FD)
-                {
-                    fdState = GiveControlToSocket(&tempFD);
-                }
-                else 
-                {
-                    fdState = GiveControlToFile(&tempFD);
-                }
-
-                fdState++;
-
-                processedFD++;
-                if (processedFD == readyFD)
-                {
-                    break;
-                }
-            }
-        }
-
-        //     if ()
-        //     {
-        //         //  client ready to read from file
-        //         struct Mail letter = ReadDataFromFile(0);
-        //         SendMail(readyFD, letter);
-        //         RevokeLetter(letter);
-        //         continue;
-        //     }
-
-        //     if (FD_ISSET(readyFD, &Manager.writers.set))
-        //     {
-        //         //  client ready to send data
-        //         continue;
-        //     }
-
-        //     if (FD_ISSET(readyFD, &Manager.handlers.set))
-        //     {
-        //         //  client receive interrupt
-        //         break;
-        //     }
-        // }
+        Dispose();
+        printf("Fail\n\tFail to init logger. Exit");
+        exit(err);
     }
-}
+    printf("Success\n");
+    printf("Init workers pool...");
+    Workers.pool = (struct worker **)calloc(COUNT_THREADS - 1, sizeof(struct worker *));
+    if (Workers.pool == NULL)
+    {
+        printf("Fail\n\t Pool don't create.\n Exit");
+        exit(-1);
+    }
+    printf("Success\n");
 
-//  Stop work method
-void Stop()
-{
+    //  1-main, 1 logger
+    Workers.count = COUNT_THREADS - 2;
+    if (Workers.count <= 0)
+    {
+        Workers.count = 0;
+    }
+
+    for (int I = 0; I < Workers.count; I++)
+    {
+        err = createWorker(I);
+        if (err)
+        {
+            printf("Fail\n\t Worker %d don't create.", I);
+            Dispose();
+            return;
+        }
+        printf("\n\tWorker %d is running\n", I);
+    }
+
+    printf("\nInit workers...Success\n");
+    printf("Init FileViewer...");
+    err = InitFileViewer();
+    if (err != 0)
+    {
+        printf("Fail\n\tErr: %d", err);
+        Dispose();
+        return;
+    }
+    printf("Success\n");
+
+    printf("Init signal catcher...");
+    err = initSignalHandler();
+    if (err != 0)
+    {
+        printf("Fail\n\tErr: %d", err);
+    }
+    printf("Success\n");
+    worked = true;
+    watchMailDirLoop();
+    return;
 }
 
 //  Dispose resource
 void Dispose()
 {
-    DisposeFileViewer();
+    printf("Disposing.... \n");
+    if (!Workers.pool)
+    {
+        return;
+    }
+
+    for (int I = 0; I < Workers.count; I++)
+    {
+        printf("\tWait worker %d\n", I);
+        Workers.pool[I]->worked = false;
+        pthread_kill(Workers.pool[I]->thread, SIGUSR1);
+        pthread_join(Workers.pool[I]->thread, NULL);
+        destroyWorker(I);
+        printf("\tWorker %d closing\n", I);
+    }
+
+    free(Workers.pool);
+    // DisposeFileViewer();
+
+    printf("Success");
+    return;
+}
+
+struct worker_pool *GetWorkerPool()
+{
+    return &Workers;
+}
+
+int MostFreeWorker()
+{
+    int min = Workers.pool[0]->count_task;
+    int res = 0;
+    for (int I = 1; I < Workers.count; I++)
+    {
+        if (min > Workers.pool[I]->count_task)
+        {
+            min = Workers.pool[I]->count_task;
+            res = I;
+        }
+    }
+
+    return res;
+}
+
+int DelegateTaskToWorker(int workerIndex, struct worker_task *task)
+{
+    if (workerIndex > Workers.count)
+    {
+        return -1;
+    }
+
+    sem_wait(&Workers.pool[workerIndex]->lock);
+    struct worker_task *pointer = Workers.pool[workerIndex]->tasks;
+    while (pointer && pointer->next != NULL)
+    {
+        pointer = pointer->next;
+    }
+
+    if (pointer != NULL)
+    {
+        pointer->next = task;
+    }
+    else
+    {
+        Workers.pool[workerIndex]->tasks = task;
+    }
+
+    Workers.pool[workerIndex]->count_task++;
+
+    sem_post(&Workers.pool[workerIndex]->lock);
+    return 0;
 }
 
 //==========================//
 //      PRIVATE METHODS     //
 //==========================//
+
+int createWorker(int index)
+{
+    int state = 0;
+    Workers.pool[index] = (struct worker *)malloc(sizeof(struct worker));
+    if (!Workers.pool[index])
+    {
+        printf("\nFail to allocate memory for record of worker");
+        return -1;
+    }
+    Workers.pool[index]->tasks = NULL;
+    Workers.pool[index]->workerId = index;
+    Workers.pool[index]->count_task = 0;
+    Workers.pool[index]->worked = true;
+    state = sem_init(&(Workers.pool[index]->lock), 0, 1);
+    if (state)
+    {
+        printf("Fail to init semaphore of worker %d tasks", index);
+        return -2;
+    }
+
+    state = pthread_create(&Workers.pool[index]->thread, NULL, InitWorker, (void *)Workers.pool[index]);
+    if (state)
+    {
+        printf("Fail to create thread of worker %d\n", index);
+        return -3;
+    }
+
+    return 0;
+}
+
+void destroyWorker(int index)
+{
+    free(Workers.pool[index]);
+    return;
+}
+
+void watchMailDirLoop()
+{
+
+    printf("Start loop to search new files for send\n");
+    while (worked)
+    {
+        printf("loop start\n");
+        SearchNewFiles();
+        printf("loop ended\n");
+        sleep(30);
+    }
+    Dispose();
+    printf("CANCEL PROGRAMM\n");
+    return;
+}
+
+int initSignalHandler()
+{
+    struct sigaction actions;
+    memset(&actions, 0, sizeof(actions));
+    actions.sa_handler = signalHandler;
+
+    sigemptyset(&actions.sa_mask);
+    sigaddset(&actions.sa_mask, SIGINT);
+    sigaction(SIGINT, &actions, NULL);
+    return 0;
+}
+
+void signalHandler(int signum)
+{
+    if (signum == SIGINT)
+    {
+        printf("\nCatch SIGINT\n");
+        worked = false;
+    }
+    return;
+}
