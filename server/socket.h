@@ -6,6 +6,10 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#define SOCKET_STATE_DEFAULT 7
+#define SOCKET_STATE_SEND_STUB 8
+#define SOCKET_STATE_RECEIVE_DATA 9
+
 // список файловых дескрипторов сокетов
 struct fd_linked_list {
 	int fd;

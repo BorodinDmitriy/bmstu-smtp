@@ -46,6 +46,7 @@ int server_run() {
 		// проходим по списку сокетов в поисках установленного соединения
 		for (p = serv.socket_fds; p != NULL; p = p->next) {
 			if (FD_ISSET(p->fd, &socket_set)) {
+
 				// принимаем соединение
     			new_socket = accept(p->fd, (struct sockaddr *) &(serv.address),  (socklen_t*) &(serv.addrlen));
     			if (new_socket < 0) 
@@ -53,6 +54,20 @@ int server_run() {
         			printf("accept() failed"); 
         			continue;
     			} 
+
+    			FD_CLR(p->fd, &socket_set);
+    			int file_flags = fcntl(new_socket, F_GETFL, 0);
+    			if (file_flags == -1)
+    			{
+        			printf("Fail to receive socket flags");
+        			continue;
+    			}
+
+    			if (fcntl(new_socket, F_SETFL, file_flags | O_NONBLOCK))
+    			{	
+        			printf("Fail to set flag 'O_NONBLOCK' for socket");
+        			continue;
+    			}
 
     			// соединение принято - можно делать обработку smtp
     			int *sock_fd = (int *) malloc(sizeof(int));

@@ -34,7 +34,15 @@ struct process * init_processes(int count) {
         		printf("child process forked with pid: %d\n", getpid());
         		printf("parent pid: %d\n", getppid());
         		struct process *pr = init_process(getpid());
-        		run_process(pr);
+        		while (1) {
+        			int a = run_process(pr);
+        			printf("rr\n");
+
+        			if (a > 1) {
+        				break;
+        			}
+        		}
+        		
         		//smtp_handler(sock_fd, getpid());
         	default: // процесс - родитель
         		return init_process(getpid());
