@@ -15,9 +15,6 @@ struct mesg_buffer {
 
 struct process {
 	pid_t pid;
-	char key_type[6];
-	key_t key; 
-    int msgid; 
 
 	fd_set socket_set;
 	int max_fd;

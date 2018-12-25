@@ -13,35 +13,11 @@ int run_process(struct process *pr) {
 	char smtp_stub[SERVER_BUFFER_SIZE] = "Hi, you've come to smtp server";
 
 	while (1) {
-		// msgrcv to receive message 
-    	if (msgrcv(pr->msgid, &message, sizeof(message), 1, IPC_NOWAIT) >= 0) {
-    		// display the message 
-    		printf("Data Received is : %d \n", message.fd); 
+		printf("PROCESS_RUNS\n");
+		sleep(50);
+	}
 
-    		struct client_socket cl_sock;
-    		cl_sock.fd = message.fd;
-    		cl_sock.buffer = (char *) malloc(SERVER_BUFFER_SIZE);
-    		cl_sock.state = SOCKET_STATE_SEND_STUB;
-
-    		// добавить новый сокет в список сокетов процесса
-    		struct client_socket_list *new_socket = malloc(sizeof(struct client_socket_list));
-    		new_socket->c_sock = cl_sock;
-    		new_socket->next = pr->sock_list;
-    		pr->sock_list = new_socket;
-
-    		if (pr->max_fd < cl_sock.fd) {
-    			pr->max_fd = cl_sock.fd;
-    		}
-
-    		/*struct client_socket_list *p;
-    		for (p = pr->sock_list; p != NULL; p = p->next) {
-    			printf("%d\n", p->c_sock.fd);
-    		}*/
-    		/*sprintf(buffer_output, "%s\n", smtp_stub);
-			printf("%s\n", smtp_stub);
-			send(cl_sock.fd, buffer_output, strlen(buffer_output), 0);*/
-    	}
-  
+	/*while (1) {
     
     	printf("asd\n");
     	printf("%d\n",pr->sock_list->c_sock.fd);
@@ -52,16 +28,6 @@ int run_process(struct process *pr) {
 		int fd = pr->sock_list->c_sock.fd;
 		printf("%d\n", fd);
 		printf("%d\n", pr->max_fd);
-
-		/*fd_set reader_set;
-		fd_set writer_set;
-
-		FD_ZERO(&reader_set);
-		FD_ZERO(&writer_set);
-		FD_SET(fd, &reader_set);
-		FD_SET(fd, &writer_set);
-
-		select(pr->max_fd + 1,  &reader_set, &writer_set, NULL, &tv);*/
 
 
 		if (pr->sock_list != NULL) {
@@ -96,11 +62,8 @@ int run_process(struct process *pr) {
 					switch (p->c_sock.state) {
 						case SOCKET_STATE_SEND_STUB: {
 							sprintf(buffer_output, "%s\n", smtp_stub);
-							//printf("%s\n", smtp_stub);
 							if (send(p->c_sock.fd, buffer_output, strlen(buffer_output), 0) < 1) {
 								printf("send_stub");
-								//FD_CLR(p->c_sock.fd, &(pr->socket_set));
-								//close(p->c_sock.fd);
 								return 0;
 							} else {
 								printf("send_stub_ok");
@@ -116,16 +79,10 @@ int run_process(struct process *pr) {
 								struct client_socket_list *temp = p;
 								p->next = temp->next;
 								free(temp);
-								//FD_CLR(p->c_sock.fd, &(pr->socket_set));
-								//close(p->c_sock.fd);
-								//continue;
 								return 0;
 							}
 							if (received_bytes_count < 0) {
 								printf("problems with socket %d\n", p->c_sock.fd);
-								//FD_CLR(p->c_sock.fd, &(pr->socket_set));
-								//close(p->c_sock.fd);
-								//continue;
 								return 0;
 							}
 							if (received_bytes_count > 0) {
@@ -139,7 +96,7 @@ int run_process(struct process *pr) {
 				p = p->next;
 			}
 		}
-	}
+	}*/
 }
 
 void smtp_handler(int *socket_fd, const int pid) {

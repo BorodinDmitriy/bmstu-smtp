@@ -3,17 +3,7 @@
 struct process * init_process(pid_t pid) {
 	struct process *result = (struct process *) malloc(sizeof(struct process));
 	result->pid = pid;
-	sprintf(result->key_type, "%d", (int)pid);
-
-	key_t k;
-	// ftok to generate unique key 
-    k = ftok(result->key_type, (int)pid);
-    // msgget creates a message queue 
-    // and returns identifier 
-    int msgid = msgget(k, 0666 | IPC_CREAT); 
-
-    result->key = k;
-    result->msgid = msgid;
+	
     result->sock_list = NULL;
     result->max_fd = -1;
     FD_ZERO(&(result->socket_set));
@@ -36,7 +26,7 @@ struct process * init_processes(int count) {
         		struct process *pr = init_process(getpid());
         		while (1) {
         			int a = run_process(pr);
-        			printf("rr\n");
+        			//printf("rr\n");
 
         			if (a > 1) {
         				break;

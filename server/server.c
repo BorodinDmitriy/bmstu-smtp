@@ -33,7 +33,9 @@ int server_run() {
 	// вечно слушающий цикл в поисках новых соединений
 	// и создающий по процессу на каждое соединение
 	while (1) {
-		fd_set socket_set;
+		printf("SERVER_WORKS\n");
+		sleep(100);
+		/*fd_set socket_set;
 		FD_ZERO(&socket_set);
 
 		for (p = serv.socket_fds; p != NULL; p = p->next) {
@@ -77,7 +79,6 @@ int server_run() {
     			message.fd = new_socket;
     			message.mesg_type = 1;
 
-    			msgsnd(serv.prcs->msgid, &message, sizeof(message), 0); 
 
     			// создание дочернего процесса, где будет происходить обработка
     			/*pid_t pid;
@@ -92,8 +93,8 @@ int server_run() {
         			default: // процесс - родитель
         				continue;
     			}*/
-			}
-		}
+			//}
+		//}
 	}
 	serv.state = SERVER_FINISH_WORK;
 	return serv.state;
