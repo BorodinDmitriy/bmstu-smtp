@@ -12,9 +12,77 @@ int run_process(struct process *pr) {
 
 	char smtp_stub[SERVER_BUFFER_SIZE] = "Hi, you've come to smtp server";
 
+	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
+
 	while (1) {
 		printf("PROCESS_RUNS\n");
-		sleep(50);
+		//sleep(50);
+		struct timeval tv; // timeval используется внутри select для выхода из ожидания по таймауту
+		tv.tv_sec = 15;
+		tv.tv_usec = 0;
+		printf("sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
+		if (pr->sock_list != NULL) {
+			// first add to sets all the sockets in the process' socket list
+			struct client_socket_list *p;
+    		for (p = pr->sock_list; p != NULL; p = p->next) {
+    			FD_SET(p->c_sock.fd, &(pr->socket_set));
+    			FD_SET(p->c_sock.fd, &(pr->writer_set));
+    			FD_SET(p->c_sock.fd, &(pr->exception_set));
+    			printf("socket = %d\n", p->c_sock.fd);
+    		}
+
+    		// вечное ожидание соединения по одному из связанных сокетов
+			select(pr->max_fd + 1, &(pr->socket_set), NULL, NULL, NULL);
+
+			// проходим по списку сокетов в поисках установленного соединения
+			for (p = pr->sock_list; p != NULL; p = p->next) {
+				if (FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
+
+					// принимаем соединение
+    				new_socket = accept(p->c_sock.fd, (struct sockaddr *) &(pr->serv_address),  (socklen_t*) &(pr->addrlen));
+    				printf("new_socket = %d pid = %d\n", new_socket, getpid());
+    				if (new_socket < 0) 
+    				{ 
+        				printf("accept() failed"); 
+        				continue;
+    				} 
+
+    				//FD_CLR(p->c_sock.fd, &(pr->socket_set));
+    				int file_flags = fcntl(new_socket, F_GETFL, 0);
+    				if (file_flags == -1)
+    				{
+        				printf("Fail to receive socket flags");
+        				continue;
+    				}
+
+    				if (fcntl(new_socket, F_SETFL, file_flags | O_NONBLOCK))
+    				{	
+        				printf("Fail to set flag 'O_NONBLOCK' for socket");
+        				continue;
+    				}
+
+    				struct client_socket cl_sock;
+        			cl_sock.fd = new_socket;
+        			cl_sock.buffer = (char *) malloc(SERVER_BUFFER_SIZE);
+        			cl_sock.state = 0;
+
+        			// добавить новый сокет в список сокетов процесса
+        			struct client_socket_list *new_scket = malloc(sizeof(struct client_socket_list));
+        			new_scket->c_sock = cl_sock;
+        			new_scket->next = pr->sock_list;
+        			pr->sock_list = new_scket;
+
+        			if (pr->max_fd < cl_sock.fd) {
+            			pr->max_fd = cl_sock.fd;
+        			}
+
+        			// call smtp_handler for new socket
+        			smtp_handler(&new_socket, getpid());
+        			//FD_SET(p->c_sock.fd, &(pr->socket_set));
+
+				}
+			}
+		}
 	}
 
 	// TODO: select for sets + smtp_handler (base_version)
@@ -206,5 +274,5 @@ void smtp_handler(int *socket_fd, const int pid) {
 	}
 	// обработка команды кончилась - закрываем сокет
 	close(client_socket_fd);
-	kill(pid, SIGTERM);
+	//kill(pid, SIGTERM);
 }

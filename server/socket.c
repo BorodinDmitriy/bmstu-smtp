@@ -86,6 +86,7 @@ struct fd_linked_list * init_sockets(void) {
         	return NULL;
     	} 
 
+    	printf("listener = %d\n", socket_fd);
     	// добавить новый сокет в список сокетов
     	struct fd_linked_list *new_socket = malloc(sizeof(struct fd_linked_list));
     	new_socket->fd = socket_fd;
