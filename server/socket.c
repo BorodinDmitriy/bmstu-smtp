@@ -16,7 +16,7 @@ struct fd_linked_list * init_sockets(void) {
 
 	// инициализируем hints
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;		// пока AF_INET, потом надо сделать AF_UNSPEC для IPv6
+	hints.ai_family = AF_UNSPEC;		// пока AF_INET, потом надо сделать AF_UNSPEC для IPv6
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;	// если не указать, полученные сокеты будут доступны 
 									// только для методов connect, sendmsg и какие-то еще клиентские
@@ -36,7 +36,7 @@ struct fd_linked_list * init_sockets(void) {
 		if (p->ai_family == AF_INET) {
 			addr = &((struct sockaddr_in*)p->ai_addr)->sin_addr; 
 		} else {
-			continue;
+			addr = &((struct sockaddr_in6*)p->ai_addr)->sin6_addr; 
 		}
 
 		// получение ip-адреса в человекочитаемом виде - для связывания
