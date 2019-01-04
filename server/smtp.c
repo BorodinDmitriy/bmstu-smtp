@@ -20,6 +20,103 @@ int run_process(struct process *pr) {
 		struct timeval tv; // timeval используется внутри select для выхода из ожидания по таймауту
 		tv.tv_sec = 15;
 		tv.tv_usec = 0;
+		printf("listeners_list = %p is_null = %d\n",pr->listeners_list, (pr->listeners_list == NULL));
+		if (pr->listeners_list != NULL) {
+			// first add to sets all the sockets in the process' socket list
+			struct client_socket_list *p;
+    		for (p = pr->listeners_list; p != NULL; p = p->next) {
+    			FD_SET(p->c_sock.fd, &(pr->listener_set));
+    			//FD_SET(p->c_sock.fd, &(pr->writer_set));
+    			//FD_SET(p->c_sock.fd, &(pr->exception_set));
+    			printf("socket = %d\n", p->c_sock.fd);
+    		}
+
+    		// вечное ожидание соединения по одному из связанных сокетов
+			select(pr->max_fd + 1, &(pr->listener_set), NULL, NULL, NULL);
+
+			// проходим по списку сокетов в поисках установленного соединения
+			for (p = pr->listeners_list; p != NULL; p = p->next) {
+				if (FD_ISSET(p->c_sock.fd, &(pr->listener_set))) {
+
+					// принимаем соединение
+    				new_socket = accept(p->c_sock.fd, (struct sockaddr *) &(pr->serv_address),  (socklen_t*) &(pr->addrlen));
+    				printf("new_socket = %d pid = %d\n", new_socket, getpid());
+    				if (new_socket < 0) 
+    				{ 
+        				printf("accept() failed"); 
+        				continue;
+    				} 
+
+    				//FD_CLR(p->c_sock.fd, &(pr->socket_set));
+    				int file_flags = fcntl(new_socket, F_GETFL, 0);
+    				if (file_flags == -1)
+    				{
+        				printf("Fail to receive socket flags");
+        				continue;
+    				}
+
+    				if (fcntl(new_socket, F_SETFL, file_flags | O_NONBLOCK))
+    				{	
+        				printf("Fail to set flag 'O_NONBLOCK' for socket");
+        				continue;
+    				}
+
+    				struct client_socket cl_sock;
+        			cl_sock.fd = new_socket;
+        			cl_sock.buffer = (char *) malloc(SERVER_BUFFER_SIZE);
+        			cl_sock.state = 0;
+
+        			// добавить новый сокет в список сокетов процесса
+        			struct client_socket_list *new_scket = malloc(sizeof(struct client_socket_list));
+        			new_scket->c_sock = cl_sock;
+        			new_scket->next = pr->sock_list;
+        			pr->sock_list = new_scket;
+
+        			if (pr->max_fd < cl_sock.fd) {
+            			pr->max_fd = cl_sock.fd;
+        			}
+
+        			// call smtp_handler for new socket
+        			//new_smtp_handler(&new_socket, getpid());
+        			//FD_SET(p->c_sock.fd, &(pr->socket_set));
+
+				}
+			}
+		}
+
+		// end accept_connection
+		printf("sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
+		if (pr->sock_list != NULL) {
+			struct client_socket_list *p;
+    		for (p = pr->sock_list; p != NULL; p = p->next) {
+    			FD_SET(p->c_sock.fd, &(pr->socket_set));
+    			//FD_SET(p->c_sock.fd, &(pr->writer_set));
+    			//FD_SET(p->c_sock.fd, &(pr->exception_set));
+    			printf("client_socket = %d\n", p->c_sock.fd);
+    		}
+
+			select(pr->max_fd + 1, &(pr->socket_set), NULL, NULL, &tv);
+
+			for (p = pr->sock_list; p != NULL; p = p->next) {
+				if (FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
+
+        			// call smtp_handler for socket
+        			int new_sock = (p->c_sock.fd);
+        			smtp_handler(&new_sock, getpid());
+        			//FD_SET(p->c_sock.fd, &(pr->socket_set));
+
+				}
+			}
+		}
+	}
+	/*
+	// old_version
+	while (1) {
+		printf("PROCESS_RUNS\n");
+		//sleep(50);
+		struct timeval tv; // timeval используется внутри select для выхода из ожидания по таймауту
+		tv.tv_sec = 15;
+		tv.tv_usec = 0;
 		printf("sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
 		if (pr->sock_list != NULL) {
 			// first add to sets all the sockets in the process' socket list
@@ -77,13 +174,15 @@ int run_process(struct process *pr) {
         			}
 
         			// call smtp_handler for new socket
-        			smtp_handler(&new_socket, getpid());
+        			new_smtp_handler(&new_socket, getpid());
         			//FD_SET(p->c_sock.fd, &(pr->socket_set));
 
 				}
 			}
 		}
 	}
+	// end old_version
+	*/
 
 	// TODO: select for sets + smtp_handler (base_version)
 	// TODO: states in smtp_handler (mid_version)
@@ -170,8 +269,26 @@ int run_process(struct process *pr) {
 	}*/
 }
 
-void smtp_handler(int *socket_fd, const int pid) {
+void new_smtp_handler(int *socket_fd, const int pid) {
 	printf("SMTP handler start");
+
+	int client_socket_fd = *socket_fd;		// клентский сокет, полученный после select()
+	int received_bytes_count;				// число прочитанных байт
+	// int i, j;
+	char buffer[SERVER_BUFFER_SIZE];		// буфер, в который считываем
+	char buffer_output[SERVER_BUFFER_SIZE];	// выходной буфер для записи ответа
+
+	char smtp_stub[SERVER_BUFFER_SIZE] = "Hi, you've come to smtp server";
+
+	sprintf(buffer_output, "%s\n", smtp_stub);
+	printf("%s\n", smtp_stub);
+	if (send(client_socket_fd, buffer_output, strlen(buffer_output), 0) < 0) {
+		return;
+	}
+}
+
+void smtp_handler(int *socket_fd, const int pid) {
+	printf("SMTP handler begin");
 
 	int client_socket_fd = *socket_fd;		// клентский сокет, полученный после select()
 	int received_bytes_count;				// число прочитанных байт

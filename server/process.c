@@ -5,9 +5,11 @@ struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, stru
 	result->pid = pid;
 	
     result->sock_list = NULL;
+    result->listeners_list = NULL;
     result->max_fd = -1;
     result->serv_address = serv_address;
     result->addrlen = sizeof(serv_address);
+    FD_ZERO(&(result->listener_set));
     FD_ZERO(&(result->socket_set));
     FD_ZERO(&(result->writer_set));
     FD_ZERO(&(result->exception_set));
@@ -25,8 +27,8 @@ struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, stru
         // добавить новый сокет в список сокетов процесса
         struct client_socket_list *new_socket = malloc(sizeof(struct client_socket_list));
         new_socket->c_sock = cl_sock;
-        new_socket->next = result->sock_list;
-        result->sock_list = new_socket;
+        new_socket->next = result->listeners_list;
+        result->listeners_list = new_socket;
 
         if (result->max_fd < cl_sock.fd) {
             result->max_fd = cl_sock.fd;

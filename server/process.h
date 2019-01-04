@@ -18,11 +18,13 @@ struct process {
 	struct sockaddr_in serv_address;
 	size_t addrlen;
 
+	fd_set listener_set; // reader_set
 	fd_set socket_set; // reader_set
 	fd_set writer_set; // writer_set
 	fd_set exception_set; // exception_set
 
 	int max_fd;
+	struct client_socket_list *listeners_list;
 	struct client_socket_list *sock_list;
 };
 

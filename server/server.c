@@ -2,6 +2,8 @@
 
 static struct server serv;
 
+void handle_signal(int signal);
+
 int server_init() {
 	struct fd_linked_list *p;	
 
