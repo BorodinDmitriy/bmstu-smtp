@@ -28,4 +28,5 @@ struct client_socket_list {
 };
 
 struct fd_linked_list * init_sockets(void);
+struct fd_linked_list * init_sockets_using_clients(int client_number);
 #endif
