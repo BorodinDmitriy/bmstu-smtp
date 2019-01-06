@@ -12,7 +12,7 @@ int server_init() {
 	serv.addrlen = sizeof(serv.address);
 	serv.socket_fds = init_sockets();
 	//serv.socket_fds = init_sockets_using_clients(10);
-	serv.prcs = init_processes(2, serv.socket_fds, serv.address);
+	serv.prcs = init_processes(1, serv.socket_fds, serv.address);
 	if (serv.socket_fds == NULL) {
 		printf("SERVER INIT FAILED\n");
 		serv.state = SERVER_FAIL_INIT;

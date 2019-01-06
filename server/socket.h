@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include "message.h"
 
 #define SOCKET_STATE_DEFAULT 7
 #define SOCKET_STATE_SEND_STUB 8
@@ -27,7 +28,10 @@ struct fd_linked_list {
 struct client_socket {
 	int fd;
 	char *buffer;
+	int buffer_offset;
+	int input_message;
 	int state;
+	struct msg *message;
 };
 
 struct client_socket_list {
