@@ -22,7 +22,7 @@ struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, stru
         struct client_socket cl_sock;
         cl_sock.fd = p->fd;
         cl_sock.buffer = (char *) malloc(SERVER_BUFFER_SIZE);
-        cl_sock.state = 0;
+        cl_sock.state = SOCKET_STATE_INIT;
 
         // добавить новый сокет в список сокетов процесса
         struct client_socket_list *new_socket = malloc(sizeof(struct client_socket_list));

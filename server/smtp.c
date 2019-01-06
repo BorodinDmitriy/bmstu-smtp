@@ -64,7 +64,7 @@ int run_process(struct process *pr) {
     				struct client_socket cl_sock;
         			cl_sock.fd = new_socket;
         			cl_sock.buffer = (char *) malloc(SERVER_BUFFER_SIZE);
-        			cl_sock.state = 0;
+        			cl_sock.state = SOCKET_STATE_INIT;
 
         			// добавить новый сокет в список сокетов процесса
         			struct client_socket_list *new_scket = malloc(sizeof(struct client_socket_list));
@@ -285,6 +285,10 @@ void new_smtp_handler(int *socket_fd, const int pid) {
 	if (send(client_socket_fd, buffer_output, strlen(buffer_output), 0) < 0) {
 		return;
 	}
+}
+
+void new_smtp_handler_with_states(struct client_socket *c_sock) {
+
 }
 
 void smtp_handler(int *socket_fd, const int pid) {

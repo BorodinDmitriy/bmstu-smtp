@@ -10,6 +10,14 @@
 #define SOCKET_STATE_SEND_STUB 8
 #define SOCKET_STATE_RECEIVE_DATA 9
 
+#define SOCKET_STATE_INIT 7
+#define SOCKET_STATE_WAIT 8
+#define SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS 9
+#define SOCKET_STATE_RECEPIENTS_SET 10
+#define SOCKET_STATE_WRITING_DATA 11
+#define SOCKET_STATE_DELIVERING 12
+#define SOCKET_STATE_CLOSED 13
+
 // список файловых дескрипторов сокетов
 struct fd_linked_list {
 	int fd;
