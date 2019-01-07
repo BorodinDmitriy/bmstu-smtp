@@ -4,9 +4,6 @@
 //    PRIVATE ATTRIBUTES    //
 //==========================//
 
-static struct domain_record *Dictionary;
-static sem_t lock;
-
 //==========================//
 //  DEFINES PRIVATE METHOD  //
 //==========================//
@@ -19,35 +16,17 @@ int moveLetter(char *from, char *to);
 struct worker_task *createTaskForLetter(char *domain, char *path);
 void destroyTask(struct worker_task *task);
 
-//  Dictionary methods
-void freeDicrionary();
-int addRecordToDictionary(char *domain);
-
 //==========================//
 //      PUBLIC METHODS      //
 //==========================//
 
 int InitFileViewer()
 {
-    Dictionary = NULL;
-    int err;
-    err = sem_init(&lock, 0, 1);
-    if (err != 0)
-    {
-        printf("FileViewer: initialization fail. Exit...");
-        return -1;
-    }
+    return 0;  
 }
 
 void DestroyFileViewer()
-{
-    int err;
-    freeDicrionary();
-    err = sem_destroy(&lock);
-    if (err != 0)
-    {
-        printf("FileViewer: fail to destroy semaphore.");
-    }
+{    
     return;
 }
 
@@ -185,27 +164,6 @@ void SearchNewFiles()
     return;
 }
 
-int FindDomainInDictionary(char *domain)
-{
-    sem_wait(&lock);
-    struct domain_record *pointer = Dictionary;
-    while (pointer != NULL)
-    {
-        if (strcmp(pointer->domain, domain) == 0)
-        {
-            return pointer->workerId;
-        }
-    }
-
-    sem_post(&lock);
-    return -1;
-}
-
-void RemoveDomainRecordFromDictionary(int workerId, char *domain)
-{
-    
-}
-
 //==========================//
 //      PRIVATE METHODS     //
 //==========================//
@@ -253,7 +211,7 @@ void processingLetters(struct files_record *files)
         while (workerId < 0 && tryes < 3)
         {
             //  worker not found
-            workerId = addRecordToDictionary(domain);
+            workerId = addDomainRecordToDictionary(domain);
             tryes++;
         }
 
@@ -387,66 +345,4 @@ int moveLetter(char *from, char *to)
         printf("Fail to move file from %s to %s", from, to);   
     }
     return state;
-}
-
-//  Dictionary section
-int addRecordToDictionary(char *domain)
-{
-    sem_wait(&lock);
-    struct domain_record *pointer = Dictionary;
-
-    while (Dictionary && pointer->next != NULL)
-    {
-        pointer = pointer->next;
-    }
-
-    struct domain_record *new_record = (struct domain_record *)malloc(sizeof(struct domain_record));
-    if (new_record == NULL)
-    {
-        printf("FileView: fail to create new record for dictionary");
-        sem_post(&lock);
-        return -1;
-    }
-
-    int len = strlen(domain) + 1;
-    new_record->domain = (char *)calloc(len, sizeof(char));
-    if (new_record->domain == NULL)
-    {
-        printf("FileView: fail to allocate memory for domain\n");
-        free(new_record);
-        sem_post(&lock);
-        return -1;
-    }
-
-    memset(new_record->domain, '\0', len);
-    strcpy(new_record->domain, domain);
-    new_record->workerId = MostFreeWorker();
-    new_record->next = NULL;
-
-    if (Dictionary == NULL)
-    {    
-        Dictionary = new_record;
-    } 
-    else 
-    {
-        pointer->next = new_record;
-    }
-
-    sem_post(&lock);
-    return 0;
-}
-
-void freeDicrionary()
-{
-    sem_wait(&lock);
-    struct domain_record *pointer = Dictionary;
-    while (pointer != NULL)
-    {
-        pointer = pointer->next;
-        free(Dictionary);
-        Dictionary = pointer;
-    }
-    sem_post(&lock);
-
-    return;
 }
