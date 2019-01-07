@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include "structs.h"
 #include "controller.h"
+#include "logger.h"
 
 void InitWorker(void *my_info);
 
