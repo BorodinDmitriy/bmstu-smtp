@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <semaphore.h>
+#include "dictionary.h"
 #include "structs.h"
 #include "logger.h"
 
@@ -20,6 +21,5 @@ struct files_record
 int InitFileViewer();
 void DestroyFileViewer();
 void SearchNewFiles();
-void RemoveDomainRecordFromDictionary(int workerId, char *domain);
 
 #endif //FILE_VIEWER_H
