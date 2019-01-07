@@ -14,6 +14,7 @@
 #include "file_viewer.h"
 #include "worker.h"
 #include "logger.h"
+#include "dictionary.h"
 
 #define STATE_START_INIT 0
 #define STATE_FINISH_INIT 1
