@@ -2,27 +2,6 @@
 #include "smtp.h"
 #include "process.h"
 
-/*struct client_socket_list * delete_elem(struct client_socket_list *lst, struct client_socket_list *root)
-{
-	struct client_socket_list *temp;
-	temp = root;
-	while (temp->next != lst) // просматриваем список начиная с корня
-	{ // пока не найдем узел, предшествующий lst
-    	temp = temp->next;
-	}
- 	temp->next = lst->next; // переставляем указатель
-  	free(lst); // освобождаем память удаляемого узла
-  	return(temp);
-}
-
-struct client_socket_list * delete_head(struct client_socket_list *root)
-{
-  	struct client_socket_list *temp;
-  	temp = root->next;
-  	free(root); // освобождение памяти текущего корня
-  	return(temp); // новый корень списка
-}*/
-
 int count_list_elems(struct client_socket_list *root) {
 	int result = 0;
 	while (root != NULL) {
