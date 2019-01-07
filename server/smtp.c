@@ -354,10 +354,10 @@ int handle_HELO(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     char* host_ip = ip_to_hostname(inet_ntoa(address->sin_addr));
     if (strcmp(host, host_ip) == 0) {
         sprintf(buffer_output, "%s %s\r\n", HEADER_250_OK, host);
-        printf("HELO S%d: %s", c_sock->fd, buffer_output);
+        printf("Server: %d, HELO: %s", c_sock->fd, buffer_output);
     } else {
         sprintf(buffer_output, "%s %s\r\n", HEADER_252_OK, host);
-        printf("HELO S%d: %s", c_sock->fd, buffer_output);
+        printf("Server: %d, HELO: %s", c_sock->fd, buffer_output);
     }
     free(host);
     send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
@@ -372,11 +372,15 @@ int handle_EHLO(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     
     free(host);
     sprintf(buffer_output, HEADER_250_OK);
-    printf("EHLO S%d: %s", c_sock->fd, buffer_output);
+    printf("Server: %d, EHLO: %s", c_sock->fd, buffer_output);
     send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     c_sock->state = SOCKET_STATE_WAIT;
     return 0;
 }
+/*
+int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
+
+}*/
 
 void smtp_handler(int *socket_fd, const int pid) {
 	printf("SMTP handler begin");
