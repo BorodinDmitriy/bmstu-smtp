@@ -307,10 +307,11 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 			sprintf(buffer_output, HEADER_250_OK_NOOP);
 		} else if (STR_EQUAL(c_sock->buffer, "QUIT")) { 
 			// закрыть соединение
-			sprintf(buffer_output, HEADER_221_OK);
+			return handle_QUIT(c_sock,message_buffer,buffer_output,&address);
+			/*sprintf(buffer_output, HEADER_221_OK);
 			printf("Server: %d, message: %s", c_sock->fd, buffer_output);
 			send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
-			c_sock->state = SOCKET_STATE_CLOSED;
+			c_sock->state = SOCKET_STATE_CLOSED;*/
 			//close(client_socket_fd);
 			//kill(pid, SIGTERM);
 		} else { 
@@ -356,10 +357,15 @@ int handle_EHLO(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     c_sock->state = SOCKET_STATE_WAIT;
     return 0;
 }
-/*
-int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
 
-}*/
+int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
+	sprintf(buffer_output, HEADER_221_OK);
+    printf("Server: %d, QUIT: %s", c_sock->fd, buffer_output);
+    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    c_sock->state = SOCKET_STATE_CLOSED;
+    free(msg_buffer);
+    return 1;
+}
 
 void smtp_handler(int *socket_fd, const int pid) {
 	printf("SMTP handler begin");
