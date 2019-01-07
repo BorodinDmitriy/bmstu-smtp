@@ -9,7 +9,7 @@ void processingTasks(struct worker *worker_context, struct network_controller *m
 void initWorkerSignalHandler(sigset_t *empty, sigset_t *block);
 void shutdownWorker(struct worker *worker_context, struct network_controller *manager);
 struct FileDesc *addNewSocketConnection(struct network_controller *manager, char *domain);
-struct FileDesc *findSocketByDomain(char *domain);
+struct FileDesc *findSocketByDomain(struct network_controller *manager, char *domain);
 
 void handler(int sig);
 
@@ -100,7 +100,7 @@ void run(struct worker *worker_context, struct network_controller manager)
         //  check readers
         for (int i = 0; i < manager.readers.count; i++)
         {
-            currentFD = listViewer->fd.id;
+            currentFD = listViewer->fd->id;
 
             //  found ready file description
             if (FD_ISSET(currentFD, &readers_temp))
@@ -123,7 +123,7 @@ void run(struct worker *worker_context, struct network_controller manager)
         listViewer = manager.socket_list;
         for (int i = 0; i < manager.writers.count; i++)
         {
-            currentFD = listViewer->fd.id;
+            currentFD = listViewer->fd->id;
             if (FD_ISSET(currentFD, &writers_temp))
             {
                 FD_CLR(currentFD, &manager.writers.set);
@@ -143,7 +143,7 @@ void run(struct worker *worker_context, struct network_controller manager)
         listViewer = manager.socket_list;
         for (int i = 0; i < manager.handlers.count; i++)
         {
-            currentFD = listViewer->fd.id;
+            currentFD = listViewer->fd->id;
             if (FD_ISSET(currentFD, &handlers_temp))
             {
                 FD_CLR(currentFD, &manager.handlers.set);
@@ -173,7 +173,7 @@ void processingTasks(struct worker *worker_context, struct network_controller *m
     sem_wait(&worker_context->lock);
     while (worker_task_pointer)
     {
-        socket_pointer = findSocketByDomain(worker_task_pointer->domain);
+        socket_pointer = findSocketByDomain(manager, worker_task_pointer->domain);
         //  if socket with current domain is exist
         if (socket_pointer)
         {
@@ -224,6 +224,153 @@ void shutdownWorker(struct worker *worker_context, struct network_controller *ma
 {
     return;
 }
+
+//======================//
+//  SOCKET POOL TOOLS   //
+//======================//
+
+struct FileDesc *findSocketByDomain(struct network_controller *manager, char *domain)
+{
+    struct FileDescList *pointer = manager->socket_list;
+    struct FileDesc *result = NULL;
+    int state;
+    while (pointer != NULL)
+    {
+        state = strcmp(pointer->fd->domain, domain);
+        if (state == 0)
+        {
+            result = pointer->fd;
+            break;
+        }
+
+        pointer = pointer->next;
+    }
+
+    return result;
+}
+
+struct FileDesc *addNewSocketConnection(struct network_controller *manager, char *domain)
+{
+    int state;
+    struct FileDesc *new_socket_connection = (struct FileDesc *)malloc(sizeof(struct FileDesc));
+    if (!new_socket_connection)
+    {
+        char message[100];
+        memset(message, '\0', 100);
+        sprintf(message, "Worker has problem on allocate memory by new socket connection.");
+        Error(message);
+        return NULL;
+    }
+
+    //  copy domain
+    int len;
+    len = strlen(domain) + 1;
+    new_socket_connection->domain = (char *)calloc(len, sizeof(char));
+    if (!new_socket_connection->domain)
+    {
+        char message[100];
+        memset(message, '\0', 100);
+        sprintf(message, "Worker has problem on allocate memory by socket domain.");
+        Error(message);
+        free(new_socket_connection);
+    }
+    memset(new_socket_connection->domain, '\0', len);
+    strncpy(new_socket_connection->domain, domain, len - 1);
+
+    struct FileDescList *pointer = manager->socket_list;
+    struct FileDescList *new_record = (struct FileDescList *)malloc(sizeof(struct FileDescList));
+    if (!new_record)
+    {
+        char message[100];
+        memset(message, '\0', 100);
+        sprintf(message, "Worker has problem on allocate memory by new record in file desc list.");
+        Error(message);
+        free(new_socket_connection->domain);
+        free(new_socket_connection);
+    }
+
+    new_record->fd = new_socket_connection;
+    new_record->next = NULL;
+
+    if (pointer)
+    {
+        while (pointer->next != NULL)
+        {
+            pointer = pointer->next;
+        }
+        pointer->next = new_record;
+    }
+    else
+    {
+        manager->socket_list = new_record;
+    }
+
+    new_socket_connection->current_state = 0;
+    state = SMTP_Control(new_socket_connection);
+    if (state != 0)
+    {
+        char message[100];
+        memset(message, '\0', 100);
+        sprintf(message, "Worker has problem on preparing socket for new connection by domain(%s)", new_socket_connection->domain);
+        Error(message);
+
+        //  free all allocated fields
+        free(new_record);
+        if (pointer)
+        {
+            pointer->next = NULL;
+        }
+        else
+        {
+            manager->socket_list = NULL;
+        }
+
+        free(new_socket_connection->domain);
+        free(new_socket_connection);
+    }
+
+    return new_socket_connection;
+}
+
+void removeSocketConnectionFromPool(struct network_controller *manager, struct FileDesc *socket_connection)
+{
+    struct FileDescList *pool_pointer = manager->socket_list;
+    struct FileDescList *pool_pointer_prev;
+    while (pool_pointer)
+    {
+        if (pool_pointer->fd->id == socket_connection->id)
+        {
+            pool_pointer_prev->next = pool_pointer->next;
+
+            free(socket_connection->domain);
+            free(socket_connection);
+            free(pool_pointer);
+            break;
+        }
+
+        pool_pointer_prev = pool_pointer;
+        pool_pointer = pool_pointer->next;
+    }
+}
+
+void removeAllSocketConnectionByDomain(struct network_controller *manager)
+{
+    struct FileDescList *pointer = manager->socket_list;
+    while (manager->socket_list)
+    {
+        pointer = manager->socket_list->next;
+        free(manager->socket_list->fd->domain);
+        free(manager->socket_list->fd);
+        free(manager->socket_list);
+        manager->socket_list = pointer;
+    }
+
+    return;
+}
+
+//======================//
+//    SIGNAL FIELD      //
+//======================//
 
 void initWorkerSignalHandler(sigset_t *empty, sigset_t *block)
 {
