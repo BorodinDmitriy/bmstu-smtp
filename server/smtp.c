@@ -317,7 +317,8 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 			//kill(pid, SIGTERM);
 		} else { 
 			// метод не был определен
-			sprintf(buffer_output, HEADER_502_NOT_IMPLEMENTED);
+			//sprintf(buffer_output, HEADER_502_NOT_IMPLEMENTED);
+			handle_NOT_IMPLEMENTED(c_sock,message_buffer,buffer_output,&address);
 		}
 		printf("Server: %d, message: %s", c_sock->fd, buffer_output);
 		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
@@ -371,6 +372,13 @@ int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 int handle_NOOP(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
 	sprintf(buffer_output, HEADER_250_OK_NOOP);
     printf("Server: %d, NOOP: %s", c_sock->fd, buffer_output);
+    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    return 0;
+}
+
+int handle_NOT_IMPLEMENTED(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
+	sprintf(buffer_output, HEADER_502_NOT_IMPLEMENTED);
+    printf("Server: %d, NOT_IMPLEMENTED: %s", c_sock->fd, buffer_output);
     send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     return 0;
 }
