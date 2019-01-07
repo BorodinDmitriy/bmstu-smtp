@@ -25,6 +25,7 @@ int initSignalHandler();
 void InitController()
 {
     printf("Init main thread\n");
+
     printf("Init logger...");
     int err;
     err = pthread_create(&logger, NULL, InitLogger, NULL);
@@ -48,9 +49,10 @@ void InitController()
     Workers.count = COUNT_THREADS - 2;
     if (Workers.count <= 0)
     {
-        Workers.count = 0;
+        Workers.count = 1;
     }
 
+    printf("Workers: %d\n", Workers.count);
     for (int I = 0; I < Workers.count; I++)
     {
         err = createWorker(I);
@@ -60,10 +62,21 @@ void InitController()
             Dispose();
             return;
         }
-        printf("\n\tWorker %d is running\n", I);
+        printf("\tWorker %d is running\n", I);
     }
 
     printf("\nInit workers...Success\n");
+
+    printf("Init dictionary...");
+    err = InitDictionary();
+    if (err != 0)
+    {
+        printf("Fail\n\tErr: %d", err);
+        Dispose();
+        return;
+    }
+    printf("Success\n");
+
     printf("Init FileViewer...");
     err = InitFileViewer();
     if (err != 0)
