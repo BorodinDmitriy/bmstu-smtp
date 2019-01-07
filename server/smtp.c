@@ -180,33 +180,6 @@ int run_process(struct process *pr) {
 				pr->sock_list = delete_elem(pr->sock_list, SOCKET_STATE_CLOSED);
 				after = count_list_elems(pr->sock_list);
 			} while ((before - after) > 0);
-			/*int pos = 0;
-			struct client_socket_list *root;
-			struct client_socket_list *p;
-
-			p = pr->sock_list;
-			root = pr->sock_list;
-
-			while (p != NULL) {
-				if (p->c_sock.state == SOCKET_STATE_CLOSED) {
-					close(p->c_sock.fd);
-					if (pos == 0) {
-						// delete head
-						root = delete_head(root);
-						p = root;
-						pos = 0;
-						printf("delete_head: sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
-					} else {
-						// non-head
-						p = delete_elem(p, root);
-						printf("delete_elem: sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
-					}
-
-				} else {
-					p = p->next;
-					pos++;
-				}
-			}*/
 		}
 
 		printf("sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
