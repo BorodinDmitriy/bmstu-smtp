@@ -22,7 +22,7 @@
 //======================//
 #define SOCKET_FD 0
 #define FILE_FD 1
-#define COUNT_THREADS 4
+#define COUNT_THREADS 2
 
 #define NEW_TASK 0
 #define TASK_IS_LOCK 1
@@ -30,22 +30,20 @@
 #define TASK_COMPLETE 3
 #define TASK_IS_FINISH 4
 
-
-
 struct FileDescSet
 {
     fd_set set;
-    struct FileDescList *list;
     int count;
 };
 
 struct FileDesc
 {
     int id;
-    int type;
+    char *domain;
+    char *mx_record;
     struct sockaddr_in addr;
-    int context;
-    int goal;
+    int current_state;
+    struct worker_task *task_pool;
 };
 
 struct FileDescList
@@ -64,7 +62,7 @@ struct domain_record
 struct worker_pool
 {
     int count;
-    struct worker *pool;
+    struct worker **pool;
 };
 
 struct worker_task 
@@ -72,6 +70,7 @@ struct worker_task
     int state;
     char *path;
     char *domain;
+    struct worker_task *next;
 };
 
 struct worker
@@ -79,15 +78,17 @@ struct worker
     pthread_t thread;
     sem_t lock;
     struct worker_task *tasks;
+    int workerId;
+    int count_task;
+    bool worked;
 };
 
-struct Controller
+struct network_controller
 {
     struct FileDescSet readers;
     struct FileDescSet writers;
     struct FileDescSet handlers;
-    int currentState;
-    bool worked;
+    struct FileDescList *socket_list;    
 };
 
 
