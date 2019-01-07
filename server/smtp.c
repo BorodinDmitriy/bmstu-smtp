@@ -304,7 +304,8 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 			sprintf(buffer_output, HEADER_250_OK_RESET);
 		} else if (STR_EQUAL(c_sock->buffer, "NOOP")) { 
 			// ничего не делать
-			sprintf(buffer_output, HEADER_250_OK_NOOP);
+			// sprintf(buffer_output, HEADER_250_OK_NOOP);
+			handle_NOOP(c_sock,message_buffer,buffer_output,&address);
 		} else if (STR_EQUAL(c_sock->buffer, "QUIT")) { 
 			// закрыть соединение
 			return handle_QUIT(c_sock,message_buffer,buffer_output,&address);
@@ -365,6 +366,13 @@ int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     c_sock->state = SOCKET_STATE_CLOSED;
     free(msg_buffer);
     return 1;
+}
+
+int handle_NOOP(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
+	sprintf(buffer_output, HEADER_250_OK_NOOP);
+    printf("Server: %d, NOOP: %s", c_sock->fd, buffer_output);
+    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    return 0;
 }
 
 void smtp_handler(int *socket_fd, const int pid) {
