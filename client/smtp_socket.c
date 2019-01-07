@@ -17,7 +17,7 @@ int recvCommand(struct FileDesc *fd);
 int GiveControlToSocket(struct FileDesc *fd)
 {
     int state = 0;
-    switch ((*fd).context)
+    switch ((*fd).current_state)
     {
     case START_WORK:
     {
@@ -52,7 +52,6 @@ int SmtpInitSocket(char *domain, struct FileDesc *fd)
     struct FileDesc connection;
 
     connection.id = socket(AF_INET, SOCK_STREAM, 0);
-    connection.type = SOCKET_FD;
 
     int opt_val = 1;
     socklen_t opt_len = sizeof(opt_val);
@@ -96,21 +95,22 @@ int SmtpInitSocket(char *domain, struct FileDesc *fd)
     }
 
     state = connect(connection.id, (struct sockaddr *)&connection.addr, sizeof(connection.addr));
-    if (state < 0) {
+    if (state < 0)
+    {
         printf("Fail connection");
         return state;
     }
 
-    connection.context = START_WORK;
+    connection.current_state = START_WORK;
 
     *fd = connection;
 
     return 0;
 }
 
-int smtpConnection(struct FileDesc fd) 
+int smtpConnection(struct FileDesc fd)
 {
- //   int state = connect(fd.id, &fd.addr, sizeof(.dest));
+    //   int state = connect(fd.id, &fd.addr, sizeof(.dest));
 }
 
 int CloseConnection(struct FileDesc fd)
@@ -290,5 +290,10 @@ int sendHelo(int index, char *address)
 
     printf("\nReceive response from HELO: %s", message);
     free(message);
+    return 0;
+}
+
+int SMTP_Control(struct FileDesc *socket_connection)
+{
     return 0;
 }
