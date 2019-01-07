@@ -78,7 +78,25 @@ struct client_socket_list* delete_elem(struct client_socket_list* curr, int stat
   	return curr;
 }
 
+// -1 - error
+// 0 - timeout
+// else - amount of clients
+int check_clients_by_timeout(struct client_socket_list *clients, int max_fd, struct timeval timeout) {
+	fd_set socket_set;
+	struct client_socket_list *p;
+	int rc;
 
+	FD_ZERO(&socket_set);
+	if (clients != NULL) {
+		for (p = clients; p != NULL; p = p->next) {
+    		FD_SET(p->c_sock.fd, &socket_set);
+    		// printf("client_socket%d = %d SOCKET_STATE = %d\n", getpid(), p->c_sock.fd, p->c_sock.state);
+    	}
+
+    	return select(max_fd + 1, &socket_set, NULL, NULL, &timeout);
+	}
+	return -1;
+}
 
 int run_process(struct process *pr) {
 	struct mesg_buffer message;
@@ -93,12 +111,126 @@ int run_process(struct process *pr) {
 	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
 
 	while (1) {
-		printf("PROCESS_RUNS\n");
+		//printf("PROCESS_RUNS\n");
 		//sleep(50);
 		struct timeval tv; // timeval используется внутри select для выхода из ожидания по таймауту
 		tv.tv_sec = 15;
 		tv.tv_usec = 0;
+
+		// delete all closed sockets
+		if (pr->sock_list != NULL) {
+			int before = 0;
+			int after = 0;
+			do {
+				before = count_list_elems(pr->sock_list);
+				pr->sock_list = delete_elem(pr->sock_list, SOCKET_STATE_CLOSED);
+				after = count_list_elems(pr->sock_list);
+			} while ((before - after) > 0);
+		}
+
+		// add all the sockets to socket list
+		struct client_socket_list *p;
+		int rc;
 		printf("listeners_list = %p is_null = %d\n",pr->listeners_list, (pr->listeners_list == NULL));
+		printf("sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
+
+		FD_ZERO(&(pr->socket_set));
+		// first add listeners
+		if (pr->listeners_list != NULL) {
+			for (p = pr->listeners_list; p != NULL; p = p->next) {
+    			FD_SET(p->c_sock.fd, &(pr->socket_set));
+    			//printf("lisening_socket = %d\n", p->c_sock.fd);
+    		}
+		}
+		// then add client sockets if exist
+		if (pr->sock_list != NULL) {
+			for (p = pr->sock_list; p != NULL; p = p->next) {
+    			FD_SET(p->c_sock.fd, &(pr->socket_set));
+    			printf("client_socket%d = %d SOCKET_STATE = %d\n", getpid(), p->c_sock.fd, p->c_sock.state);
+    		}
+		}
+
+		// now we can use select with timeout
+		rc = select(pr->max_fd + 1, &(pr->socket_set), NULL, NULL, &tv);
+		if (rc == 0) {
+			// no sockets are ready - timeout
+			printf("no sockets are ready - timeout\n");
+			for (p = pr->sock_list; p != NULL; p = p->next) {
+				if (!FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
+					p->c_sock.state = SOCKET_STATE_CLOSED;
+				}
+			}
+		} else {
+			// some sockets are ready
+			// check listeners
+			if (pr->listeners_list != NULL) {
+				// проходим по списку сокетов в поисках установленного соединения
+				for (p = pr->listeners_list; p != NULL; p = p->next) {
+					if (FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
+
+						// принимаем соединение
+    					new_socket = accept(p->c_sock.fd, (struct sockaddr *) &(pr->serv_address),  (socklen_t*) &(pr->addrlen));
+    					printf("new_socket = %d pid = %d\n", new_socket, getpid());
+    					if (new_socket < 0) 
+    					{ 
+        					printf("accept() failed"); 
+        					continue;
+    					} 
+
+    					//FD_CLR(p->c_sock.fd, &(pr->socket_set));
+    					int file_flags = fcntl(new_socket, F_GETFL, 0);
+    					if (file_flags == -1)
+    					{
+        					printf("Fail to receive socket flags");
+        					continue;
+    					}
+
+    					if (fcntl(new_socket, F_SETFL, file_flags | O_NONBLOCK))
+    					{	
+        					printf("Fail to set flag 'O_NONBLOCK' for socket");
+        					continue;
+    					}
+
+    					struct client_socket cl_sock;
+        				cl_sock.fd = new_socket;
+        				cl_sock.buffer = (char *) malloc(SERVER_BUFFER_SIZE);
+        				cl_sock.state = SOCKET_STATE_INIT;
+        				cl_sock.buffer_offset = 0;
+        				cl_sock.message = (struct msg *) malloc(sizeof(struct msg));
+
+        				// добавить новый сокет в список сокетов процесса
+        				struct client_socket_list *new_scket = malloc(sizeof(struct client_socket_list));
+        				new_scket->c_sock = cl_sock;
+        				new_scket->next = pr->sock_list;
+        				pr->sock_list = new_scket;
+
+        				if (pr->max_fd < cl_sock.fd) {
+            				pr->max_fd = cl_sock.fd;
+        				}
+					}
+				}
+			}
+			// end check listeners
+
+			// check clients
+			if (pr->sock_list != NULL) {
+				for (p = pr->sock_list; p != NULL; p = p->next) {
+					if (FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
+
+        				// call smtp_handler for socket
+        				int new_sock = (p->c_sock.fd);
+        				//new_smtp_handler(&new_sock, getpid());
+        				new_smtp_handler_with_states(&(p->c_sock));
+        				//FD_SET(p->c_sock.fd, &(pr->socket_set));
+
+					}
+				}
+			}
+
+			
+		}
+
+		/*printf("listeners_list = %p is_null = %d\n",pr->listeners_list, (pr->listeners_list == NULL));
 		if (pr->listeners_list != NULL) {
 			int rc;
 			// first add to sets all the sockets in the process' socket list
@@ -171,16 +303,7 @@ int run_process(struct process *pr) {
 
 		// end accept_connection
 
-		// delete all closed sockets
-		if (pr->sock_list != NULL) {
-			int before = 0;
-			int after = 0;
-			do {
-				before = count_list_elems(pr->sock_list);
-				pr->sock_list = delete_elem(pr->sock_list, SOCKET_STATE_CLOSED);
-				after = count_list_elems(pr->sock_list);
-			} while ((before - after) > 0);
-		}
+		
 
 		printf("sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
 		if (pr->sock_list != NULL) {
@@ -215,7 +338,7 @@ int run_process(struct process *pr) {
 
 				}
 			}
-		}
+		}*/
 	}
 	/*
 	// old_version
