@@ -48,7 +48,7 @@ struct FileDesc
 
 struct FileDescList
 {
-    struct FileDesc fd;
+    struct FileDesc *fd;
     struct FileDescList *next;
 };
 
