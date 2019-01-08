@@ -298,7 +298,8 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 			sprintf(buffer_output, HEADER_354_CONTINUE);
 		} else if (STR_EQUAL(c_sock->buffer, "RSET")) { 
 			// сброс соединения
-			sprintf(buffer_output, HEADER_250_OK_RESET);
+			handle_RSET(c_sock,message_buffer,buffer_output,&address);
+			// sprintf(buffer_output, HEADER_250_OK_RESET);
 		} else if (STR_EQUAL(c_sock->buffer, "NOOP")) { 
 			// ничего не делать
 			// sprintf(buffer_output, HEADER_250_OK_NOOP);
@@ -391,6 +392,23 @@ int handle_RCPT(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 	}
 
 	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    
+    return 0;
+}
+
+int handle_RSET(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
+	sprintf(buffer_output, HEADER_250_OK_RESET);
+    printf("Server: %d, RSET: %s", c_sock->fd, buffer_output);
+    free(c_sock->message->from);
+    c_sock->message->from = NULL;
+    int i = 0;
+    for (i = 0; i < c_sock->message->recepients_num - 1; i++) {
+    	free(c_sock->message->to[i]);
+    	c_sock->message->to[i] = NULL;
+    }
+    c_sock->message->recepients_num = 0;
+    c_sock->state = SOCKET_STATE_WAIT;
+    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     
     return 0;
 }
