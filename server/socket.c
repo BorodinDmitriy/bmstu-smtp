@@ -175,3 +175,24 @@ struct fd_linked_list * init_sockets_using_clients(int client_number) {
 
 	return result;
 }
+
+struct client_socket init_client_socket(int fd, int buffer_size, int state, int max_recepients, int needs_message) {
+	struct client_socket result;
+
+	result.fd = fd;
+	result.buffer = NULL;
+	if (buffer_size > 0) {
+		result.buffer = malloc(buffer_size * sizeof(int));
+	}
+	result.state = state;
+	result.buffer_offset = 0;
+	result.message = NULL;
+	if (needs_message) {
+		result.message = malloc(sizeof(struct msg));
+		result.message->to = malloc(max_recepients * sizeof(char*));
+		result.message->from = NULL;
+		result.message->body = NULL;
+		result.message->recepients_num = 0;
+	}
+    return result;
+}

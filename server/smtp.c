@@ -170,12 +170,12 @@ int run_process(struct process *pr) {
         					continue;
     					}
 
-    					struct client_socket cl_sock;
-        				cl_sock.fd = new_socket;
+    					struct client_socket cl_sock = init_client_socket(new_socket, SERVER_BUFFER_SIZE, SOCKET_STATE_INIT, SERVER_MAX_RECIPIENTS, 1);
+        				/*cl_sock.fd = new_socket;
         				cl_sock.buffer = (char *) malloc(SERVER_BUFFER_SIZE);
         				cl_sock.state = SOCKET_STATE_INIT;
         				cl_sock.buffer_offset = 0;
-        				cl_sock.message = (struct msg *) malloc(sizeof(struct msg));
+        				cl_sock.message = (struct msg *) malloc(sizeof(struct msg));*/
 
         				// добавить новый сокет в список сокетов процесса
         				struct client_socket_list *new_scket = malloc(sizeof(struct client_socket_list));

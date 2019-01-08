@@ -41,4 +41,5 @@ struct client_socket_list {
 
 struct fd_linked_list * init_sockets(void);
 struct fd_linked_list * init_sockets_using_clients(int client_number);
+struct client_socket init_client_socket(int fd, int buffer_size, int state, int max_recepients, int needs_message);
 #endif

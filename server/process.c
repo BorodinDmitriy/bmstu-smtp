@@ -19,12 +19,7 @@ struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, stru
     for (p = socket_fds; p != NULL; p = p->next) {
         printf("%d\n", p->fd);
 
-        struct client_socket cl_sock;
-        cl_sock.fd = p->fd;
-        cl_sock.buffer = NULL;
-        cl_sock.state = SOCKET_STATE_WAIT;
-        cl_sock.buffer_offset = 0;
-        cl_sock.message = NULL;
+        struct client_socket cl_sock = init_client_socket(p->fd, 0, SOCKET_STATE_WAIT, SERVER_MAX_RECIPIENTS, 0);
 
         // добавить новый сокет в список сокетов процесса
         struct client_socket_list *new_socket = malloc(sizeof(struct client_socket_list));
