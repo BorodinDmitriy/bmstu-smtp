@@ -38,6 +38,7 @@
 #define HEADER_250_OK_RESET "250 Ok reset\r\n"
 #define HEADER_252_OK "252 Ok\r\n"
 #define HEADER_354_CONTINUE "354 Continue\r\n"
+#define HEADER_450_MAILBOX_UNAVAILABLE "450 Requested mail action not taken: mailbox unavailable\r\n"
 #define HEADER_502_NOT_IMPLEMENTED "502 Command Not Implemented\r\n"
 
 

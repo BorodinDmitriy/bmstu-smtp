@@ -287,7 +287,8 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 			handle_EHLO(c_sock,message_buffer,buffer_output,&address);
 		} else if (STR_EQUAL(c_sock->buffer, "MAIL")) { 
 			// получено новое письмо от
-			sprintf(buffer_output, HEADER_250_OK);
+			//sprintf(buffer_output, HEADER_250_OK);
+			handle_MAIL(c_sock,message_buffer,buffer_output,&address);
 		} else if (STR_EQUAL(c_sock->buffer, "RCPT")) { 
 			// письмо направлено ... 
 			sprintf(buffer_output, HEADER_250_OK_RECIPIENT);
@@ -356,7 +357,17 @@ int handle_EHLO(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 }
 
 int handle_MAIL(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
-	//c_sock->message.from = get_mail(message_buffer);
+	c_sock->message->from = get_mail(msg_buffer);
+	if (strcmp(c_sock->message->from, "") != 0) {
+		sprintf(buffer_output, HEADER_250_OK);
+    	printf("Server: %d, MAIL: %s %s", c_sock->fd, c_sock->message->from, buffer_output);
+	} else {
+		sprintf(buffer_output, HEADER_450_MAILBOX_UNAVAILABLE);
+    	printf("Server: %d, MAIL: %s", c_sock->fd, buffer_output);
+	}
+	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    c_sock->state = SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS;
+    return 0;
 }
 
 int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
