@@ -462,16 +462,9 @@ int handle_TEXT(struct client_socket *c_sock, char buffer_output[],char* maildir
 	printf("Client: %d, In-MESSAGE: %s", c_sock->fd, c_sock->buffer);
 
 	if (strcmp(c_sock->buffer, ".") == 0) {
-		//sprintf(buffer_output, HEADER_250_OK);
     	printf("Server: %d, MESSAGE: %s", c_sock->fd, c_sock->message->body);
-    	//send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
 
-		/*FILE *fp = fopen("bla.txt","a");
-        fprintf(fp,"X-ORIGIN-FROM:%s\r\n",c_sock->message->from);
-        fprintf(fp,"X-ORIGIN-TO:%s\r\n",c_sock->message->to[0]);
-        fprintf(fp,"%s\n",c_sock->message->body);
-        fclose(fp);*/
-
+    	save_message(c_sock->message, "../maildir/");
     	free(c_sock->message->body);
     	c_sock->input_message = 0;
     	handle_RSET(c_sock, NULL, buffer_output, NULL);
