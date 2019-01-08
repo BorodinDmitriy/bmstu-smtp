@@ -1,7 +1,15 @@
 #include "message.h"
 
-//char* get_mail(char *message);
-//char* get_domain(char *message);
+char* get_mail(char *message) {
+	char *result = NULL;
+	char *start = strchr(message, MAIL_START);
+	if (!start)
+		return NULL;
+	char *end = strchr(start + 1, MAIL_END);
+	if (!end)
+		return NULL;
+	return select_from_message(message, result, start, end);
+}
 
 char* get_domain(char* message) {
     char* info = NULL;
@@ -14,7 +22,7 @@ char* get_domain(char* message) {
 
 //void generate_filename(char *seq);
 //int save_message(struct msg *message, char *path);
-//char* ip_to_hostname(char *hostname);
+
 char* ip_to_hostname(char *hostname) {
   	struct hostent *hent;
   	struct in_addr addr;
@@ -27,7 +35,7 @@ char* ip_to_hostname(char *hostname) {
 
   	return hostname;
 }
-//char* select_from_message(char *message, char *buffer, char *start, char *end);
+
 char* select_from_message(char* message, char* buffer, char* start, char* end) {
     if ( start && end ) {
         start++;

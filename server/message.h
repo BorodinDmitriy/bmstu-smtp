@@ -35,7 +35,7 @@ struct msg {
 	int recepients_num;
 };
 
-//char* get_mail(char *message);
+char* get_mail(char *message);
 char* get_domain(char *message);
 //void generate_filename(char *seq);
 //int save_message(struct msg *message, char *path);
