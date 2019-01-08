@@ -295,7 +295,8 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 			handle_RCPT(c_sock,message_buffer,buffer_output,&address);
 		} else if (STR_EQUAL(c_sock->buffer, "DATA")) { 
 			// содержимое письма
-			sprintf(buffer_output, HEADER_354_CONTINUE);
+			//sprintf(buffer_output, HEADER_354_CONTINUE);
+			handle_DATA(c_sock,message_buffer,buffer_output,&address);
 		} else if (STR_EQUAL(c_sock->buffer, "RSET")) { 
 			// сброс соединения
 			handle_RSET(c_sock,message_buffer,buffer_output,&address);
@@ -319,7 +320,7 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 			handle_NOT_IMPLEMENTED(c_sock,message_buffer,buffer_output,&address);
 		}
 		printf("Server: %d, message: %s", c_sock->fd, buffer_output);
-		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+		//send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
 
 		// смещаем буфер для обработки следующей команды
 		memmove(c_sock->buffer, eol + 2, SERVER_BUFFER_SIZE - (eol + 2 - c_sock->buffer));
@@ -408,6 +409,19 @@ int handle_RSET(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     }
     c_sock->message->recepients_num = 0;
     c_sock->state = SOCKET_STATE_WAIT;
+    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    
+    return 0;
+}
+
+int handle_DATA(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
+	sprintf(buffer_output, HEADER_354_START);
+    printf("Server: %d, DATA: %s", c_sock->fd, buffer_output);
+    c_sock->message->body = (char *)malloc(1);
+    c_sock->message->body[0] = '\0';
+    c_sock->message->body_length = 1;
+    c_sock->input_message = 1;
+    c_sock->state = SOCKET_STATE_WRITING_DATA;
     send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     
     return 0;

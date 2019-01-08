@@ -32,6 +32,7 @@ struct msg {
 	char **to;
 	char *from;
 	char *body;
+	int body_length;
 	int recepients_num;
 };
 
