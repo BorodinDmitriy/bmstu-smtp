@@ -58,3 +58,6 @@ client/client
 
 # VSCode file rubbish
 client/.vscode/
+
+# maildir_test_files
+maildir/
