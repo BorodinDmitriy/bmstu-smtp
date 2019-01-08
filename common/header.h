@@ -41,6 +41,7 @@
 #define HEADER_354_CONTINUE "354 Continue\r\n"
 #define HEADER_450_MAILBOX_UNAVAILABLE "450 Requested mail action not taken: mailbox unavailable\r\n"
 #define HEADER_451_EXCEEDED_RECIPIENTS "451 Unable to complete command: number of recipients exceeded\r\n"
+#define HEADER_451_COMMAND_NOT_ALLOWED "451 Unable to complete command: command not allowed\r\n"
 #define HEADER_502_NOT_IMPLEMENTED "502 Command Not Implemented\r\n"
 
 

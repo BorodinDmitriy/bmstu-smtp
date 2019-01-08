@@ -90,8 +90,6 @@ int run_process(struct process *pr) {
 	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
 
 	while (1) {
-		//printf("PROCESS_RUNS\n");
-		//sleep(50);
 		struct timeval tv; // timeval используется внутри select для выхода из ожидания по таймауту
 		tv.tv_sec = 15;
 		tv.tv_usec = 0;
@@ -192,21 +190,13 @@ int run_process(struct process *pr) {
 					if (FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
 
         				// call smtp_handler for socket
-        				int new_sock = (p->c_sock.fd);
-        				//new_smtp_handler(&new_sock, getpid());
         				new_smtp_handler_with_states(&(p->c_sock));
-        				//FD_SET(p->c_sock.fd, &(pr->socket_set));
-
 					}
 				}
 			}	
 		}
 	}
-
-
-	// TODO: select for sets + smtp_handler (base_version)
-	// TODO: states in smtp_handler (mid_version)
-
+	return;
 }
 
 void new_smtp_handler(int *socket_fd, const int pid) {
@@ -236,12 +226,6 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 	address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons( SERVER_PORT );
-
-    /*fd_set sockset;
-    
-    FD_ZERO(&sockset);
-    FD_SET(state->sockfd, &sockset);
-	*/
 
 	int buffer_left = SERVER_BUFFER_SIZE - c_sock->buffer_offset - 1;
 	if (buffer_left == 0) {
@@ -277,56 +261,42 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 			strcpy(message_buffer, c_sock->buffer);
 			// конец строки для сравнения (потом переделать под разделение на данные и команды)
 			c_sock->buffer[4] = '\0';
+			int err_code = 0;
 
 			if (STR_EQUAL(c_sock->buffer, "HELO")) { 
 				// начальное приветствие
-				//sprintf(buffer_output, HEADER_250_OK);
-				handle_HELO(c_sock,message_buffer,buffer_output,&address);
+				err_code = handle_HELO(c_sock,message_buffer,buffer_output,&address);
 			} else if (STR_EQUAL(c_sock->buffer, "EHLO")) { 
 				// улучшенное начальное приветствие
-				//sprintf(buffer_output, HEADER_250_OK);
-				handle_EHLO(c_sock,message_buffer,buffer_output,&address);
+				err_code = handle_EHLO(c_sock,message_buffer,buffer_output,&address);
 			} else if (STR_EQUAL(c_sock->buffer, "MAIL")) { 
 				// получено новое письмо от
-				//sprintf(buffer_output, HEADER_250_OK);
-				handle_MAIL(c_sock,message_buffer,buffer_output,&address);
+				err_code = handle_MAIL(c_sock,message_buffer,buffer_output,&address);
 			} else if (STR_EQUAL(c_sock->buffer, "RCPT")) { 
 				// письмо направлено ... 
-				//sprintf(buffer_output, HEADER_250_OK_RECIPIENT);
-				handle_RCPT(c_sock,message_buffer,buffer_output,&address);
+				err_code = handle_RCPT(c_sock,message_buffer,buffer_output,&address);
 			} else if (STR_EQUAL(c_sock->buffer, "DATA")) { 
 				// содержимое письма
-				//sprintf(buffer_output, HEADER_354_CONTINUE);
-				handle_DATA(c_sock,message_buffer,buffer_output,&address);
+				err_code = handle_DATA(c_sock,message_buffer,buffer_output,&address);
 			} else if (STR_EQUAL(c_sock->buffer, "RSET")) { 
-				// сброс соединения
-				handle_RSET(c_sock,message_buffer,buffer_output,&address);
-				// sprintf(buffer_output, HEADER_250_OK_RESET);
+				// сброс отправителя/получателей
+				err_code = handle_RSET(c_sock,message_buffer,buffer_output,&address);
 			} else if (STR_EQUAL(c_sock->buffer, "NOOP")) { 
 				// ничего не делать
-				// sprintf(buffer_output, HEADER_250_OK_NOOP);
-				handle_NOOP(c_sock,message_buffer,buffer_output,&address);
+				err_code = handle_NOOP(c_sock,message_buffer,buffer_output,&address);
 			} else if (STR_EQUAL(c_sock->buffer, "QUIT")) { 
 				// закрыть соединение
 				return handle_QUIT(c_sock,message_buffer,buffer_output,&address);
-				/*sprintf(buffer_output, HEADER_221_OK);
-				printf("Server: %d, message: %s", c_sock->fd, buffer_output);
-				send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
-				c_sock->state = SOCKET_STATE_CLOSED;*/
-				//close(client_socket_fd);
-				//kill(pid, SIGTERM);
 			} else { 
 				// метод не был определен
-				//sprintf(buffer_output, HEADER_502_NOT_IMPLEMENTED);
 				handle_NOT_IMPLEMENTED(c_sock,message_buffer,buffer_output,&address);
 			}
+			if (err_code < 0) {
+				allowed_commands(c_sock, buffer_output);
+			}
 		} else {
-			handle_TEXT(c_sock,buffer_output,"../maildir");
+			handle_TEXT(c_sock,buffer_output,"../maildir/");
 		}
-
-		
-		//printf("Server: %d, message: %s", c_sock->fd, buffer_output);
-		//send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
 
 		// смещаем буфер для обработки следующей команды
 		memmove(c_sock->buffer, eol + 2, SERVER_BUFFER_SIZE - (eol + 2 - c_sock->buffer));
@@ -334,105 +304,159 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 	}
 }
 
-int handle_HELO(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
-	char* host = get_domain(msg_buffer);
-    int addrlen = sizeof(*address);
-    getpeername(c_sock->fd, (struct sockaddr*)address, (socklen_t*)&addrlen);
-    char* host_ip = ip_to_hostname(inet_ntoa(address->sin_addr));
-    if (strcmp(host, host_ip) == 0) {
-        sprintf(buffer_output, "%s %s\r\n", HEADER_250_OK, host);
-        printf("Server: %d, HELO: %s", c_sock->fd, buffer_output);
-    } else {
-        sprintf(buffer_output, "%s %s\r\n", HEADER_252_OK, host);
-        printf("Server: %d, HELO: %s", c_sock->fd, buffer_output);
-    }
-    free(host);
+int allowed_commands(struct client_socket *c_sock,char buffer_output[]) {
+	
+	sprintf(buffer_output, HEADER_451_COMMAND_NOT_ALLOWED);
+    printf("Server: %d, NOT_ALLOWED: %s", c_sock->fd, buffer_output);
     send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
-    c_sock->state = SOCKET_STATE_WAIT;
-    return 0;
+	switch (c_sock->state) {
+		case SOCKET_STATE_INIT: {
+			sprintf(buffer_output, "Allowed commands are: HELO, EHLO, NOOP, QUIT\n");
+			send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+			break;
+		}
+		case SOCKET_STATE_WAIT: {
+			sprintf(buffer_output, "Allowed commands are: RSET, MAIL, NOOP, QUIT\n");
+			send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+			break;
+		}
+		case SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS: {
+			sprintf(buffer_output, "Allowed commands are: RSET, RCPT, NOOP, QUIT\n");
+			send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+			break;
+		}
+		case SOCKET_STATE_RECEPIENTS_SET: {
+			sprintf(buffer_output, "Allowed commands are: RSET, RCPT, NOOP, DATA, QUIT\n");
+			send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+			break;
+		}
+		case SOCKET_STATE_WRITING_DATA: {
+			sprintf(buffer_output, "Allowed commands are: .\n");
+			send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+			break;
+		}
+		default: {
+			break;
+		}
+	}
+	return 0;
+}
+
+int handle_HELO(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
+	if (c_sock->state == SOCKET_STATE_INIT) {
+		char* host = get_domain(msg_buffer);
+    	int addrlen = sizeof(*address);
+    	getpeername(c_sock->fd, (struct sockaddr*)address, (socklen_t*)&addrlen);
+    	char* host_ip = ip_to_hostname(inet_ntoa(address->sin_addr));
+    	if (strcmp(host, host_ip) == 0) {
+        	sprintf(buffer_output, "%s %s\r\n", HEADER_250_OK, host);
+        	printf("Server: %d, HELO: %s", c_sock->fd, buffer_output);
+    	} else {
+        	sprintf(buffer_output, "%s %s\r\n", HEADER_252_OK, host);
+        	printf("Server: %d, HELO: %s", c_sock->fd, buffer_output);
+    	}
+    	free(host);
+    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    	c_sock->state = SOCKET_STATE_WAIT;
+    	return 0;
+	}
+	return -1;
 }
 
 int handle_EHLO(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
-	char* host = get_domain(msg_buffer);
-    int addrlen = sizeof(*address);
-    getpeername(c_sock->fd, (struct sockaddr*)address, (socklen_t*)&addrlen);
+	if (c_sock->state == SOCKET_STATE_INIT) {
+		char* host = get_domain(msg_buffer);
+    	int addrlen = sizeof(*address);
+    	getpeername(c_sock->fd, (struct sockaddr*)address, (socklen_t*)&addrlen);
     
-    free(host);
-    sprintf(buffer_output, HEADER_250_OK);
-    printf("Server: %d, EHLO: %s", c_sock->fd, buffer_output);
-    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
-    c_sock->state = SOCKET_STATE_WAIT;
-    return 0;
+  		free(host);
+    	sprintf(buffer_output, HEADER_250_OK);
+    	printf("Server: %d, EHLO: %s", c_sock->fd, buffer_output);
+    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    	c_sock->state = SOCKET_STATE_WAIT;
+    	return 0;
+	}
+	return -1;
 }
 
 int handle_MAIL(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
-	c_sock->message->from = get_mail(msg_buffer);
-	//printf("MAIL = %s\n", c_sock->message->from);
-	if ((c_sock->message->from != NULL) && (strcmp(c_sock->message->from, "") != 0)) {
-		sprintf(buffer_output, HEADER_250_OK);
-    	printf("Server: %d, MAIL: %s %s", c_sock->fd, c_sock->message->from, buffer_output);
-    	c_sock->state = SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS;
-	} else {
-		sprintf(buffer_output, HEADER_450_MAILBOX_UNAVAILABLE);
-    	printf("Server: %d, MAIL: %s", c_sock->fd, buffer_output);
-	}
-	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
-    
-    return 0;
-}
-
-int handle_RCPT(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
-	if (c_sock->message->recepients_num >= SERVER_MAX_RECIPIENTS) {
-		sprintf(buffer_output, HEADER_451_EXCEEDED_RECIPIENTS);
-    	printf("Server: %d, RCPT: %s", c_sock->fd, buffer_output);
-	} else {
-		c_sock->message->to[c_sock->message->recepients_num] = get_mail(msg_buffer);
-		if ((c_sock->message->to[c_sock->message->recepients_num] != NULL) && (strcmp(c_sock->message->to[c_sock->message->recepients_num], "") != 0)) {
-			c_sock->message->recepients_num++;
+	if (c_sock->state == SOCKET_STATE_WAIT) {
+		c_sock->message->from = get_mail(msg_buffer);
+		if ((c_sock->message->from != NULL) && (strcmp(c_sock->message->from, "") != 0)) {
 			sprintf(buffer_output, HEADER_250_OK);
-    		printf("Server: %d, RCPT: %s", c_sock->fd, buffer_output);
-    		c_sock->state = SOCKET_STATE_RECEPIENTS_SET;
+    		printf("Server: %d, MAIL: %s %s", c_sock->fd, c_sock->message->from, buffer_output);
+    		c_sock->state = SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS;
 		} else {
 			sprintf(buffer_output, HEADER_450_MAILBOX_UNAVAILABLE);
     		printf("Server: %d, MAIL: %s", c_sock->fd, buffer_output);
 		}
-	}
-
-	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     
-    return 0;
+    	return 0;
+	}
+	return -1;
+}
+
+int handle_RCPT(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
+	if ((c_sock->state == SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS) || (c_sock->state == SOCKET_STATE_RECEPIENTS_SET) ){
+		if (c_sock->message->recepients_num >= SERVER_MAX_RECIPIENTS) {
+			sprintf(buffer_output, HEADER_451_EXCEEDED_RECIPIENTS);
+    		printf("Server: %d, RCPT: %s", c_sock->fd, buffer_output);
+		} else {
+			c_sock->message->to[c_sock->message->recepients_num] = get_mail(msg_buffer);
+			if ((c_sock->message->to[c_sock->message->recepients_num] != NULL) && (strcmp(c_sock->message->to[c_sock->message->recepients_num], "") != 0)) {
+				c_sock->message->recepients_num++;
+				sprintf(buffer_output, HEADER_250_OK);
+    			printf("Server: %d, RCPT: %s", c_sock->fd, buffer_output);
+    			c_sock->state = SOCKET_STATE_RECEPIENTS_SET;
+			} else {
+				sprintf(buffer_output, HEADER_450_MAILBOX_UNAVAILABLE);
+    			printf("Server: %d, MAIL: %s", c_sock->fd, buffer_output);
+			}
+		}
+
+		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    
+    	return 0;
+	}
+	return -1;
 }
 
 int handle_RSET(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
-	sprintf(buffer_output, HEADER_250_OK_RESET);
-    printf("Server: %d, RSET: %s", c_sock->fd, buffer_output);
-    free(c_sock->message->from);
-    c_sock->message->from = NULL;
-    int i = 0;
-    for (i = 0; i < c_sock->message->recepients_num - 1; i++) {
-    	free(c_sock->message->to[i]);
-    	c_sock->message->to[i] = NULL;
-    }
-    c_sock->message->recepients_num = 0;
-    c_sock->state = SOCKET_STATE_WAIT;
-    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+	if ((c_sock->state == SOCKET_STATE_WAIT) || (c_sock->state == SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS) ||
+		(c_sock->state == SOCKET_STATE_RECEPIENTS_SET) || (c_sock->state == SOCKET_STATE_DELIVERING)) {
+		sprintf(buffer_output, HEADER_250_OK_RESET);
+    	printf("Server: %d, RSET: %s", c_sock->fd, buffer_output);
+    	free(c_sock->message->from);
+    	c_sock->message->from = NULL;
+    	int i = 0;
+    	for (i = 0; i < c_sock->message->recepients_num - 1; i++) {
+    		free(c_sock->message->to[i]);
+    		c_sock->message->to[i] = NULL;
+    	}
+    	c_sock->message->recepients_num = 0;
+    	c_sock->state = SOCKET_STATE_WAIT;
+    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     
-    return 0;
+    	return 0;
+	}
+	return -1;
 }
 
 int handle_DATA(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
-	sprintf(buffer_output, HEADER_354_START);
-    printf("Server: %d, DATA: %s", c_sock->fd, buffer_output);
-    c_sock->message->body = (char *)malloc(1);
-    c_sock->message->body[0] = '\0';
-
-    printf("NESSAGE_BODY = %d\n", strlen(c_sock->message->body) );
-    c_sock->message->body_length = 0;
-    c_sock->input_message = 1;
-    c_sock->state = SOCKET_STATE_WRITING_DATA;
-    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+	if (c_sock->state == SOCKET_STATE_RECEPIENTS_SET) {
+		sprintf(buffer_output, HEADER_354_START);
+    	printf("Server: %d, DATA: %s", c_sock->fd, buffer_output);
+    	c_sock->message->body = (char *)malloc(1);
+    	c_sock->message->body[0] = '\0';
+    	c_sock->message->body_length = 0;
+    	c_sock->input_message = 1;
+    	c_sock->state = SOCKET_STATE_WRITING_DATA;
+    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     
-    return 0;
+    	return 0;
+	}
+	return -1;
 }
 
 int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
@@ -463,11 +487,13 @@ int handle_TEXT(struct client_socket *c_sock, char buffer_output[],char* maildir
 
 	if (strcmp(c_sock->buffer, ".") == 0) {
     	printf("Server: %d, MESSAGE: %s", c_sock->fd, c_sock->message->body);
-
-    	save_message(c_sock->message, "../maildir/");
+    	c_sock->state = SOCKET_STATE_DELIVERING;
+    	save_message(c_sock->message, maildir_path);
     	free(c_sock->message->body);
     	c_sock->input_message = 0;
-    	handle_RSET(c_sock, NULL, buffer_output, NULL);
+    	if (handle_RSET(c_sock, NULL, buffer_output, NULL) == -1) {
+    		allowed_commands(c_sock, buffer_output);
+    	}
 	} else {
 		//printf("MALLOC_SIZE = %d\n", (strlen(c_sock->message->body) + SERVER_BUFFER_SIZE * 2) * sizeof(char));
 		if (strlen(c_sock->message->body) + strlen(c_sock->buffer) >= c_sock->message->body_length) {
@@ -482,6 +508,8 @@ int handle_TEXT(struct client_socket *c_sock, char buffer_output[],char* maildir
 	}
 	return 0;
 }
+
+
 
 void smtp_handler(int *socket_fd, const int pid) {
 	printf("SMTP handler begin");
