@@ -199,24 +199,6 @@ int run_process(struct process *pr) {
 	return;
 }
 
-void new_smtp_handler(int *socket_fd, const int pid) {
-	printf("SMTP handler start");
-
-	int client_socket_fd = *socket_fd;		// клентский сокет, полученный после select()
-	int received_bytes_count;				// число прочитанных байт
-	// int i, j;
-	char buffer[SERVER_BUFFER_SIZE];		// буфер, в который считываем
-	char buffer_output[SERVER_BUFFER_SIZE];	// выходной буфер для записи ответа
-
-	char smtp_stub[SERVER_BUFFER_SIZE] = "Hi, you've come to smtp server";
-
-	sprintf(buffer_output, "%s\n", smtp_stub);
-	printf("%s\n", smtp_stub);
-	if (send(client_socket_fd, buffer_output, strlen(buffer_output), 0) < 0) {
-		return;
-	}
-}
-
 void new_smtp_handler_with_states(struct client_socket *c_sock) {
 	printf("SMTP handler begin");
 	int received_bytes_count;
