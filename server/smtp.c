@@ -272,54 +272,60 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 		// обработка ключевых слов
 		printf("Client: %d, message: %s\n", c_sock->fd, c_sock->buffer);
 
-		char *message_buffer = (char *) malloc (SERVER_BUFFER_SIZE);
-		strcpy(message_buffer, c_sock->buffer);
-		// конец строки для сравнения (потом переделать под разделение на данные и команды)
-		c_sock->buffer[4] = '\0';
+		if (!c_sock->input_message) {
+			char *message_buffer = (char *) malloc (SERVER_BUFFER_SIZE);
+			strcpy(message_buffer, c_sock->buffer);
+			// конец строки для сравнения (потом переделать под разделение на данные и команды)
+			c_sock->buffer[4] = '\0';
 
-		if (STR_EQUAL(c_sock->buffer, "HELO")) { 
-			// начальное приветствие
-			//sprintf(buffer_output, HEADER_250_OK);
-			handle_HELO(c_sock,message_buffer,buffer_output,&address);
-		} else if (STR_EQUAL(c_sock->buffer, "EHLO")) { 
-			// улучшенное начальное приветствие
-			//sprintf(buffer_output, HEADER_250_OK);
-			handle_EHLO(c_sock,message_buffer,buffer_output,&address);
-		} else if (STR_EQUAL(c_sock->buffer, "MAIL")) { 
-			// получено новое письмо от
-			//sprintf(buffer_output, HEADER_250_OK);
-			handle_MAIL(c_sock,message_buffer,buffer_output,&address);
-		} else if (STR_EQUAL(c_sock->buffer, "RCPT")) { 
-			// письмо направлено ... 
-			//sprintf(buffer_output, HEADER_250_OK_RECIPIENT);
-			handle_RCPT(c_sock,message_buffer,buffer_output,&address);
-		} else if (STR_EQUAL(c_sock->buffer, "DATA")) { 
-			// содержимое письма
-			//sprintf(buffer_output, HEADER_354_CONTINUE);
-			handle_DATA(c_sock,message_buffer,buffer_output,&address);
-		} else if (STR_EQUAL(c_sock->buffer, "RSET")) { 
-			// сброс соединения
-			handle_RSET(c_sock,message_buffer,buffer_output,&address);
-			// sprintf(buffer_output, HEADER_250_OK_RESET);
-		} else if (STR_EQUAL(c_sock->buffer, "NOOP")) { 
-			// ничего не делать
-			// sprintf(buffer_output, HEADER_250_OK_NOOP);
-			handle_NOOP(c_sock,message_buffer,buffer_output,&address);
-		} else if (STR_EQUAL(c_sock->buffer, "QUIT")) { 
-			// закрыть соединение
-			return handle_QUIT(c_sock,message_buffer,buffer_output,&address);
-			/*sprintf(buffer_output, HEADER_221_OK);
-			printf("Server: %d, message: %s", c_sock->fd, buffer_output);
-			send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
-			c_sock->state = SOCKET_STATE_CLOSED;*/
-			//close(client_socket_fd);
-			//kill(pid, SIGTERM);
-		} else { 
-			// метод не был определен
-			//sprintf(buffer_output, HEADER_502_NOT_IMPLEMENTED);
-			handle_NOT_IMPLEMENTED(c_sock,message_buffer,buffer_output,&address);
+			if (STR_EQUAL(c_sock->buffer, "HELO")) { 
+				// начальное приветствие
+				//sprintf(buffer_output, HEADER_250_OK);
+				handle_HELO(c_sock,message_buffer,buffer_output,&address);
+			} else if (STR_EQUAL(c_sock->buffer, "EHLO")) { 
+				// улучшенное начальное приветствие
+				//sprintf(buffer_output, HEADER_250_OK);
+				handle_EHLO(c_sock,message_buffer,buffer_output,&address);
+			} else if (STR_EQUAL(c_sock->buffer, "MAIL")) { 
+				// получено новое письмо от
+				//sprintf(buffer_output, HEADER_250_OK);
+				handle_MAIL(c_sock,message_buffer,buffer_output,&address);
+			} else if (STR_EQUAL(c_sock->buffer, "RCPT")) { 
+				// письмо направлено ... 
+				//sprintf(buffer_output, HEADER_250_OK_RECIPIENT);
+				handle_RCPT(c_sock,message_buffer,buffer_output,&address);
+			} else if (STR_EQUAL(c_sock->buffer, "DATA")) { 
+				// содержимое письма
+				//sprintf(buffer_output, HEADER_354_CONTINUE);
+				handle_DATA(c_sock,message_buffer,buffer_output,&address);
+			} else if (STR_EQUAL(c_sock->buffer, "RSET")) { 
+				// сброс соединения
+				handle_RSET(c_sock,message_buffer,buffer_output,&address);
+				// sprintf(buffer_output, HEADER_250_OK_RESET);
+			} else if (STR_EQUAL(c_sock->buffer, "NOOP")) { 
+				// ничего не делать
+				// sprintf(buffer_output, HEADER_250_OK_NOOP);
+				handle_NOOP(c_sock,message_buffer,buffer_output,&address);
+			} else if (STR_EQUAL(c_sock->buffer, "QUIT")) { 
+				// закрыть соединение
+				return handle_QUIT(c_sock,message_buffer,buffer_output,&address);
+				/*sprintf(buffer_output, HEADER_221_OK);
+				printf("Server: %d, message: %s", c_sock->fd, buffer_output);
+				send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+				c_sock->state = SOCKET_STATE_CLOSED;*/
+				//close(client_socket_fd);
+				//kill(pid, SIGTERM);
+			} else { 
+				// метод не был определен
+				//sprintf(buffer_output, HEADER_502_NOT_IMPLEMENTED);
+				handle_NOT_IMPLEMENTED(c_sock,message_buffer,buffer_output,&address);
+			}
+		} else {
+			handle_TEXT(c_sock,buffer_output,"../maildir");
 		}
-		printf("Server: %d, message: %s", c_sock->fd, buffer_output);
+
+		
+		//printf("Server: %d, message: %s", c_sock->fd, buffer_output);
 		//send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
 
 		// смещаем буфер для обработки следующей команды
@@ -419,7 +425,9 @@ int handle_DATA(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     printf("Server: %d, DATA: %s", c_sock->fd, buffer_output);
     c_sock->message->body = (char *)malloc(1);
     c_sock->message->body[0] = '\0';
-    c_sock->message->body_length = 1;
+
+    printf("NESSAGE_BODY = %d\n", strlen(c_sock->message->body) );
+    c_sock->message->body_length = 0;
     c_sock->input_message = 1;
     c_sock->state = SOCKET_STATE_WRITING_DATA;
     send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
@@ -448,6 +456,38 @@ int handle_NOT_IMPLEMENTED(struct client_socket *c_sock, char *msg_buffer, char 
     printf("Server: %d, NOT_IMPLEMENTED: %s", c_sock->fd, buffer_output);
     send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     return 0;
+}
+
+int handle_TEXT(struct client_socket *c_sock, char buffer_output[],char* maildir_path) {
+	printf("Client: %d, In-MESSAGE: %s", c_sock->fd, c_sock->buffer);
+
+	if (strcmp(c_sock->buffer, ".") == 0) {
+		//sprintf(buffer_output, HEADER_250_OK);
+    	printf("Server: %d, MESSAGE: %s", c_sock->fd, c_sock->message->body);
+    	//send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+
+		/*FILE *fp = fopen("bla.txt","a");
+        fprintf(fp,"X-ORIGIN-FROM:%s\r\n",c_sock->message->from);
+        fprintf(fp,"X-ORIGIN-TO:%s\r\n",c_sock->message->to[0]);
+        fprintf(fp,"%s\n",c_sock->message->body);
+        fclose(fp);*/
+
+    	free(c_sock->message->body);
+    	c_sock->input_message = 0;
+    	handle_RSET(c_sock, NULL, buffer_output, NULL);
+	} else {
+		//printf("MALLOC_SIZE = %d\n", (strlen(c_sock->message->body) + SERVER_BUFFER_SIZE * 2) * sizeof(char));
+		if (strlen(c_sock->message->body) + strlen(c_sock->buffer) >= c_sock->message->body_length) {
+			int malloc_size = strlen(c_sock->message->body) + SERVER_BUFFER_SIZE * 2;
+			c_sock->message->body = (char *) realloc(c_sock->message->body, malloc_size);
+			c_sock->message->body_length = malloc_size;	
+		}
+		strcat(c_sock->message->body, c_sock->buffer);
+		int len = strlen(c_sock->message->body);
+		c_sock->message->body[len] = '\n';
+		c_sock->message->body[len + 1] = '\0';
+	}
+	return 0;
 }
 
 void smtp_handler(int *socket_fd, const int pid) {
