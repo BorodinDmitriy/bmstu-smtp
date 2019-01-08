@@ -171,11 +171,6 @@ int run_process(struct process *pr) {
     					}
 
     					struct client_socket cl_sock = init_client_socket(new_socket, SERVER_BUFFER_SIZE, SOCKET_STATE_INIT, SERVER_MAX_RECIPIENTS, 1);
-        				/*cl_sock.fd = new_socket;
-        				cl_sock.buffer = (char *) malloc(SERVER_BUFFER_SIZE);
-        				cl_sock.state = SOCKET_STATE_INIT;
-        				cl_sock.buffer_offset = 0;
-        				cl_sock.message = (struct msg *) malloc(sizeof(struct msg));*/
 
         				// добавить новый сокет в список сокетов процесса
         				struct client_socket_list *new_scket = malloc(sizeof(struct client_socket_list));
@@ -358,6 +353,10 @@ int handle_EHLO(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     c_sock->state = SOCKET_STATE_WAIT;
     return 0;
+}
+
+int handle_MAIL(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
+	//c_sock->message.from = get_mail(message_buffer);
 }
 
 int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
