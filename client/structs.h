@@ -20,6 +20,8 @@
 //======================//
 //      FD TYPES        //
 //======================//
+#define MY_DOMAIN "smtp-test.ru"
+
 #define SOCKET_FD 0
 #define FILE_FD 1
 #define COUNT_THREADS 2
