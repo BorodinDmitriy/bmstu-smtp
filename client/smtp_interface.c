@@ -44,6 +44,7 @@ int SMTP_Control(struct FileDesc *socket_connection)
     int state = 0;
     while (state == 0)
     {
+        printf("socket_connection: %d\n", socket_connection->current_state);
         switch (socket_connection->current_state)
         {
         case PREPARE_SOCKET_CONNECTION:
@@ -120,6 +121,12 @@ int SMTP_Control(struct FileDesc *socket_connection)
 
         default:
             state = -1;
+        }
+
+        //  wait letters by current domain
+        if (socket_connection->prev_state == PREPARE_SOCKET_CONNECTION) 
+        {
+            break;
         }
     }
     return state;
