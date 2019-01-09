@@ -305,7 +305,8 @@ struct FileDesc *addNewSocketConnection(struct network_controller *manager, char
         manager->socket_list = new_record;
     }
 
-    new_socket_connection->current_state = 0;
+    new_socket_connection->prev_state = NULL_POINTER;
+    new_socket_connection->current_state = PREPARE_SOCKET_CONNECTION;
     state = SMTP_Control(new_socket_connection);
     if (state != 0)
     {
@@ -325,6 +326,7 @@ struct FileDesc *addNewSocketConnection(struct network_controller *manager, char
             manager->socket_list = NULL;
         }
 
+        free(new_socket_connection->mx_record);
         free(new_socket_connection->domain);
         free(new_socket_connection);
     }
