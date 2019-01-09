@@ -579,6 +579,11 @@ int handleSendMailFrom(struct FileDesc *connection)
     return 0;
 }
 
+int handleResponseOfMailFrom(struct FileDesc *connection) 
+{
+    
+}
+
 //============//
 //    TOOLS   //
 //============//
