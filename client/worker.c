@@ -97,7 +97,7 @@ void run(struct worker *worker_context, struct network_controller manager)
 
         processedFD = 0;
         listViewer = manager.socket_list;
-        //  check readers
+        //  check all sockets readers, writers and handlers
         for (int i = 0; i < manager.readers.count; i++)
         {
             currentFD = listViewer->fd->id;
@@ -209,6 +209,8 @@ void processingTasks(struct worker *worker_context, struct network_controller *m
             worker_task_pointer = worker_task_pointer->next;
             continue;
         }
+
+        FD_SET(socket_pointer->id, &manager->readers.set);
 
         socket_pointer->task_pool = worker_task_pointer;
         worker_task_pointer = worker_task_pointer->next;
