@@ -18,6 +18,7 @@ int verifyServerDomain(char *message, char *domain);
 int prepareSocketForConnection(struct FileDesc *connection);
 int handleGreeting(struct FileDesc *connection);
 int handleSendEHLO(struct FileDesc *connection);
+int handleResponseByEHLO(struct FileDesc *connection);
 
 //==========================//
 //      PUBLIC METHODS      //
@@ -184,6 +185,10 @@ int SMTP_Control(struct FileDesc *socket_connection)
             state = handleSendEHLO(socket_connection);
             break;
 
+        case SEND_EHLO: 
+            state = handleResponseByEHLO(socket_connection);
+            break;
+
         default:
             state = -1;
         }
@@ -200,7 +205,7 @@ int prepareSocketForConnection(struct FileDesc *connection)
     int state = 0;
 
     //  Check states
-    if (connection->current_state != PREPARE_SOCKET_CONNECTION && connection->prev_state != NULL_POINTER)
+    if (connection->current_state != PREPARE_SOCKET_CONNECTION || connection->prev_state != NULL_POINTER)
     {
         char message[150];
         memset(message, '\0', 150);
@@ -304,7 +309,7 @@ int prepareSocketForConnection(struct FileDesc *connection)
 int handleGreeting(struct FileDesc *connection)
 {
     //  Check state
-    if (connection->current_state != CONNECT && connection->prev_state != PREPARE_SOCKET_CONNECTION)
+    if (connection->current_state != CONNECT || connection->prev_state != PREPARE_SOCKET_CONNECTION)
     {
         //  Set error state
         connection->prev_state = connection = connection->current_state;
@@ -331,7 +336,7 @@ int handleGreeting(struct FileDesc *connection)
 
         char err_message[150];
         memset(err_message, '\0', 150);
-        sprintf("Worker: SMTP_Control: handleGreeting: Fail to receive greeting from server %s. Errno: %d", connection->mx_record, errno);
+        sprintf(err_message, "Worker: SMTP_Control: handleGreeting: Fail to receive greeting from server %s. Errno: %d", connection->mx_record, errno);
         Error(err_message);
 
         //  change state on Error
@@ -376,6 +381,125 @@ int handleGreeting(struct FileDesc *connection)
 
 int handleSendEHLO(struct FileDesc *connection)
 {
+    //  Check current and prev states 
+    if (connection->current_state != RECEIVE_SMTP_GREETING || connection->prev_state != CONNECT)
+    {
+        //  Set error state
+        connection->prev_state = connection = connection->current_state;
+        connection->current_state = SMTP_ERROR;
+
+        return -1;   
+    }
+    int len = strlen(MY_DOMAIN);
+
+    char message[5 + len + 3];
+
+    memset(message, '\0', 8 + len);
+    sprintf(message, "EHLO %s\r\n", MY_DOMAIN);
+
+    int size = send(connection->id, message, len + 7, NULL);
+
+    if (size == -1)
+    {
+        if (size == -1 && errno == EWOULDBLOCK)
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleSendEHLO: Fail to send EHLO command to server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->prev_state = connection->current_state;
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    //  Change current state 
+    connection->prev_state = connection->current_state;
+    connection->current_state = SEND_EHLO;
+
+    return 0;
+}
+
+int handleResponseByEHLO(struct FileDesc *connection)
+{
+    //  Check current and prev states 
+    if (connection->current_state != SEND_EHLO || connection->prev_state != RECEIVE_SMTP_GREETING)
+    {
+        //  Set error state
+        connection->prev_state = connection = connection->current_state;
+        connection->current_state = SMTP_ERROR;
+
+        return -1;   
+    }
+
+    char message[BUFFER];
+
+    int size = recv(connection->id, message, BUFFER, NULL);
+
+    if (size < 0)
+    {
+        if (size == -1 && errno == EWOULDBLOCK)
+        {
+             //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseByEHLO: Fail to receive EHLO response from server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->prev_state = connection->current_state;
+        connection->current_state = SMTP_ERROR;
+        return -2;   
+    }
+
+    int status = getCommandStatus(message);
+    if (status != 250 && status != 421)
+    {
+        connection->prev_state = connection->current_state;
+        connection->current_state = SMTP_ERROR;
+        return -3;   
+    }
+
+    if (status == 421)
+    {
+        connection->prev_state = connection->current_state;
+        connection->current_state = DISPOSING_SOCKET;
+        return 0;
+    }
+
+    //  check message
+    int len = strlen(MY_DOMAIN);
+    char *pointer = strstr(message, MY_DOMAIN);
+    if (!pointer)
+    {   
+        //  In EHLO not founded my name... is error connection
+        connection->prev_state = connection->current_state;
+        connection->current_state = SMTP_ERROR;
+        return -4;
+    }
+
+    //  check CRLF
+    if (message[size - 2] !='\r' || message[size - 1] != '\n' || (pointer + len + 1) != '\r' || (pointer - 1) != ' ')
+    {
+        //  Bad command. Error in CRLF or my domain
+        connection->prev_state = connection->current_state;
+        connection->current_state = SMTP_ERROR;
+        return -5;
+    }
+
+    //  change current state 
+    connection->prev_state = connection->current_state;
+    connection->current_state = RECEIVE_EHLO_RESPONSE;
+
+    return 0;
 }
 
 //============//
