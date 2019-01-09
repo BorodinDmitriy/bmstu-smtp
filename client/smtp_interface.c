@@ -10,6 +10,7 @@
 int getMXrecord(struct FileDesc *connection);
 int getCommandStatus(char *message);
 int verifyServerDomain(char *message, char *domain);
+int setLetterMetaData(struct letter_info *info, char *filepath);
 
 //============//
 //  HANDLERS  //
@@ -18,7 +19,9 @@ int verifyServerDomain(char *message, char *domain);
 int prepareSocketForConnection(struct FileDesc *connection);
 int handleGreeting(struct FileDesc *connection);
 int handleSendEHLO(struct FileDesc *connection);
-int handleResponseByEHLO(struct FileDesc *connection);
+int handleResponseOfEHLO(struct FileDesc *connection);
+int handleSendMailFrom(struct FileDesc *connection);
+int handleResponseOfMailFrom(struct FileDesc *connection);
 
 //==========================//
 //      PUBLIC METHODS      //
@@ -185,8 +188,16 @@ int SMTP_Control(struct FileDesc *socket_connection)
             state = handleSendEHLO(socket_connection);
             break;
 
-        case SEND_EHLO: 
-            state = handleResponseByEHLO(socket_connection);
+        case SEND_EHLO:
+            state = handleResponseOfEHLO(socket_connection);
+            break;
+
+        case RECEIVE_EHLO_RESPONSE:
+            state = handleSendMailFrom(socket_connection);
+            break;
+
+        case SEND_MAIL_FROM:
+            state = handleResponseOfMailFrom(socket_connection);
             break;
 
         default:
@@ -381,14 +392,14 @@ int handleGreeting(struct FileDesc *connection)
 
 int handleSendEHLO(struct FileDesc *connection)
 {
-    //  Check current and prev states 
+    //  Check current and prev states
     if (connection->current_state != RECEIVE_SMTP_GREETING || connection->prev_state != CONNECT)
     {
         //  Set error state
         connection->prev_state = connection = connection->current_state;
         connection->current_state = SMTP_ERROR;
 
-        return -1;   
+        return -1;
     }
     int len = strlen(MY_DOMAIN);
 
@@ -418,23 +429,23 @@ int handleSendEHLO(struct FileDesc *connection)
         return -2;
     }
 
-    //  Change current state 
+    //  Change current state
     connection->prev_state = connection->current_state;
     connection->current_state = SEND_EHLO;
 
     return 0;
 }
 
-int handleResponseByEHLO(struct FileDesc *connection)
+int handleResponseOfEHLO(struct FileDesc *connection)
 {
-    //  Check current and prev states 
+    //  Check current and prev states
     if (connection->current_state != SEND_EHLO || connection->prev_state != RECEIVE_SMTP_GREETING)
     {
         //  Set error state
         connection->prev_state = connection = connection->current_state;
         connection->current_state = SMTP_ERROR;
 
-        return -1;   
+        return -1;
     }
 
     char message[BUFFER];
@@ -445,7 +456,7 @@ int handleResponseByEHLO(struct FileDesc *connection)
     {
         if (size == -1 && errno == EWOULDBLOCK)
         {
-             //  All ok, connection is would block, wait and again try to receive getting
+            //  All ok, connection is would block, wait and again try to receive getting
             return 1;
         }
 
@@ -457,7 +468,7 @@ int handleResponseByEHLO(struct FileDesc *connection)
         //  change state on Error
         connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
-        return -2;   
+        return -2;
     }
 
     int status = getCommandStatus(message);
@@ -465,7 +476,7 @@ int handleResponseByEHLO(struct FileDesc *connection)
     {
         connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
-        return -3;   
+        return -3;
     }
 
     if (status == 421)
@@ -479,7 +490,7 @@ int handleResponseByEHLO(struct FileDesc *connection)
     int len = strlen(MY_DOMAIN);
     char *pointer = strstr(message, MY_DOMAIN);
     if (!pointer)
-    {   
+    {
         //  In EHLO not founded my name... is error connection
         connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
@@ -487,7 +498,7 @@ int handleResponseByEHLO(struct FileDesc *connection)
     }
 
     //  check CRLF
-    if (message[size - 2] !='\r' || message[size - 1] != '\n' || (pointer + len + 1) != '\r' || (pointer - 1) != ' ')
+    if (message[size - 2] != '\r' || message[size - 1] != '\n' || (pointer + len + 1) != '\r' || (pointer - 1) != ' ')
     {
         //  Bad command. Error in CRLF or my domain
         connection->prev_state = connection->current_state;
@@ -495,9 +506,75 @@ int handleResponseByEHLO(struct FileDesc *connection)
         return -5;
     }
 
-    //  change current state 
+    connection->attempt = 0;
+
+    //  change current state
     connection->prev_state = connection->current_state;
     connection->current_state = RECEIVE_EHLO_RESPONSE;
+
+    return 0;
+}
+
+int handleSendMailFrom(struct FileDesc *connection)
+{
+    //  Check states and transition
+
+    bool first_sending = ((connection->current_state == RECEIVE_EHLO_RESPONSE) && (connection->prev_state == SEND_EHLO));
+    bool repeated_sending = ((connection->current_state == RECEIVE_LETTER_RESPONSE) && (connection->prev_state == SEND_LETTER));
+
+    if (!first_sending || !repeated_sending)
+    {
+        //  Set error state
+        connection->prev_state = connection->current_state;
+        connection->current_state = SMTP_ERROR;
+
+        return -1;
+    }
+
+    int state = setLetterMetaData(&connection->meta_data, connection->task_pool->path);
+
+    if (state != 0)
+    {
+        char message[250];
+        memset(message, '\0', 250);
+        sprintf(message, "Worker: handleSendMailFrom: Fail to receive metadata about letter with filepath(%s) by domain (%s)",connection->task_pool->path, connection->domain);
+        Error(message);
+
+        connection->prev_state = connection->current_state;
+        connection->current_state = SMTP_ERROR;
+
+        return -2;
+    }
+
+    //  send MAIL command
+
+    char message[BUFFER];
+    memset(message, '\0', BUFFER);
+    sprintf(message, "MAIL FROM:<%s>\r\n",connection->meta_data.from);
+    int len = strlen(message);
+
+    state = send(connection->id, message, len, NULL);
+    if (state < 0)
+    {
+        if (state == -1 && errno == EWOULDBLOCK) 
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleSendMailFrom: Fail to send MAIL FROM command to server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->prev_state = connection->current_state;
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    connection->prev_state = connection->current_state;
+    connection->current_state = SEND_MAIL_FROM;
 
     return 0;
 }
@@ -579,5 +656,93 @@ int verifyServerDomain(char *message, char *domain)
         state = -1;
     }
 
+    return state;
+}
+
+int setLetterMetaData(struct letter_info *info, char *filepath)
+{
+    FILE *letter;
+    letter = fopen(filepath, "r");
+    if (!letter)
+    {
+        char message[150];
+        memset(message, '\0', 150);
+        sprintf(message, "Worker: handleSendMailFrom: getLetterMetaData: fail to find letter by path %s for domain", filepath);
+        Error(message);
+        return -1;
+    }
+
+    int state = 0;
+    char buffer[BUFFER];
+    char *pointer;
+    int len;
+    free(info->from);
+    free(info->to);
+    info->from = NULL;
+    info->to = NULL;
+    while (state == 0)
+    {
+        if (fgets(buffer, BUFFER, letter) == NULL)
+        {
+            state = -2;
+            break;
+        }
+
+        if (info->to && info->from)
+        {
+            //  All ok, find all part of metadata
+            break;
+        }
+
+        len = strlen(buffer);
+
+        if (buffer[len - 2] != '\r' || buffer[len - 1] != '\n')
+        {
+            continue;
+        }
+
+        if (buffer[0] == 'T' && buffer[1] == 'o' && buffer[2] == ':')
+        {
+            //  find strict "To:"
+            pointer = strstr(buffer, "@");
+            if (!pointer)
+            {
+                continue;
+            }
+
+            len = strlen(pointer);
+            info->to = (char *)calloc(len - 3, sizeof(char));
+            if (!info->to)
+            {
+                Error("Worker: handleSendMailFrom: getLetterMetaData: fail to allocate memory for 'to' directive");
+                return -3;
+            }
+            strncpy(info->to, pointer + 1, len - 3);
+            continue;
+        }
+
+        if (buffer[0] == 'F' && buffer[1] == 'r' && buffer[2] == 'o' && buffer[3] == 'm' && buffer[4] == ':')
+        {
+            //  find strict "From:"
+            pointer = strstr(buffer, "@");
+            if (!pointer)
+            {
+                continue;
+            }
+
+            len = strlen(pointer);
+            info->from = (char *)calloc(len - 3, sizeof(char));
+            if (!info->from)
+            {
+                Error("Worker: handleSendMailFrom: getLetterMetaData: fail to allocate memory for 'from' directive");
+                return -4;
+            }
+            strncpy(info->from, pointer + 1, len - 3);
+            continue;
+        }
+    }
+
+
+    fclose(letter);
     return state;
 }
