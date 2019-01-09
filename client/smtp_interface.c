@@ -69,7 +69,7 @@ int SMTP_Control(struct FileDesc *socket_connection)
         case RECEIVE_MAIL_FROM_RESPONSE:
             state = handleResponseOfMailFrom(socket_connection);
             break;
-        
+
         case SEND_RCPT_TO:
             state = handleSendRCPTto(socket_connection);
             break;
@@ -77,7 +77,7 @@ int SMTP_Control(struct FileDesc *socket_connection)
         case RECEIVE_RCPT_TO_RESPONSE:
             state = handleResponseOfRCPTto(socket_connection);
             break;
-        
+
         case SEND_DATA:
             state = handleSendDATA(socket_connection);
             break;
@@ -89,11 +89,11 @@ int SMTP_Control(struct FileDesc *socket_connection)
         case SEND_LETTER:
             state = handleSendLetter(socket_connection);
             break;
-        
+
         case RECEIVE_LETTER_RESPONSE:
             state = handleResponseOfLetter(socket_connection);
             break;
-        
+
         case SEND_QUIT:
             state = handleSendQUIT(socket_connection);
             break;
@@ -106,16 +106,14 @@ int SMTP_Control(struct FileDesc *socket_connection)
             state = handleDisponsing(socket_connection);
             break;
 
-
-
-        case SMTP_ERROR: 
+        case SMTP_ERROR:
             state = handleSmtpError(socket_connection);
             break;
 
         case SEND_RSET:
             state = handleSolvableMistake(socket_connection);
             break;
-        
+
         case RECEIVE_RSET_RESPONSE:
             state = handleResponseOfRSET(socket_connection);
             break;
@@ -501,7 +499,7 @@ int handleResponseOfMailFrom(struct FileDesc *connection)
     int size;
     char message[BUFFER];
     size = recv(connection->id, message, BUFFER, NULL);
-    if (size < 0) 
+    if (size < 0)
     {
         if (size == -1 && errno == EWOULDBLOCK)
         {
@@ -524,7 +522,7 @@ int handleResponseOfMailFrom(struct FileDesc *connection)
     {
         char err_message[150];
         memset(err_message, '\0', 150);
-        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail status(%d) of MAIL FROM response from server %s.",status, connection->mx_record);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail status(%d) of MAIL FROM response from server %s.", status, connection->mx_record);
         Error(err_message);
 
         //  change state on Error
@@ -534,11 +532,11 @@ int handleResponseOfMailFrom(struct FileDesc *connection)
 
     char verifyMessage[9] = "250 OK\r\n\0";
     status = strncmp(message, verifyMessage, 8);
-    if (status != 0) 
+    if (status != 0)
     {
         char err_message[150];
         memset(err_message, '\0', 150);
-        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail status(%d) of MAIL FROM response from server %s.",status, connection->mx_record);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail status(%d) of MAIL FROM response from server %s.", status, connection->mx_record);
         Error(err_message);
 
         //  change state on Error
@@ -570,7 +568,7 @@ int handleSendRCPTto(struct FileDesc *connection)
     len = strlen(message);
 
     int size = send(connection->id, message, len, NULL);
-    if (size < 0) 
+    if (size < 0)
     {
         if (size == -1 && errno == EWOULDBLOCK)
         {
@@ -607,7 +605,7 @@ int handleResponseOfRCPTto(struct FileDesc *connection)
     int size;
     char message[BUFFER];
     size = recv(connection->id, message, BUFFER, NULL);
-    if (size < 0) 
+    if (size < 0)
     {
         if (size == -1 && errno == EWOULDBLOCK)
         {
@@ -630,7 +628,7 @@ int handleResponseOfRCPTto(struct FileDesc *connection)
     {
         char err_message[150];
         memset(err_message, '\0', 150);
-        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfRCPTto: Fail status(%d) of RCPT TO response from server %s.",status, connection->mx_record);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfRCPTto: Fail status(%d) of RCPT TO response from server %s.", status, connection->mx_record);
         Error(err_message);
 
         //  change state on Error
@@ -641,7 +639,7 @@ int handleResponseOfRCPTto(struct FileDesc *connection)
     char verifyMessage[9] = "250 OK\r\n\0";
     int len = strlen(message);
     status = strncmp(message, verifyMessage, 8);
-    if (status != 0) 
+    if (status != 0)
     {
         char err_message[150 + len];
         memset(err_message, '\0', 150 + len);
@@ -661,12 +659,92 @@ int handleResponseOfRCPTto(struct FileDesc *connection)
 
 int handleSendDATA(struct FileDesc *connection)
 {
+    //  Check current and prev states
+    if (connection->current_state != SEND_DATA || connection->prev_state != RECEIVE_RCPT_TO_RESPONSE)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }
 
+    char message[7];
+
+    memset(message, '\0', 7);
+    sprintf(message, "DATA\r\n");
+
+    int size = send(connection->id, message, 7, NULL);
+    if (size < 0)
+    {
+        if (size == -1 && errno == EWOULDBLOCK)
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleSendDATA: Fail to send DATA on server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    connection->prev_state = connection->current_state;
+    connection->current_state = RECEIVE_DATA_RESPONSE;
+
+    return 0;   
 }
 
 int handleResponseOfDATA(struct FileDesc *connection)
 {
+    //  Check current and prev states
+    if (connection->current_state != RECEIVE_DATA_RESPONSE || connection->prev_state != SEND_DATA)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }
 
+    int size;
+    char message[BUFFER];
+    size = recv(connection->id, message, BUFFER, NULL);
+    if (size < 0)
+    {
+        if (size == -1 && errno == EWOULDBLOCK)
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfDATA: Fail to receive DATA response from server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    int status = getCommandStatus(message);
+    if (status != 354)
+    {
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfDATA: Fail status(%d) of DATA response from server %s.", status, connection->mx_record);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -3;
+    }
+
+    connection->prev_state = connection->current_state;
+    connection->current_state = SEND_LETTER;
+
+    return 0;
 }
 
 int handleSendLetter(struct FileDesc *connection)
@@ -675,37 +753,30 @@ int handleSendLetter(struct FileDesc *connection)
 
 int handleResponseOfLetter(struct FileDesc *connection)
 {
-
 }
 
 int handleSendQUIT(struct FileDesc *connection)
 {
-
 }
 
 int handleResponseOfQUIT(struct FileDesc *connection)
 {
-
 }
 
 int handleDisponsing(struct FileDesc *connection)
 {
-
 }
 
 int handleSmtpError(struct FileDesc *connection)
 {
-
 }
 
 int handleSolvableMistake(struct FileDesc *connection)
 {
-
 }
 
 int handleResponseOfRSET(struct FileDesc *connection)
 {
-
 }
 
 //============//
