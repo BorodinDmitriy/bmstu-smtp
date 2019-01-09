@@ -16,7 +16,7 @@ int setLetterMetaData(struct letter_info *info, char *filepath);
 //  HANDLERS  //
 //============//
 
-int prepareSocketForConnection(struct FileDesc *connection);
+int handlePrepareSocketConnection(struct FileDesc *connection);
 int handleGreeting(struct FileDesc *connection);
 int handleSendEHLO(struct FileDesc *connection);
 int handleResponseOfEHLO(struct FileDesc *connection);
@@ -177,26 +177,26 @@ int SMTP_Control(struct FileDesc *socket_connection)
         switch (socket_connection->current_state)
         {
         case PREPARE_SOCKET_CONNECTION:
-            state = prepareSocketForConnection(socket_connection);
-            break;
-
-        case CONNECT:
-            state = handleGreeting(socket_connection);
+            state = handlePrepareSocketConnection(socket_connection);
             break;
 
         case RECEIVE_SMTP_GREETING:
-            state = handleSendEHLO(socket_connection);
+            state = handleGreeting(socket_connection);
             break;
 
         case SEND_EHLO:
-            state = handleResponseOfEHLO(socket_connection);
+            state = handleSendEHLO(socket_connection);
             break;
 
         case RECEIVE_EHLO_RESPONSE:
-            state = handleSendMailFrom(socket_connection);
+            state = handleResponseOfEHLO(socket_connection);
             break;
 
         case SEND_MAIL_FROM:
+            state = handleSendMailFrom(socket_connection);
+            break;
+
+        case RECEIVE_MAIL_FROM_RESPONSE:
             state = handleResponseOfMailFrom(socket_connection);
             break;
 
@@ -211,7 +211,7 @@ int SMTP_Control(struct FileDesc *socket_connection)
 //  HANDLERS  //
 //============//
 
-int prepareSocketForConnection(struct FileDesc *connection)
+int handlePrepareSocketConnection(struct FileDesc *connection)
 {
     int state = 0;
 
@@ -220,7 +220,7 @@ int prepareSocketForConnection(struct FileDesc *connection)
     {
         char message[150];
         memset(message, '\0', 150);
-        sprintf(message, "Worker: prepareSocketForConnection: unexpected current_state (%d) and prev_state(%d) for socket with domain %s", connection->current_state, connection->prev_state, connection->domain);
+        sprintf(message, "Worker: handlePrepareSocketConnection: unexpected current_state (%d) and prev_state(%d) for socket with domain %s", connection->current_state, connection->prev_state, connection->domain);
         Error(message);
         return -1;
     }
@@ -245,7 +245,7 @@ int prepareSocketForConnection(struct FileDesc *connection)
     {
         char message[100];
         memset(message, '\0', 100);
-        sprintf(message, "Worker: prepareSocketForConnection: Fail to set socket option 'SO_REUSEADDR' for %s domain", connection->domain);
+        sprintf(message, "Worker: handlePrepareSocketConnection: Fail to set socket option 'SO_REUSEADDR' for %s domain", connection->domain);
         Error(message);
         return -3;
     }
@@ -255,7 +255,7 @@ int prepareSocketForConnection(struct FileDesc *connection)
     {
         char message[100];
         memset(message, '\0', 100);
-        sprintf(message, "Worker: prepareSocketForConnection: Fail to set socket option 'SO_REUSEPORT' for %s domain", connection->domain);
+        sprintf(message, "Worker: handlePrepareSocketConnection: Fail to set socket option 'SO_REUSEPORT' for %s domain", connection->domain);
         Error(message);
         return -4;
     }
@@ -265,7 +265,7 @@ int prepareSocketForConnection(struct FileDesc *connection)
     {
         char message[100];
         memset(message, '\0', 100);
-        sprintf(message, "Worker: prepareSocketForConnection: Fail to receive socket flags for %s domain", connection->domain);
+        sprintf(message, "Worker: handlePrepareSocketConnection: Fail to receive socket flags for %s domain", connection->domain);
         Error(message);
         return -5;
     }
@@ -275,7 +275,7 @@ int prepareSocketForConnection(struct FileDesc *connection)
     {
         char message[100];
         memset(message, '\0', 100);
-        sprintf(message, "Worker: prepareSocketForConnection: Fail to set flag 'O_NONBLOCK' for socket by %s domain", connection->domain);
+        sprintf(message, "Worker: handlePrepareSocketConnection: Fail to set flag 'O_NONBLOCK' for socket by %s domain", connection->domain);
         Error(message);
         return -6;
     }
@@ -288,7 +288,7 @@ int prepareSocketForConnection(struct FileDesc *connection)
     {
         char message[100];
         memset(message, '\0', 100);
-        sprintf(message, "Worker: prepareSocketForConnection: Fail to inet_pton for %s domain", connection->domain);
+        sprintf(message, "Worker: handlePrepareSocketConnection: Fail to inet_pton for %s domain", connection->domain);
         Error(message);
         return -7;
     }
@@ -298,13 +298,13 @@ int prepareSocketForConnection(struct FileDesc *connection)
     {
         char message[100];
         memset(message, '\0', 100);
-        sprintf(message, "Worker: prepareSocketForConnection: Fail to inet_pton for %s domain", connection->domain);
+        sprintf(message, "Worker: handlePrepareSocketConnection: Fail to inet_pton for %s domain", connection->domain);
         Error(message);
         return -8;
     }
 
     //  CHANGE CURRENT STATE AND PREV STATE
-    connection->current_state = CONNECT;
+    connection->current_state = RECEIVE_SMTP_GREETING;
     connection->prev_state = PREPARE_SOCKET_CONNECTION;
 
     if (state == -1 && errno == EAGAIN)
@@ -320,12 +320,10 @@ int prepareSocketForConnection(struct FileDesc *connection)
 int handleGreeting(struct FileDesc *connection)
 {
     //  Check state
-    if (connection->current_state != CONNECT || connection->prev_state != PREPARE_SOCKET_CONNECTION)
+    if (connection->current_state != RECEIVE_SMTP_GREETING || connection->prev_state != PREPARE_SOCKET_CONNECTION)
     {
         //  Set error state
-        connection->prev_state = connection = connection->current_state;
         connection->current_state = SMTP_ERROR;
-
         return -1;
     }
 
@@ -351,7 +349,6 @@ int handleGreeting(struct FileDesc *connection)
         Error(err_message);
 
         //  change state on Error
-        connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
         return -2;
     }
@@ -361,14 +358,12 @@ int handleGreeting(struct FileDesc *connection)
     //  Unexpected status codes
     if (status != 220 && status != 421)
     {
-        connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
         return -3;
     }
 
     if (status == 421)
     {
-        connection->prev_state = connection->current_state;
         connection->current_state = DISPOSING_SOCKET;
         return 0;
     }
@@ -378,14 +373,13 @@ int handleGreeting(struct FileDesc *connection)
     if (status != 0)
     {
         //  Unexpected domain
-        connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
         return -4;
     }
 
     //  Successfully change state, all actions is ok
     connection->prev_state = connection->current_state;
-    connection->current_state = RECEIVE_SMTP_GREETING;
+    connection->current_state = SEND_EHLO;
 
     return 0;
 }
@@ -393,12 +387,10 @@ int handleGreeting(struct FileDesc *connection)
 int handleSendEHLO(struct FileDesc *connection)
 {
     //  Check current and prev states
-    if (connection->current_state != RECEIVE_SMTP_GREETING || connection->prev_state != CONNECT)
+    if (connection->current_state != SEND_EHLO || connection->prev_state != RECEIVE_SMTP_GREETING)
     {
         //  Set error state
-        connection->prev_state = connection = connection->current_state;
         connection->current_state = SMTP_ERROR;
-
         return -1;
     }
     int len = strlen(MY_DOMAIN);
@@ -424,14 +416,13 @@ int handleSendEHLO(struct FileDesc *connection)
         Error(err_message);
 
         //  change state on Error
-        connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
         return -2;
     }
 
     //  Change current state
     connection->prev_state = connection->current_state;
-    connection->current_state = SEND_EHLO;
+    connection->current_state = RECEIVE_EHLO_RESPONSE;
 
     return 0;
 }
@@ -439,17 +430,15 @@ int handleSendEHLO(struct FileDesc *connection)
 int handleResponseOfEHLO(struct FileDesc *connection)
 {
     //  Check current and prev states
-    if (connection->current_state != SEND_EHLO || connection->prev_state != RECEIVE_SMTP_GREETING)
+    if (connection->current_state != RECEIVE_EHLO_RESPONSE || connection->prev_state != SEND_EHLO)
     {
         //  Set error state
-        connection->prev_state = connection = connection->current_state;
         connection->current_state = SMTP_ERROR;
 
         return -1;
     }
 
     char message[BUFFER];
-
     int size = recv(connection->id, message, BUFFER, NULL);
 
     if (size < 0)
@@ -466,7 +455,6 @@ int handleResponseOfEHLO(struct FileDesc *connection)
         Error(err_message);
 
         //  change state on Error
-        connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
         return -2;
     }
@@ -474,14 +462,12 @@ int handleResponseOfEHLO(struct FileDesc *connection)
     int status = getCommandStatus(message);
     if (status != 250 && status != 421)
     {
-        connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
         return -3;
     }
 
     if (status == 421)
     {
-        connection->prev_state = connection->current_state;
         connection->current_state = DISPOSING_SOCKET;
         return 0;
     }
@@ -492,7 +478,6 @@ int handleResponseOfEHLO(struct FileDesc *connection)
     if (!pointer)
     {
         //  In EHLO not founded my name... is error connection
-        connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
         return -4;
     }
@@ -501,7 +486,6 @@ int handleResponseOfEHLO(struct FileDesc *connection)
     if (message[size - 2] != '\r' || message[size - 1] != '\n' || (pointer + len + 1) != '\r' || (pointer - 1) != ' ')
     {
         //  Bad command. Error in CRLF or my domain
-        connection->prev_state = connection->current_state;
         connection->current_state = SMTP_ERROR;
         return -5;
     }
@@ -510,7 +494,7 @@ int handleResponseOfEHLO(struct FileDesc *connection)
 
     //  change current state
     connection->prev_state = connection->current_state;
-    connection->current_state = RECEIVE_EHLO_RESPONSE;
+    connection->current_state = SEND_MAIL_FROM;
 
     return 0;
 }
@@ -519,10 +503,11 @@ int handleSendMailFrom(struct FileDesc *connection)
 {
     //  Check states and transition
 
-    bool first_sending = ((connection->current_state == RECEIVE_EHLO_RESPONSE) && (connection->prev_state == SEND_EHLO));
-    bool repeated_sending = ((connection->current_state == RECEIVE_LETTER_RESPONSE) && (connection->prev_state == SEND_LETTER));
+    bool first_sending = connection->prev_state == RECEIVE_EHLO_RESPONSE;
+    bool repeated_sending = connection->prev_state == RECEIVE_LETTER_RESPONSE;
+    bool fail_sending = connection->prev_state == RECEIVE_RSET_RESPONSE;
 
-    if (!first_sending || !repeated_sending)
+    if (connection->current_state != SEND_MAIL_FROM || (!first_sending && !repeated_sending && !fail_sending))
     {
         //  Set error state
         connection->prev_state = connection->current_state;
@@ -537,7 +522,7 @@ int handleSendMailFrom(struct FileDesc *connection)
     {
         char message[250];
         memset(message, '\0', 250);
-        sprintf(message, "Worker: handleSendMailFrom: Fail to receive metadata about letter with filepath(%s) by domain (%s)",connection->task_pool->path, connection->domain);
+        sprintf(message, "Worker: handleSendMailFrom: Fail to receive metadata about letter with filepath(%s) by domain (%s)", connection->task_pool->path, connection->domain);
         Error(message);
 
         connection->prev_state = connection->current_state;
@@ -550,13 +535,13 @@ int handleSendMailFrom(struct FileDesc *connection)
 
     char message[BUFFER];
     memset(message, '\0', BUFFER);
-    sprintf(message, "MAIL FROM:<%s>\r\n",connection->meta_data.from);
+    sprintf(message, "MAIL FROM:<%s>\r\n", connection->meta_data.from);
     int len = strlen(message);
 
     state = send(connection->id, message, len, NULL);
     if (state < 0)
     {
-        if (state == -1 && errno == EWOULDBLOCK) 
+        if (state == -1 && errno == EWOULDBLOCK)
         {
             //  All ok, connection is would block, wait and again try to receive getting
             return 1;
@@ -574,14 +559,14 @@ int handleSendMailFrom(struct FileDesc *connection)
     }
 
     connection->prev_state = connection->current_state;
-    connection->current_state = SEND_MAIL_FROM;
+    connection->current_state = RECEIVE_MAIL_FROM_RESPONSE;
 
     return 0;
 }
 
-int handleResponseOfMailFrom(struct FileDesc *connection) 
+int handleResponseOfMailFrom(struct FileDesc *connection)
 {
-    
+    //  check states
 }
 
 //============//
@@ -610,7 +595,7 @@ int getMXrecord(struct FileDesc *connection)
         //  current domain not resolved
         char message[150];
         memset(message, '\0', 150);
-        sprintf(message, "Worker: prepareSocketForConnection: getMXrecord: Not found MX_RECORD for %s domain", connection->domain);
+        sprintf(message, "Worker: handlePrepareSocketConnection: getMXrecord: Not found MX_RECORD for %s domain", connection->domain);
         Error(message);
         return -1;
     }
@@ -620,7 +605,7 @@ int getMXrecord(struct FileDesc *connection)
     {
         char message[150];
         memset(message, '\0', 150);
-        sprintf(message, "Worker: prepareSocketForConnection: getMXrecord: Fail to allocate memory for %s domain mx-record", connection->domain);
+        sprintf(message, "Worker: handlePrepareSocketConnection: getMXrecord: Fail to allocate memory for %s domain mx-record", connection->domain);
         Error(message);
         return -2;
     }
@@ -746,7 +731,6 @@ int setLetterMetaData(struct letter_info *info, char *filepath)
             continue;
         }
     }
-
 
     fclose(letter);
     return state;
