@@ -38,6 +38,12 @@ struct FileDescSet
     int count;
 };
 
+struct letter_info
+{
+    char *to;
+    char *from;
+};
+
 struct FileDesc
 {
     int id;
@@ -48,6 +54,7 @@ struct FileDesc
     int prev_state;
     int attempt;
     struct worker_task *task_pool;
+    struct letter_info meta_data;
 };
 
 struct FileDescList
