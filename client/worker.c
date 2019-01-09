@@ -308,7 +308,7 @@ struct FileDesc *addNewSocketConnection(struct network_controller *manager, char
     new_socket_connection->prev_state = NULL_POINTER;
     new_socket_connection->current_state = PREPARE_SOCKET_CONNECTION;
     state = SMTP_Control(new_socket_connection);
-    if (state != 0)
+    if (state != 0 || state != 1)
     {
         char message[100];
         memset(message, '\0', 100);
