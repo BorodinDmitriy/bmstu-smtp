@@ -554,12 +554,109 @@ int handleResponseOfMailFrom(struct FileDesc *connection)
 
 int handleSendRCPTto(struct FileDesc *connection)
 {
+    //  Check current and prev states
+    if (connection->current_state != SEND_RCPT_TO || connection->prev_state != RECEIVE_MAIL_FROM_RESPONSE)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }
 
+    char message[BUFFER];
+    int len;
+
+    memset(message, '\0', BUFFER);
+    sprintf(message, "RCPT To: <%s>\r\n", connection->meta_data.to);
+    len = strlen(message);
+
+    int size = send(connection->id, message, len, NULL);
+    if (size < 0) 
+    {
+        if (size == -1 && errno == EWOULDBLOCK)
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleSendRCPTto: Fail to send RCPT on server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    connection->prev_state = connection->current_state;
+    connection->current_state = RECEIVE_RCPT_TO_RESPONSE;
+
+    return 0;
 }
 
 int handleResponseOfRCPTto(struct FileDesc *connection)
 {
+    //  Check current and prev states
+    if (connection->current_state != RECEIVE_RCPT_TO_RESPONSE || connection->prev_state != SEND_RCPT_TO)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }
 
+    int size;
+    char message[BUFFER];
+    size = recv(connection->id, message, BUFFER, NULL);
+    if (size < 0) 
+    {
+        if (size == -1 && errno == EWOULDBLOCK)
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfRCPTto: Fail to receive RCPT TO response from server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    int status = getCommandStatus(message);
+    if (status != 250)
+    {
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfRCPTto: Fail status(%d) of RCPT TO response from server %s.",status, connection->mx_record);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -3;
+    }
+
+    char verifyMessage[9] = "250 OK\r\n\0";
+    int len = strlen(message);
+    status = strncmp(message, verifyMessage, 8);
+    if (status != 0) 
+    {
+        char err_message[150 + len];
+        memset(err_message, '\0', 150 + len);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail message(%s) of RCPT TO response from server %s.", message, connection->mx_record);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -4;
+    }
+
+    connection->prev_state = connection->current_state;
+    connection->current_state = SEND_DATA;
+
+    return 0;
 }
 
 int handleSendDATA(struct FileDesc *connection)
@@ -608,7 +705,7 @@ int handleSolvableMistake(struct FileDesc *connection)
 
 int handleResponseOfRSET(struct FileDesc *connection)
 {
-    
+
 }
 
 //============//
