@@ -1,7 +1,13 @@
 #include "process.h"
 
 struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address) {
-	struct process *result = (struct process *) malloc(sizeof(struct process));
+    struct mq_attr attr;
+    attr.mq_flags = 0;
+    attr.mq_maxmsg = 10;
+    attr.mq_msgsize = SERVER_BUFFER_SIZE;
+    attr.mq_curmsgs = 0;
+
+    struct process *result = (struct process *) malloc(sizeof(struct process));
 	result->pid = pid;
 	
     result->sock_list = NULL;
@@ -9,6 +15,23 @@ struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, stru
     result->max_fd = -1;
     result->serv_address = serv_address;
     result->addrlen = sizeof(serv_address);
+    result->state_worked = 1;
+
+    char queue_name[20];
+    sprintf(queue_name, "/process%d", getpid());
+    //printf("QUEUE2 = %s\n", queue_name);
+    result->queue_name = queue_name;
+    result->mq = NULL;
+    mqd_t mq = mq_open(result->queue_name, O_CREAT | O_RDONLY | O_NONBLOCK, 0644, &attr);
+    if (mq > 0) {
+        result->mq = (mqd_t *) malloc(sizeof(mqd_t));
+        *(result->mq) = mq;
+        if (result->max_fd < mq) {
+            result->max_fd = mq;
+        }
+        printf("mqueue created");
+    }
+
     FD_ZERO(&(result->listener_set));
     FD_ZERO(&(result->socket_set));
     FD_ZERO(&(result->writer_set));
@@ -34,10 +57,49 @@ struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, stru
 
     return result;
 }
+void handle_process_signal(int signum)
+{
+    if (signum == SIGINT)
+    {
+        printf("%d: Want to gracefully close\n", getpid());
+        mqd_t mq;
+        char buffer[SERVER_BUFFER_SIZE] = "#";
+        char queue_name[20];
 
-struct process * init_processes(int count, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address) {
+        sprintf(queue_name, "/process%d", getpid());
+
+        /* open the mail queue */
+        mq = mq_open(queue_name, O_WRONLY);
+        if (mq_send(mq, buffer, SERVER_BUFFER_SIZE, 0)) {
+            printf("errno = %d\n", errno);
+        }
+        
+        mq_close(mq);
+
+    }
+    return; 
+}
+
+void init_signal_catch(sigset_t *empty, sigset_t *block)
+{
+    /*sigemptyset(empty);
+    sigemptyset(block);
+
+    sigaddset(block, SIGINT);
+    sigprocmask(SIG_BLOCK, block, empty);*/
+    struct sigaction signals;
+    signals.sa_handler = handle_process_signal;
+    signals.sa_flags = 0;
+    //sigemptyset(&signals.sa_mask);
+    sigfillset(&signals.sa_mask);
+    sigaction(SIGINT, &signals, NULL);
+
+    return;
+}
+
+int * init_processes(int count, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address) {
 	int i;
-	struct process *result = NULL;
+	int *result_pid_array = (int *)malloc(count * sizeof(int));
 	for (i = 0; i < count; i++) {
 		pid_t pid;
     	switch (pid = fork()) {
@@ -48,19 +110,21 @@ struct process * init_processes(int count, struct fd_linked_list *socket_fds, st
         		printf("child process forked with pid: %d\n", getpid());
         		printf("parent pid: %d\n", getppid());
         		struct process *pr = init_process(getpid(),socket_fds, serv_address);
-        		while (1) {
-        			int a = run_process(pr);
-        			//printf("rr\n");
 
-        			if (a > 1) {
-        				break;
-        			}
-        		}
+                static int state_worked = 1;
+
+                sigset_t empty, block;
+                init_signal_catch(&empty, &block);
+
+        		int a = run_process(pr);
+                kill(getpid(),SIGTERM);
         		
         		//smtp_handler(sock_fd, getpid());
         	default: // процесс - родитель
         		//return init_process(getpid(),socket_fds);
+                result_pid_array[i] = pid;
                 continue;
     	}
 	}
+    return result_pid_array;
 }

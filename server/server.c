@@ -2,7 +2,30 @@
 
 static struct server serv;
 
-void handle_signal(int signal);
+void handle_server_signal(int signum)
+{
+    if (signum == SIGINT)
+    {
+        printf("%d: Want to gracefully close\n", getpid());
+        int i = 0;
+        for (i = 0; i < serv.process_count; i++) {
+        	wait(serv.pids[i]);
+        }
+        serv.state = SERVER_FINISH_WORK;
+    }
+    return; 
+}
+
+void init_signal_catcher(sigset_t *empty, sigset_t *block)
+{
+    struct sigaction signals;
+    signals.sa_handler = handle_server_signal;
+    signals.sa_flags = 0;
+    sigfillset(&signals.sa_mask);
+    sigaction(SIGINT, &signals, NULL);
+
+    return;
+}
 
 int server_init() {
 	struct fd_linked_list *p;	
@@ -12,8 +35,10 @@ int server_init() {
 	serv.addrlen = sizeof(serv.address);
 	serv.socket_fds = init_sockets();
 	//serv.socket_fds = init_sockets_using_clients(10);
-	serv.prcs = init_processes(1, serv.socket_fds, serv.address);
-	if (serv.socket_fds == NULL) {
+	serv.process_count = 2;
+	serv.pids = init_processes(serv.process_count, serv.socket_fds, serv.address);
+
+	if ((serv.socket_fds == NULL) || (serv.pids == NULL)) {
 		printf("SERVER INIT FAILED\n");
 		serv.state = SERVER_FAIL_INIT;
 	} else {
@@ -22,6 +47,9 @@ int server_init() {
 		for (p = serv.socket_fds; p != NULL; p = p->next) {
 			(p->fd > serv.socket_fd_max) ? (serv.socket_fd_max = p->fd) : 1;
 		}
+
+		sigset_t empty, block;
+        init_signal_catcher(&empty, &block);
 		serv.state = SERVER_FINISH_INIT;
 	}
 	
@@ -35,9 +63,9 @@ int server_run() {
 	serv.state = SERVER_START_WORK;
 	// вечно слушающий цикл в поисках новых соединений
 	// и создающий по процессу на каждое соединение
-	while (1) {
+	while (serv.state == SERVER_START_WORK) {
 		printf("SERVER_WORKS\n");
-		printf("serv_sock = %d\n", serv.socket_fds);
+		//printf("serv_sock = %d\n", serv.socket_fds);
 		sleep(100);
 		/*fd_set socket_set;
 		FD_ZERO(&socket_set);

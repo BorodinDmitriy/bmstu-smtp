@@ -89,7 +89,7 @@ int run_process(struct process *pr) {
 
 	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
 
-	while (1) {
+	while (pr->state_worked) {
 		struct timeval tv; // timeval используется внутри select для выхода из ожидания по таймауту
 		tv.tv_sec = 15;
 		tv.tv_usec = 0;
@@ -127,6 +127,10 @@ int run_process(struct process *pr) {
     		}
 		}
 
+		if (*(pr->mq) != NULL) {
+			FD_SET(*(pr->mq), &(pr->socket_set));
+		}
+
 		// now we can use select with timeout
 		rc = select(pr->max_fd + 1, &(pr->socket_set), NULL, NULL, &tv);
 		if (rc == 0) {
@@ -139,6 +143,23 @@ int run_process(struct process *pr) {
 			}
 		} else {
 			// some sockets are ready
+			// check mqueue
+			if (*(pr->mq) != NULL) {
+				if (FD_ISSET(*(pr->mq), &(pr->socket_set))) {
+					char msg_buffer[SERVER_BUFFER_SIZE];
+					memset(msg_buffer, 0x00, sizeof(msg_buffer));
+        			int bytes_read = mq_receive(*(pr->mq), msg_buffer, SERVER_BUFFER_SIZE, NULL);
+        			if (bytes_read >= 0) {
+						printf("Server: Received message: %s\n", msg_buffer);
+						if (strcmp(msg_buffer,"#") == 0) {
+							pr->state_worked = 0;
+							continue;
+						}
+					} else {
+						printf("Server: None \n");
+					}
+				}
+			}
 			// check listeners
 			if (pr->listeners_list != NULL) {
 				// проходим по списку сокетов в поисках установленного соединения

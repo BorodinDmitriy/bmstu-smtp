@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <mqueue.h>
 
 #define CLIENT_MAIL_DIR_PATH "./maildir/"
 #define STR_EQUAL(a,b)	(strcmp(a, b) == 0)

@@ -6,6 +6,7 @@
 #include <sys/ipc.h> 
 #include <sys/msg.h> 
 #include <stdlib.h>
+#include <mqueue.h>
 
 // structure for message queue 
 struct mesg_buffer { 
@@ -17,6 +18,9 @@ struct process {
 	pid_t pid;
 	struct sockaddr_in serv_address;
 	size_t addrlen;
+	mqd_t *mq;
+	char *queue_name;
+	int state_worked;
 
 	fd_set listener_set; // reader_set
 	fd_set socket_set; // reader_set
@@ -29,6 +33,6 @@ struct process {
 };
 
 struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address);
-struct process * init_processes(int count, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address);
+int * init_processes(int count, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address);
 
 #endif

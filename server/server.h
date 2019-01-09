@@ -23,7 +23,8 @@ struct server {
 	size_t addrlen;
 	char *domain;
 	int state;
-	struct process *prcs;
+	int process_count;
+	int *pids;
 };
 
 #endif
