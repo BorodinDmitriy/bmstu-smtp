@@ -5,6 +5,9 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
+#include <arpa/nameser.h>
+#include <netinet/in.h>
+#include <resolv.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
