@@ -22,152 +22,22 @@ int handleSendEHLO(struct FileDesc *connection);
 int handleResponseOfEHLO(struct FileDesc *connection);
 int handleSendMailFrom(struct FileDesc *connection);
 int handleResponseOfMailFrom(struct FileDesc *connection);
+int handleSendRCPTto(struct FileDesc *connection);
+int handleResponseOfRCPTto(struct FileDesc *connection);
+int handleSendDATA(struct FileDesc *connection);
+int handleResponseOfDATA(struct FileDesc *connection);
+int handleSendLetter(struct FileDesc *connection);
+int handleResponseOfLetter(struct FileDesc *connection);
+int handleSendQUIT(struct FileDesc *connection);
+int handleResponseOfQUIT(struct FileDesc *connection);
+int handleDisponsing(struct FileDesc *connection);
+int handleSmtpError(struct FileDesc *connection);
+int handleSolvableMistake(struct FileDesc *connection);
+int handleResponseOfRSET(struct FileDesc *connection);
 
 //==========================//
 //      PUBLIC METHODS      //
 //==========================//
-
-// int CloseConnection(struct FileDesc fd)
-// {
-//     int state = 0;
-//     state = shutdown(fd.id, 2);
-//     if (state)
-//     {
-//         printf("Fail to shutdown connection\r\n");
-//         return state;
-//     }
-
-//     state = close(fd.id);
-//     if (state)
-//     {
-//         printf("Fail to close connection\r\n");
-//         return state;
-//     }
-
-//     return 0;
-// }
-
-//  Send letter
-// int SendMail(int fd, struct Mail letter)
-// {
-//     fd = socketList.sockets[0].fd;
-//     int cur = findIndex(fd);
-
-//     if (cur == -1)
-//     {
-//         printf("Not found sender socket");
-//         return -1;
-//     }
-
-//     memset(&socketList.sockets[cur].dest, '0', sizeof(socketList.sockets[cur].dest));
-
-//     socketList.sockets[cur].dest.sin_family = AF_INET;
-//     socketList.sockets[cur].dest.sin_port = htons(SMTP_PORT);
-
-//     int state = 0;
-
-//     // state = inet_pton(AF_INET, "94.100.180.160", &socketList.sockets[cur].dest.sin_addr);
-//     state = inet_pton(AF_INET, "127.0.0.1", &socketList.sockets[cur].dest.sin_addr);
-//     if (state <= 0)
-//     {
-//         printf("\nFail to convert address");
-//         return -1;
-//     }
-
-//     state = connect(fd, (struct sockaddr *)&socketList.sockets[cur].dest, sizeof(socketList.sockets[cur].dest));
-//     if (state < 0)
-//     {
-//         printf("\nConnection failed\n");
-//         return -1;
-//     }
-
-//     sendHelo(cur, "IU7.2@yandex.ru");
-
-//     //  close connection
-//     shutdown(fd, 2);
-//     close(fd);
-//     return 0;
-// }
-
-//==========================//
-//      PRIVATE METHODS     //
-//==========================//
-
-// int sendCommand(struct FileDesc *fd, char *command, char *data)
-// {
-//     int state = 0;
-
-//     int send_len = (int)strlen(command) + 1 + (int)strlen(data) + 5;
-
-//     char *message = (char *)calloc(send_len, sizeof(char));
-//     strcpy(message, command);
-//     strcat(message, " ");
-//     strcat(message, data);
-//     strcat(message, " \r\n");
-
-//     state = send(fd->id, message, strlen(message), 0);
-//     free(message);
-//     return state;
-// }
-
-// //  send "HELO" message of SMTP
-// int sendHelo(int index, char *address)
-// {
-//     char *message = (char *)calloc(100, sizeof(char));
-//     int state;
-
-//     // state = recv(socketList.sockets[index].fd, message, 100, NULL);
-//     if (state <= 0)
-//     {
-//         printf("\nFail to receive 'HELO' from server");
-//         free(message);
-//     }
-
-//     free(message);
-//     int address_len = strlen(address);
-//     int message_len = 5 + address_len + 5;
-//     *message = (char *)calloc(address_len, sizeof(char));
-
-//     memset(message, ' ', address_len);
-//     strcpy(message, "HELO ");
-//     strcat(message, address);
-//     strcat(message, " \r\n");
-
-//     // state = send(socketList.sockets[index].fd, message, message_len, 0);
-
-//     if (state < 0)
-//     {
-//         printf("\nFail to send 'HELO' to %s", address);
-//         free(message);
-//         return state;
-//     }
-//     memset(message, '\0', address_len);
-//     printf("\nSend HELO from %d socket", index);
-//     // int readed = recv(socketList.sockets[index].fd, message, message_len, NULL);
-
-//     printf("\nReceive response from HELO: %s", message);
-
-//     memset(message, ' ', address_len);
-//     strcpy(message, "QUIT ");
-//     strcat(message, "\r\n");
-
-//     // state = send(socketList.sockets[index].fd, message, message_len, 0);
-
-//     if (state < 0)
-//     {
-//         printf("\nFail to send 'QUIT' to %s", address);
-//         free(message);
-//         return state;
-//     }
-
-//     memset(message, '\0', address_len);
-//     printf("\nSend HELO from %d socket", index);
-//     // readed = recv(socketList.sockets[index].fd, message, message_len, NULL);
-
-//     printf("\nReceive response from HELO: %s", message);
-//     free(message);
-//     return 0;
-// }
 
 int SMTP_Control(struct FileDesc *socket_connection)
 {
@@ -199,6 +69,56 @@ int SMTP_Control(struct FileDesc *socket_connection)
         case RECEIVE_MAIL_FROM_RESPONSE:
             state = handleResponseOfMailFrom(socket_connection);
             break;
+        
+        case SEND_RCPT_TO:
+            state = handleSendRCPTto(socket_connection);
+            break;
+
+        case RECEIVE_RCPT_TO_RESPONSE:
+            state = handleResponseOfRCPTto(socket_connection);
+            break;
+        
+        case SEND_DATA:
+            state = handleSendDATA(socket_connection);
+            break;
+
+        case RECEIVE_DATA_RESPONSE:
+            state = handleResponseOfDATA(socket_connection);
+            break;
+
+        case SEND_LETTER:
+            state = handleSendLetter(socket_connection);
+            break;
+        
+        case RECEIVE_LETTER_RESPONSE:
+            state = handleResponseOfLetter(socket_connection);
+            break;
+        
+        case SEND_QUIT:
+            state = handleSendQUIT(socket_connection);
+            break;
+
+        case RECEIVE_QUIT_RESPONSE:
+            state = handleResponseOfQUIT(socket_connection);
+            break;
+
+        case DISPOSING_SOCKET:
+            state = handleDisponsing(socket_connection);
+            break;
+
+
+
+        case SMTP_ERROR: 
+            state = handleSmtpError(socket_connection);
+            break;
+
+        case SEND_RSET:
+            state = handleSolvableMistake(socket_connection);
+            break;
+        
+        case RECEIVE_RSET_RESPONSE:
+            state = handleResponseOfRSET(socket_connection);
+            break;
 
         default:
             state = -1;
@@ -206,6 +126,10 @@ int SMTP_Control(struct FileDesc *socket_connection)
     }
     return state;
 }
+
+//==========================//
+//      PRIVATE METHOD      //
+//==========================//
 
 //============//
 //  HANDLERS  //
@@ -566,7 +490,125 @@ int handleSendMailFrom(struct FileDesc *connection)
 
 int handleResponseOfMailFrom(struct FileDesc *connection)
 {
-    //  check states
+    //  Check current and prev states
+    if (connection->current_state != RECEIVE_MAIL_FROM_RESPONSE || connection->prev_state != SEND_MAIL_FROM)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }
+
+    int size;
+    char message[BUFFER];
+    size = recv(connection->id, message, BUFFER, NULL);
+    if (size < 0) 
+    {
+        if (size == -1 && errno == EWOULDBLOCK)
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail to receive MAIL FROM response from server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    int status = getCommandStatus(message);
+    if (status != 250)
+    {
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail status(%d) of MAIL FROM response from server %s.",status, connection->mx_record);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -3;
+    }
+
+    char verifyMessage[9] = "250 OK\r\n\0";
+    status = strncmp(message, verifyMessage, 8);
+    if (status != 0) 
+    {
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail status(%d) of MAIL FROM response from server %s.",status, connection->mx_record);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -4;
+    }
+
+    connection->prev_state = connection->current_state;
+    connection->current_state = SEND_RCPT_TO;
+
+    return 0;
+}
+
+int handleSendRCPTto(struct FileDesc *connection)
+{
+
+}
+
+int handleResponseOfRCPTto(struct FileDesc *connection)
+{
+
+}
+
+int handleSendDATA(struct FileDesc *connection)
+{
+
+}
+
+int handleResponseOfDATA(struct FileDesc *connection)
+{
+
+}
+
+int handleSendLetter(struct FileDesc *connection)
+{
+}
+
+int handleResponseOfLetter(struct FileDesc *connection)
+{
+
+}
+
+int handleSendQUIT(struct FileDesc *connection)
+{
+
+}
+
+int handleResponseOfQUIT(struct FileDesc *connection)
+{
+
+}
+
+int handleDisponsing(struct FileDesc *connection)
+{
+
+}
+
+int handleSmtpError(struct FileDesc *connection)
+{
+
+}
+
+int handleSolvableMistake(struct FileDesc *connection)
+{
+
+}
+
+int handleResponseOfRSET(struct FileDesc *connection)
+{
+    
 }
 
 //============//
