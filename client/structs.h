@@ -43,6 +43,8 @@ struct FileDesc
     char *mx_record;
     struct sockaddr_in addr;
     int current_state;
+    int prev_state;
+    int attempt;
     struct worker_task *task_pool;
 };
 
