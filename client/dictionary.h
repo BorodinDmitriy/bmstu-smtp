@@ -9,7 +9,7 @@
 #include "logger.h"
 
 int InitDictionary();
-void RemoveDomainRecordFromDictionary(int workerId, char *domain);
+void RemoveDomainRecordFromDictionary(char *domain);
 int AddDomainRecordToDictionary(char *domain);
 int FindDomainInDictionary(char *domain);
 void FreeDictionary();

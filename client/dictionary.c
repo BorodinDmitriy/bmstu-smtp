@@ -82,7 +82,7 @@ int FindDomainInDictionary(char *domain)
     return result;
 }
 
-void RemoveDomainRecordFromDictionary(int workerId, char *domain)
+void RemoveDomainRecordFromDictionary(char *domain)
 {
     sem_wait(&lock);
     struct domain_record *pointer = Dictionary;
@@ -92,7 +92,7 @@ void RemoveDomainRecordFromDictionary(int workerId, char *domain)
     while (pointer != NULL)
     {
         state = strcmp(domain, pointer->domain);
-        if (state == 0 && pointer->workerId == workerId) 
+        if (state == 0) 
         {
             if (prev != NULL) 
             {
