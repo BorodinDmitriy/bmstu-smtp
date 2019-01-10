@@ -86,6 +86,7 @@ int run_process(struct process *pr) {
 	char buffer_output[SERVER_BUFFER_SIZE];	// выходной буфер для записи ответа
 
 	char smtp_stub[SERVER_BUFFER_SIZE] = "Hi, you've come to smtp server";
+	char logger_buffer[SERVER_BUFFER_SIZE];
 
 	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
 

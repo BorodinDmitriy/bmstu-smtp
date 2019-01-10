@@ -22,6 +22,7 @@ struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, stru
     char logger_name[20];
     sprintf(queue_name, "/process%d", getpid());
     sprintf(logger_name, "/process%d", logger_pid);
+    result->logger_name = logger_name;
     //printf("QUEUE2 = %s\n", queue_name);
     result->queue_name = queue_name;
     result->mq = NULL;
@@ -106,27 +107,42 @@ int * init_processes(int count, struct fd_linked_list *socket_fds, struct sockad
 	for (i = 0; i < count; i++) {
 		pid_t pid;
     	switch (pid = fork()) {
-    		case -1:
-    			printf("fork() failed"); 
-        		return NULL;
-        	case 0:  // процесс - потомок
-        		printf("child process forked with pid: %d\n", getpid());
-        		printf("parent pid: %d\n", getppid());
-        		struct process *pr = init_process(getpid(),socket_fds, serv_address, logger_pid);
+    		case -1: {
+                printf("fork() failed"); 
+                return NULL;
+            }
+        	case 0:  {
+                // процесс - потомок
+                struct process *pr = init_process(getpid(),socket_fds, serv_address, logger_pid);
+                int logger_mq = mq_open(pr->logger_name, O_WRONLY);
+                if (logger_mq > 0) {
+                    pr->extra = logger_mq;
+                }
+
+                char logger_buffer[SERVER_BUFFER_SIZE];
+                sprintf(logger_buffer, "child process forked with pid: %d\n", getpid());
+                if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+                    perror(logger_buffer);
+                }
+                sprintf(logger_buffer, "parent pid: %d\n", getppid());
+                if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+                    perror(logger_buffer);
+                }
 
                 static int state_worked = 1;
 
                 sigset_t empty, block;
                 init_signal_catch(&empty, &block);
 
-        		int a = run_process(pr);
+                int a = run_process(pr);
                 kill(getpid(),SIGTERM);
-        		
-        		//smtp_handler(sock_fd, getpid());
-        	default: // процесс - родитель
-        		//return init_process(getpid(),socket_fds);
+            }
+        	default: {
+                // процесс - родитель
+                //return init_process(getpid(),socket_fds);
                 result_pid_array[i] = pid;
                 continue;
+            }
     	}
 	}
     return result_pid_array;
