@@ -942,6 +942,7 @@ int handleResponseOfLetter(struct FileDesc *connection)
     {
         next_state = SEND_QUIT;
         DestroyTask(connection->task_pool);
+        RemoveDomainRecordFromDictionary(connection->domain);
         connection->task_pool = NULL;
     }
 
@@ -953,15 +954,114 @@ int handleResponseOfLetter(struct FileDesc *connection)
 
 int handleSendQUIT(struct FileDesc *connection)
 {
-    
+    //  Check current and prev states
+    if (connection->current_state != SEND_QUIT || connection->prev_state != RECEIVE_LETTER_RESPONSE)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }   
+
+    char message[BUFFER];
+    sprintf(message, "QUIT\r\n\0");
+
+    int len = strlen(message);
+
+    int size = send(connection->id, message, len, NULL);
+
+    if (size < 0)
+    {
+        if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS)) 
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleSendQUIT: Fail to send QUIT to server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    connection->prev_state = connection->current_state;
+    connection->current_state = RECEIVE_QUIT_RESPONSE;
+
+    return 0;
 }
 
 int handleResponseOfQUIT(struct FileDesc *connection)
 {
+    //  Check current and prev states
+    if (connection->current_state != RECEIVE_QUIT_RESPONSE || connection->prev_state != SEND_QUIT)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }   
+
+    char message[BUFFER];
+    memset(message, '\0', BUFFER);
+
+    int size = recv(connection->id, message, BUFFER, NULL);
+
+    if (size < 0)
+    {
+        if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS)) 
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseQUIT: Fail to receive response of QUIT from server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    int status = getCommandStatus(message);
+    if (status != 221)
+    {
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfQUIT: Fail status(%d) of response about letter from server %s.", status, connection->mx_record);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -3;
+    }
+
+    status = verifyServerDomain(message, connection->domain);
+    int len = strlen(message);
+    if (status != 0)
+    {
+        char err_message[150 + len];
+        memset(err_message, '\0', 150 + len);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfQUIT: Fail message(%s) of QUIT response from server %s.", message, connection->mx_record);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -4;
+    }
+
+    connection->prev_state = connection->current_state;
+    connection->current_state = DISPOSING_SOCKET;
+
+    return 0;   
 }
 
 int handleDisponsing(struct FileDesc *connection)
 {
+    
 }
 
 int handleSmtpError(struct FileDesc *connection)
