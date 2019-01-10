@@ -21,6 +21,7 @@
 //      FD TYPES        //
 //======================//
 #define MY_DOMAIN "smtp-test.ru"
+#define BUFFER 4096
 
 #define SOCKET_FD 0
 #define FILE_FD 1
@@ -42,6 +43,8 @@ struct letter_info
 {
     char *to;
     char *from;
+    FILE *file;
+    char message[BUFFER];
 };
 
 struct FileDesc

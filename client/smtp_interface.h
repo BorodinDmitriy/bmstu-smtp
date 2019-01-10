@@ -15,6 +15,4 @@
 
 int SMTP_Control(struct FileDesc *socket_connection);
 
-#define BUFFER 4096
-
 #endif //SMTP_SOCKET_H
