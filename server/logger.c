@@ -50,10 +50,11 @@ int run_logger(struct process *pr) {
         			int bytes_read = mq_receive(*(pr->mq), msg_buffer, SERVER_BUFFER_SIZE, NULL);
         			if (bytes_read >= 0) {
 						printf("Logger: Received message: %s\n", msg_buffer);
+						save_to_logger_file(msg_buffer);
 						if (strcmp(msg_buffer,"#") == 0) {
 							pr->state_worked = 0;
 							continue;
-						}
+						} 
 					} else {
 						printf("Logger: None \n");
 					}
@@ -62,5 +63,25 @@ int run_logger(struct process *pr) {
 		}
 	}
 	return 0;
+}
+
+int save_to_logger_file(char *new_text) {
+
+
+    FILE* logger_file = fopen("server_log", "a");
+    if (!logger_file) {
+        perror("Error opening logger file");
+        perror("server_log");
+        return -1;
+    }
+
+    time_t current_time = time(NULL);
+    char* time = ctime(&current_time);
+    time[strlen(time) - 1] = '\0';
+    fprintf(logger_file, "[%s]: \"%s\".\n", time,new_text);
+    fflush(logger_file);
+
+    fclose(logger_file);
+    return 0;
 }
 int dispose_logger();
