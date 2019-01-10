@@ -2,11 +2,10 @@ Return-Path: ilya_chizh@mail.ru
 Received: by e.mail.ru with HTTP;
 	Mon, 14 May 2018 00:32:50 +0300
 From: ilya_chizh@mail.ru
-To: iu7.2@yandex.ru
+To: iu7.2@smtp-test.ru
 Subject: Test smtp
 MIME-Version: 1.0
 Date: Mon, 14 May 2018 00:32:50 +0300
-Reply-To: ilya_chizh@mail.ru
 X-Priority: 3 (Normal)
 Content-Type: text/html;
 
