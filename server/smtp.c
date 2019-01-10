@@ -79,15 +79,18 @@ int check_clients_by_timeout(struct client_socket_list *clients, int max_fd, str
 
 int run_process(struct process *pr) {
 	struct mesg_buffer message;
+	char logger_buffer[SERVER_BUFFER_SIZE];
 
-	printf("SMTP run process start");
+	printf("SMTP run process start\n");
+	sprintf(logger_buffer, "SMTP run process start\n");
+    if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+        perror(logger_buffer);
+    }
 
 	int received_bytes_count;				// число прочитанных байт
 	char buffer_output[SERVER_BUFFER_SIZE];	// выходной буфер для записи ответа
 
 	char smtp_stub[SERVER_BUFFER_SIZE] = "Hi, you've come to smtp server";
-	char logger_buffer[SERVER_BUFFER_SIZE];
-
 	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
 
 	while (pr->state_worked) {
@@ -109,8 +112,16 @@ int run_process(struct process *pr) {
 		// add all the sockets to socket list
 		struct client_socket_list *p;
 		int rc;
-		printf("listeners_list = %p is_null = %d\n",pr->listeners_list, (pr->listeners_list == NULL));
-		printf("sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
+		// printf("listeners_list = %p is_null = %d\n",pr->listeners_list, (pr->listeners_list == NULL));
+		// printf("sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
+		sprintf(logger_buffer, "listeners_list = %p is_null = %d\n",pr->listeners_list, (pr->listeners_list == NULL));
+    	if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+        	perror(logger_buffer);
+    	}
+    	sprintf(logger_buffer, "sock_list = %p is_null = %d\n",pr->sock_list, (pr->sock_list == NULL));
+    	if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+        	perror(logger_buffer);
+    	}
 
 		FD_ZERO(&(pr->socket_set));
 		// first add listeners
@@ -125,6 +136,10 @@ int run_process(struct process *pr) {
 			for (p = pr->sock_list; p != NULL; p = p->next) {
     			FD_SET(p->c_sock.fd, &(pr->socket_set));
     			printf("client_socket%d = %d SOCKET_STATE = %d\n", getpid(), p->c_sock.fd, p->c_sock.state);
+    			sprintf(logger_buffer, "client_socket%d = %d SOCKET_STATE = %d\n", getpid(), p->c_sock.fd, p->c_sock.state);
+    			if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+        			perror(logger_buffer);
+    			}
     		}
 		}
 
@@ -137,6 +152,10 @@ int run_process(struct process *pr) {
 		if (rc == 0) {
 			// no sockets are ready - timeout
 			printf("no sockets are ready - timeout\n");
+			sprintf(logger_buffer, "no sockets are ready - timeout\n");
+    		if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+        		perror(logger_buffer);
+    		}
 			for (p = pr->sock_list; p != NULL; p = p->next) {
 				if (!FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
 					p->c_sock.state = SOCKET_STATE_CLOSED;
@@ -170,9 +189,17 @@ int run_process(struct process *pr) {
 						// принимаем соединение
     					new_socket = accept(p->c_sock.fd, (struct sockaddr *) &(pr->serv_address),  (socklen_t*) &(pr->addrlen));
     					printf("new_socket = %d pid = %d\n", new_socket, getpid());
+    					sprintf(logger_buffer, "new_socket = %d pid = %d\n", new_socket, getpid());
+    					if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+        					perror(logger_buffer);
+    					}
     					if (new_socket < 0) 
     					{ 
-        					printf("accept() failed"); 
+        					printf("accept() failed\n"); 
+        					sprintf(logger_buffer, "accept() failed\n");
+    						if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+        						perror(logger_buffer);
+    						}
         					continue;
     					} 
 
@@ -180,13 +207,21 @@ int run_process(struct process *pr) {
     					int file_flags = fcntl(new_socket, F_GETFL, 0);
     					if (file_flags == -1)
     					{
-        					printf("Fail to receive socket flags");
+        					printf("Fail to receive socket flags\n");
+        					sprintf(logger_buffer, "Fail to receive socket flags\n");
+    						if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+        						perror(logger_buffer);
+    						}
         					continue;
     					}
 
     					if (fcntl(new_socket, F_SETFL, file_flags | O_NONBLOCK))
     					{	
-        					printf("Fail to set flag 'O_NONBLOCK' for socket");
+        					printf("Fail to set flag 'O_NONBLOCK' for socket\n");
+        					sprintf(logger_buffer, "Fail to set flag 'O_NONBLOCK' for socket\n");
+    						if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
+        						perror(logger_buffer);
+    						}
         					continue;
     					}
 

@@ -74,7 +74,7 @@ void handle_process_signal(int signum)
 
         /* open the mail queue */
         mq = mq_open(queue_name, O_WRONLY);
-        if (mq_send(mq, buffer, SERVER_BUFFER_SIZE, 0)) {
+        if (mq_send(mq, buffer, SERVER_BUFFER_SIZE, 0) < 0) {
             printf("errno = %d\n", errno);
         }
         
