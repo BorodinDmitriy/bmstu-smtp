@@ -223,7 +223,7 @@ int handlePrepareSocketConnection(struct FileDesc *connection)
     }
 
     state = connect(connection->id, (struct sockaddr *)&connection->addr, sizeof(connection->addr));
-    if (state < 0 && state != -1 && errno != EAGAIN)
+    if (state < 0 && (state != -1 && (errno != EAGAIN || errno!= EINPROGRESS)))
     {
         char message[100];
         memset(message, '\0', 100);
@@ -236,7 +236,7 @@ int handlePrepareSocketConnection(struct FileDesc *connection)
     connection->current_state = RECEIVE_SMTP_GREETING;
     connection->prev_state = PREPARE_SOCKET_CONNECTION;
 
-    if (state == -1 && errno == EAGAIN)
+    if (state == -1 && (errno == EAGAIN || errno == EINPROGRESS))
     {
         //  Socket is block on connection
         return 1;
@@ -756,6 +756,34 @@ int handleResponseOfDATA(struct FileDesc *connection)
 
 int handleSendLetter(struct FileDesc *connection)
 {
+    //  Check current and prev states
+    if (connection->current_state != SEND_LETTER || connection->prev_state != RECEIVE_DATA_RESPONSE)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }   
+
+    if (!connection->meta_data.file)
+    {
+        connection->meta_data.file = fopen(connection->task_pool->path, "r");
+
+        if (!connection->meta_data.file)
+        {
+            char err_message[150];
+            memset(err_message, '\0', 150);
+            sprintf(err_message, "Worker: SMTP_Control: handleSendLetter: Fail to open file (%s). Errno: %d", connection->task_pool->path, errno);
+            Error(err_message);
+
+            //  change state on Error
+            connection->current_state = SMTP_ERROR;
+            return -2;
+        }
+    }
+
+
+    fclose(connection->meta_data.file);
+    return 0;
 }
 
 int handleResponseOfLetter(struct FileDesc *connection)
