@@ -21,6 +21,8 @@ struct process {
 	mqd_t *mq;
 	char *queue_name;
 	int state_worked;
+	char *logger_name;
+	int extra;
 
 	fd_set listener_set; // reader_set
 	fd_set socket_set; // reader_set
@@ -32,7 +34,9 @@ struct process {
 	struct client_socket_list *sock_list;
 };
 
-struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address);
-int * init_processes(int count, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address);
+struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address, int logger_pid);
+int * init_processes(int count, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address, int logger_pid);
+void init_signal_catch(sigset_t *empty, sigset_t *block);
+void handle_process_signal(int signum);
 
 #endif

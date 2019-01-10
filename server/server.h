@@ -5,6 +5,7 @@
 #include "smtp.h"
 #include "socket.h"
 #include "process.h"
+#include "logger.h"
 
 #define SERVER_START_INIT 1
 #define SERVER_FINISH_INIT 2
@@ -25,6 +26,7 @@ struct server {
 	int state;
 	int process_count;
 	int *pids;
+	int logger_pid;
 };
 
 #endif

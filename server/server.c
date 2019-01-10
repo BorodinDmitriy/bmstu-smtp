@@ -11,6 +11,7 @@ void handle_server_signal(int signum)
         for (i = 0; i < serv.process_count; i++) {
         	wait(serv.pids[i]);
         }
+        wait(serv.logger_pid);
         serv.state = SERVER_FINISH_WORK;
     }
     return; 
@@ -36,7 +37,9 @@ int server_init() {
 	serv.socket_fds = init_sockets();
 	//serv.socket_fds = init_sockets_using_clients(10);
 	serv.process_count = 2;
-	serv.pids = init_processes(serv.process_count, serv.socket_fds, serv.address);
+	serv.logger_pid = init_logger(serv.address);
+	serv.pids = init_processes(serv.process_count, serv.socket_fds, serv.address, serv.logger_pid);
+
 
 	if ((serv.socket_fds == NULL) || (serv.pids == NULL)) {
 		printf("SERVER INIT FAILED\n");
@@ -59,74 +62,21 @@ int server_init() {
 int server_run() {
 	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
 	struct fd_linked_list *p;	
+	char queue_name[20];
+	sprintf(queue_name, "/process%d", serv.logger_pid);
+
+	int mq = mq_open(queue_name, O_WRONLY);
 
 	serv.state = SERVER_START_WORK;
 	// вечно слушающий цикл в поисках новых соединений
 	// и создающий по процессу на каждое соединение
 	while (serv.state == SERVER_START_WORK) {
-		printf("SERVER_WORKS\n");
-		//printf("serv_sock = %d\n", serv.socket_fds);
+		char buffer[SERVER_BUFFER_SIZE] = "SERVER_WORKS\n";
+        
+        if (mq_send(mq, buffer, SERVER_BUFFER_SIZE, 0)) {
+            printf("errno = %d\n", errno);
+        }
 		sleep(100);
-		/*fd_set socket_set;
-		FD_ZERO(&socket_set);
-
-		for (p = serv.socket_fds; p != NULL; p = p->next) {
-			FD_SET(p->fd, &socket_set);
-		}
-
-		// вечное ожидание соединения по одному из связанных сокетов
-		select(serv.socket_fd_max + 1, &socket_set, NULL, NULL, NULL);
-
-		// проходим по списку сокетов в поисках установленного соединения
-		for (p = serv.socket_fds; p != NULL; p = p->next) {
-			if (FD_ISSET(p->fd, &socket_set)) {
-
-				// принимаем соединение
-    			new_socket = accept(p->fd, (struct sockaddr *) &(serv.address),  (socklen_t*) &(serv.addrlen));
-    			if (new_socket < 0) 
-    			{ 
-        			printf("accept() failed"); 
-        			continue;
-    			} 
-
-    			FD_CLR(p->fd, &socket_set);
-    			int file_flags = fcntl(new_socket, F_GETFL, 0);
-    			if (file_flags == -1)
-    			{
-        			printf("Fail to receive socket flags");
-        			continue;
-    			}
-
-    			if (fcntl(new_socket, F_SETFL, file_flags | O_NONBLOCK))
-    			{	
-        			printf("Fail to set flag 'O_NONBLOCK' for socket");
-        			continue;
-    			}
-
-    			// соединение принято - можно делать обработку smtp
-    			int *sock_fd = (int *) malloc(sizeof(int));
-    			*sock_fd = new_socket;
-
-    			struct mesg_buffer message;
-    			message.fd = new_socket;
-    			message.mesg_type = 1;
-
-
-    			// создание дочернего процесса, где будет происходить обработка
-    			/*pid_t pid;
-    			switch (pid = fork()) {
-    				case -1:
-    					perror("accept() failed"); 
-        				continue;
-        			case 0:  // процесс - потомок
-        				printf("child process forked with pid: %d\n", getpid());
-        				printf("parent pid: %d\n", getppid());
-        				smtp_handler(sock_fd, getpid());
-        			default: // процесс - родитель
-        				continue;
-    			}*/
-			//}
-		//}
 	}
 	serv.state = SERVER_FINISH_WORK;
 	return serv.state;
@@ -136,7 +86,6 @@ int main(int argc, char **argv) {
 	if (server_init() == SERVER_FINISH_INIT) {
 		server_run();
 	}
-	//init_process(getpid());
 	
 	return 0;
 }

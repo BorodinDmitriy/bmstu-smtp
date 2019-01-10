@@ -1,6 +1,6 @@
 #include "process.h"
 
-struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address) {
+struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address, int logger_pid) {
     struct mq_attr attr;
     attr.mq_flags = 0;
     attr.mq_maxmsg = 10;
@@ -16,9 +16,12 @@ struct process * init_process(pid_t pid, struct fd_linked_list *socket_fds, stru
     result->serv_address = serv_address;
     result->addrlen = sizeof(serv_address);
     result->state_worked = 1;
+    result->extra = 0;
 
     char queue_name[20];
+    char logger_name[20];
     sprintf(queue_name, "/process%d", getpid());
+    sprintf(logger_name, "/process%d", logger_pid);
     //printf("QUEUE2 = %s\n", queue_name);
     result->queue_name = queue_name;
     result->mq = NULL;
@@ -97,7 +100,7 @@ void init_signal_catch(sigset_t *empty, sigset_t *block)
     return;
 }
 
-int * init_processes(int count, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address) {
+int * init_processes(int count, struct fd_linked_list *socket_fds, struct sockaddr_in serv_address, int logger_pid) {
 	int i;
 	int *result_pid_array = (int *)malloc(count * sizeof(int));
 	for (i = 0; i < count; i++) {
@@ -109,7 +112,7 @@ int * init_processes(int count, struct fd_linked_list *socket_fds, struct sockad
         	case 0:  // процесс - потомок
         		printf("child process forked with pid: %d\n", getpid());
         		printf("parent pid: %d\n", getppid());
-        		struct process *pr = init_process(getpid(),socket_fds, serv_address);
+        		struct process *pr = init_process(getpid(),socket_fds, serv_address, logger_pid);
 
                 static int state_worked = 1;
 
