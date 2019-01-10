@@ -211,7 +211,7 @@ void processingLetters(struct files_record *files)
         while (workerId < 0 && tryes < 3)
         {
             //  worker not found
-            workerId = addDomainRecordToDictionary(domain);
+            workerId = AddDomainRecordToDictionary(domain);
             tryes++;
         }
 

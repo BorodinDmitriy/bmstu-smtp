@@ -16,7 +16,7 @@ int InitDictionary()
     return 0;
 }
 
-int addDomainRecordToDictionary(char *domain)
+int AddDomainRecordToDictionary(char *domain)
 {
     sem_wait(&lock);
     struct domain_record *pointer = Dictionary;
