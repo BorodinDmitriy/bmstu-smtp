@@ -172,6 +172,7 @@ int DelegateTaskToWorker(int workerIndex, struct worker_task *task)
     Workers.pool[workerIndex]->count_task++;
 
     sem_post(&Workers.pool[workerIndex]->lock);
+    pthread_kill(Workers.pool[workerIndex]->thread, SIGUSR1);
     return 0;
 }
 
