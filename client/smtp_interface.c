@@ -788,17 +788,172 @@ int handleSendLetter(struct FileDesc *connection)
         }
     }
 
+    //  read bytes and sending
+    bool state = true;
+    int max_buffer_on_smtp = 1000;
+    char *pointer;
+    int size;
+    int len;
+    while(state)
+    {
+        memset(connection->meta_data.message,'\0', max_buffer_on_smtp);
+        pointer = fgets(connection->meta_data.message, max_buffer_on_smtp-2, connection->meta_data.file);
+        if (pointer == NULL)
+        {
+            //  need send <CRLF>.<CRLF>
+            strcpy(connection->meta_data.message, "\r\n.\r\n");
+            state = false;
+        }
+
+        len = strlen(connection->meta_data.message);
+
+        size = send(connection->id, connection->meta_data.message, len, NULL);
+
+        if (size < 0)
+        {
+            if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS)) 
+            {
+                //  All ok, connection is would block, wait and again try to receive getting
+                return 1;
+            }
+
+            char err_message[150];
+            memset(err_message, '\0', 150);
+            sprintf(err_message, "Worker: SMTP_Control: handleSendLetter: Fail to send Letter to server %s. Errno: %d", connection->mx_record, errno);
+            Error(err_message);
+
+            //  change state on Error
+            connection->current_state = SMTP_ERROR;
+            return -2;
+        }
+    }
 
     fclose(connection->meta_data.file);
+    connection->meta_data.file = NULL;
+
+    //  change states
+    connection->prev_state = connection->current_state;
+    connection->current_state = RECEIVE_LETTER_RESPONSE;
+
     return 0;
 }
 
 int handleResponseOfLetter(struct FileDesc *connection)
 {
+    //  Check current and prev states
+    if (connection->current_state != RECEIVE_LETTER_RESPONSE || connection->prev_state != SEND_LETTER)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }
+
+    int size;
+    char message[BUFFER];
+    size = recv(connection->id, message, BUFFER, NULL);
+    if (size < 0)
+    {
+        if (size == -1 && errno == EWOULDBLOCK)
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfLetter: Fail to receive response about letter from server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    int status = getCommandStatus(message);
+    if (status != 250)
+    {
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfLetter: Fail status(%d) of response about letter from server %s.", status, connection->mx_record);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -3;
+    }
+
+    char verifyMessage[9] = "250 Ok\r\n\0";
+    int len = strlen(message);
+    status = strncmp(message, verifyMessage, 8);
+    if (status != 0)
+    {
+        char err_message[150 + len];
+        memset(err_message, '\0', 150 + len);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail message(%s) of RCPT TO response from server %s.", message, connection->mx_record);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -4;
+    }
+
+    //  current task is resolved, we needed to move letter in current and destroy task
+    int len = strlen(connection->task_pool->path);
+    len += 3;
+    char *new_filepath = (char *)calloc(len, sizeof(char));
+
+    if (!new_filepath)
+    {
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfLetter: Fail to allocate memory for new letter path");
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -5;
+    }
+
+    status = SetPathInCurrentDirectory(new_filepath, connection->task_pool->path);
+    if (status < 0)
+    {
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfLetter: Fail to set move path for letter");
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -6;
+    }
+
+    MoveLetter(connection->task_pool->path, new_filepath);
+
+    int next_state;
+
+    if (connection->task_pool->next)
+    {
+        next_state = SEND_MAIL_FROM;
+        struct worker_task *pointer = connection->task_pool->next;
+        DestroyTask(connection->task_pool);
+        connection->task_pool = pointer;
+    }
+    else 
+    {
+        next_state = SEND_QUIT;
+        DestroyTask(connection->task_pool);
+        connection->task_pool = NULL;
+    }
+
+    connection->prev_state = connection->current_state;
+    connection->current_state = next_state;
+
+    return 0;
 }
 
 int handleSendQUIT(struct FileDesc *connection)
 {
+    
 }
 
 int handleResponseOfQUIT(struct FileDesc *connection)
