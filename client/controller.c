@@ -95,6 +95,7 @@ void InitController()
     }
     printf("Success\n");
     worked = true;
+    sleep(1);
     watchMailDirLoop();
     return;
 }
