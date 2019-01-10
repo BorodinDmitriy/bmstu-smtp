@@ -20,7 +20,7 @@
 //======================//
 //      FD TYPES        //
 //======================//
-#define MY_DOMAIN "smtp-test.ru"
+#define MY_DOMAIN "samsung-np530u4c"
 #define BUFFER 4096
 
 #define SOCKET_FD 0
