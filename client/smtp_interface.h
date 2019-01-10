@@ -13,10 +13,7 @@
 #include <stdio.h>
 #include "structs.h"
 
-int GiveControlToSocket(struct FileDesc *fd);
-int SmtpInitSocket(char *domain, struct FileDesc *fd);
-int CloseConnection(struct FileDesc fd);
-int SMTP_Controll(struct FileDesc *socket_connection);
+int SMTP_Control(struct FileDesc *socket_connection);
 
 #define BUFFER 4096
 
