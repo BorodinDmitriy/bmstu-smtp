@@ -794,27 +794,65 @@ int getMXrecord(struct FileDesc *connection)
 {
     int state = 0;
     int size;
+    int len;
     __u_char answer[512];
     memset(answer, '\0', 512);
 
     if (strcmp(connection->domain, "smtp-test.ru") != 0)
     {
-        size = res_search(connection->domain, C_IN, T_MX, answer, 512);
+        size = res_query(connection->domain, C_IN, T_MX, answer, 512);
+    
+        if (size < 0)
+        {
+            //  current domain not resolved
+            char message[150];
+            memset(message, '\0', 150);
+            sprintf(message, "Worker: handlePrepareSocketConnection: getMXrecord: Not found MX_RECORD for %s domain", connection->domain);
+            Error(message);
+            return -1;
+        }
+
+        ns_msg message;
+        ns_rr rr;
+
+        ns_initparse(answer, size, &message);
+        char *pointer;
+        
+        size = ns_msg_count(message, ns_c_in);
+        for (int J = 0; J < size; J++) 
+        {
+            ns_parserr(&message, ns_c_in, J, &rr);
+            ns_sprintrr(&message, &rr, NULL, NULL, answer, sizeof(answer));
+            pointer = strstr(answer, ".\t");
+            len = strlen(answer) - strlen(pointer);
+            answer[len] = '\0';
+            break;
+        }
+
+        struct hostent *he;
+        struct in_addr **addr_list;
+
+        he = gethostbyname(answer);
+        if (!he) 
+        {
+            char message[100];
+            memset(message, '\0', 100);
+            sprintf(message, "Worker: handlePrepareSocketConnection: Fail to inet_pton for %s domain", connection->domain);
+            Error(message);
+            return -3;
+        }
+        addr_list = (struct in_addr **)he->h_addr_list;
+
+        for (int I = 0; addr_list[I] != NULL; I++)
+        {
+            strcpy(answer, inet_ntoa(*addr_list[I]));
+            break;
+        }
     }
     else
     {
         //  Заглушка
         strncpy(answer, "127.0.0.1", 16);
-        size = 15;
-    }
-    if (size < 0)
-    {
-        //  current domain not resolved
-        char message[150];
-        memset(message, '\0', 150);
-        sprintf(message, "Worker: handlePrepareSocketConnection: getMXrecord: Not found MX_RECORD for %s domain", connection->domain);
-        Error(message);
-        return -1;
     }
 
     connection->mx_record = (char *)calloc(size + 1, sizeof(char));
@@ -827,6 +865,7 @@ int getMXrecord(struct FileDesc *connection)
         return -2;
     }
 
+    size = strlen(answer);
     memset(connection->mx_record, '\0', size + 1);
     strncpy(connection->mx_record, answer, size);
     return 0;
@@ -839,7 +878,7 @@ int getCommandStatus(char *message)
     strncpy(code, message, 3);
     code[4] = '\0';
 
-    status = itoa(code);
+    status = atoi(code);
     return status;
 }
 
