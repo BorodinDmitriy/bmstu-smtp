@@ -124,7 +124,7 @@ int SMTP_Control(struct FileDesc *socket_connection)
         }
 
         //  wait letters by current domain
-        if (socket_connection->prev_state == PREPARE_SOCKET_CONNECTION) 
+        if (socket_connection->prev_state == PREPARE_SOCKET_CONNECTION)
         {
             break;
         }
@@ -223,7 +223,7 @@ int handlePrepareSocketConnection(struct FileDesc *connection)
     }
 
     state = connect(connection->id, (struct sockaddr *)&connection->addr, sizeof(connection->addr));
-    if (state < 0 && (state != -1 && (errno != EAGAIN || errno!= EINPROGRESS)))
+    if (state < 0 && (state != -1 && (errno != EAGAIN || errno != EINPROGRESS)))
     {
         char message[100];
         memset(message, '\0', 100);
@@ -299,7 +299,7 @@ int handleGreeting(struct FileDesc *connection)
 
     status = verifyServerDomain(message, connection->domain);
 
-    //  Заглушка 
+    //  Заглушка
     int d = strncmp("samsung-np530u4c", connection->domain, 11);
     if (d == 0)
     {
@@ -708,7 +708,7 @@ int handleSendDATA(struct FileDesc *connection)
     connection->prev_state = connection->current_state;
     connection->current_state = RECEIVE_DATA_RESPONSE;
 
-    return 0;   
+    return 0;
 }
 
 int handleResponseOfDATA(struct FileDesc *connection)
@@ -769,7 +769,7 @@ int handleSendLetter(struct FileDesc *connection)
         //  Set error state
         connection->current_state = SMTP_ERROR;
         return -1;
-    }   
+    }
 
     if (!connection->meta_data.file)
     {
@@ -794,10 +794,10 @@ int handleSendLetter(struct FileDesc *connection)
     char *pointer;
     int size;
     int len;
-    while(state)
+    while (state)
     {
-        memset(connection->meta_data.message,'\0', max_buffer_on_smtp);
-        pointer = fgets(connection->meta_data.message, max_buffer_on_smtp-2, connection->meta_data.file);
+        memset(connection->meta_data.message, '\0', max_buffer_on_smtp);
+        pointer = fgets(connection->meta_data.message, max_buffer_on_smtp - 2, connection->meta_data.file);
         if (pointer == NULL)
         {
             //  need send <CRLF>.<CRLF>
@@ -811,7 +811,7 @@ int handleSendLetter(struct FileDesc *connection)
 
         if (size < 0)
         {
-            if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS)) 
+            if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS))
             {
                 //  All ok, connection is would block, wait and again try to receive getting
                 return 1;
@@ -941,7 +941,7 @@ int handleResponseOfLetter(struct FileDesc *connection)
         connection->attempt = 0;
         connection->task_pool = pointer;
     }
-    else 
+    else
     {
         next_state = SEND_QUIT;
         DestroyTask(connection->task_pool);
@@ -963,7 +963,7 @@ int handleSendQUIT(struct FileDesc *connection)
         //  Set error state
         connection->current_state = SMTP_ERROR;
         return -1;
-    }   
+    }
 
     char message[BUFFER];
     sprintf(message, "QUIT\r\n\0");
@@ -974,7 +974,7 @@ int handleSendQUIT(struct FileDesc *connection)
 
     if (size < 0)
     {
-        if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS)) 
+        if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS))
         {
             //  All ok, connection is would block, wait and again try to receive getting
             return 1;
@@ -1004,7 +1004,7 @@ int handleResponseOfQUIT(struct FileDesc *connection)
         //  Set error state
         connection->current_state = SMTP_ERROR;
         return -1;
-    }   
+    }
 
     char message[BUFFER];
     memset(message, '\0', BUFFER);
@@ -1013,7 +1013,7 @@ int handleResponseOfQUIT(struct FileDesc *connection)
 
     if (size < 0)
     {
-        if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS)) 
+        if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS))
         {
             //  All ok, connection is would block, wait and again try to receive getting
             return 1;
@@ -1034,7 +1034,7 @@ int handleResponseOfQUIT(struct FileDesc *connection)
     {
         char err_message[150];
         memset(err_message, '\0', 150);
-        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfQUIT: Fail status(%d) of response about letter from server %s.", status, connection->mx_record);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfQUIT: Fail status(%d) of response of QUIT from server %s.", status, connection->mx_record);
         Error(err_message);
 
         //  change state on Error
@@ -1042,24 +1042,10 @@ int handleResponseOfQUIT(struct FileDesc *connection)
         return -3;
     }
 
-    status = verifyServerDomain(message, connection->domain);
-    int len = strlen(message);
-    if (status != 0)
-    {
-        char err_message[150 + len];
-        memset(err_message, '\0', 150 + len);
-        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfQUIT: Fail message(%s) of QUIT response from server %s.", message, connection->mx_record);
-        Error(err_message);
-
-        //  change state on Error
-        connection->current_state = SMTP_ERROR;
-        return -4;
-    }
-
     connection->prev_state = connection->current_state;
     connection->current_state = DISPOSING_SOCKET;
 
-    return 0;   
+    return 0;
 }
 
 int handleDisposing(struct FileDesc *connection)
@@ -1090,7 +1076,7 @@ int handleDisposing(struct FileDesc *connection)
 
     free(connection->domain);
     connection->domain = NULL;
-    
+
     free(connection->mx_record);
     connection->mx_record = NULL;
 
@@ -1102,14 +1088,231 @@ int handleDisposing(struct FileDesc *connection)
 
 int handleSmtpError(struct FileDesc *connection)
 {
+    switch (connection->prev_state)
+    {
+    //  unsolvable_errors
+    case PREPARE_SOCKET_CONNECTION:
+    case RECEIVE_SMTP_GREETING:
+    case SEND_EHLO:
+    case RECEIVE_EHLO_RESPONSE:
+    case SEND_QUIT:
+    case RECEIVE_QUIT_RESPONSE:
+    case SEND_RSET:
+    case RECEIVE_RSET_RESPONSE:
+        //  For current states one way in DISPOSING
+        RemoveDomainRecordFromDictionary(connection->domain);
+        //  letter must be closing and moved in new
+        if (connection->meta_data.file)
+        {
+            fclose(connection->meta_data.file);
+        }
+
+        struct worker_task *pointer = connection->task_pool;
+        int len;
+        int state;
+        while (connection->task_pool)
+        {
+            len = strlen(connection->task_pool->path);
+            char *filepath = (char *)calloc(len, sizeof(char));
+            if (!filepath)
+            {
+                char err_message[150 + len];
+                memset(err_message, '\0', 150 + len);
+                sprintf(err_message, "Worker: SMTP_Control: handleSmtpError: Fail to allocate memory for new filepath of file(%s). Errno: %d", errno, connection->task_pool->path);
+                Error(err_message);
+                continue;
+            }
+
+            state = SetPathInNewDirectory(filepath, connection->task_pool->path);
+            if (state != 0)
+            {
+                free(filepath);
+                char err_message[150 + len];
+                memset(err_message, '\0', 150 + len);
+                sprintf(err_message, "Worker: SMTP_Control: handleSmtpError: Fail to set new filepath in NEW directory of file(%s). Errno: %d", errno, connection->task_pool->path);
+                Error(err_message);
+                continue;
+            }
+
+            MoveLetter(connection->task_pool->path, filepath);
+            free(filepath);
+
+            pointer = connection->task_pool->next;
+            DestroyTask(connection->task_pool);
+            connection->task_pool = pointer;
+        }
+        connection->prev_state = SMTP_ERROR;
+        connection->current_state = DISPOSING_SOCKET;
+        break;
+
+    // solvable_errors
+    case SEND_MAIL_FROM:
+    case RECEIVE_MAIL_FROM_RESPONSE:
+    case SEND_DATA:
+    case RECEIVE_DATA_RESPONSE:
+    case SEND_LETTER:
+    case RECEIVE_LETTER_RESPONSE:
+        //  check attempt for send letter
+        if (connection->attempt == 0)
+        {
+            connection->attempt++;
+
+            if (connection->meta_data.file)
+            {
+                fclose(connection->meta_data.file);
+                connection->meta_data.file = NULL;
+            }
+
+            free(connection->meta_data.from);
+            connection->meta_data.from = NULL;
+            free(connection->meta_data.to);
+            connection->meta_data.to = NULL;
+        }
+        else
+        {
+            //  with current letter we have problem 
+            if (connection->meta_data.file)
+            {
+                fclose(connection->meta_data.file);
+            }
+
+            struct worker_task *pointer = connection->task_pool->next;
+            int len;
+            int state;
+            len = strlen(connection->task_pool->path);
+            char *filepath = (char *)calloc(len, sizeof(char));
+            if (!filepath)
+            {
+                char err_message[150 + len];
+                memset(err_message, '\0', 150 + len);
+                sprintf(err_message, "Worker: SMTP_Control: handleSmtpError: Fail to allocate memory for new filepath of file(%s). Errno: %d", errno, connection->task_pool->path);
+                Error(err_message);
+            }
+            else 
+            {
+                state = SetPathInNewDirectory(filepath, connection->task_pool->path);
+                if (state != 0)
+                {
+                    char err_message[150 + len];
+                    memset(err_message, '\0', 150 + len);
+                    sprintf(err_message, "Worker: SMTP_Control: handleSmtpError: Fail to set new filepath in NEW directory of file(%s). Errno: %d", errno, connection->task_pool->path);
+                    Error(err_message);
+                }
+                else
+                {   
+                    MoveLetter(connection->task_pool->path, filepath);                    
+                }
+                free(filepath);
+            }
+            DestroyTask(connection->task_pool);
+            connection->task_pool = pointer;
+        }
+        //  send RSET
+        connection->prev_state = SMTP_ERROR;
+        connection->current_state = SEND_RSET;
+        break;
+    }
+
+    return;
 }
 
 int handleSolvableMistake(struct FileDesc *connection)
 {
+    //  Check current and prev states
+    if (connection->current_state != SEND_RSET || connection->prev_state != SMTP_ERROR)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }
+
+    char message[BUFFER];
+    sprintf(message, "RSET\r\n\0");
+
+    int len = strlen(message);
+
+    int size = send(connection->id, message, len, NULL);
+
+    if (size < 0)
+    {
+        if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS))
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleSolvableMistake: Fail to send RSET to server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    connection->prev_state = connection->current_state;
+    connection->current_state = RECEIVE_RSET_RESPONSE;
+
+    return 0;
 }
 
 int handleResponseOfRSET(struct FileDesc *connection)
 {
+    //  Check current and prev states
+    if (connection->current_state != RECEIVE_RSET_RESPONSE || connection->prev_state != SEND_RSET)
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }
+
+    char message[BUFFER];
+
+    int size = recv(connection->id, message, BUFFER, NULL);
+    if (size < 0)
+    {
+        if (size == -1 && (errno == EWOULDBLOCK || errno == EINPROGRESS))
+        {
+            //  All ok, connection is would block, wait and again try to receive getting
+            return 1;
+        }
+
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfRSET: Fail to receive response RSET from server %s. Errno: %d", connection->mx_record, errno);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -2;
+    }
+
+    int status = getCommandStatus(message);
+    if (status != 200 && status != 250)
+    {
+        char err_message[150];
+        memset(err_message, '\0', 150);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfRSET: Fail status(%d) of response RSET from server %s.", status, connection->mx_record);
+        Error(err_message);
+
+        //  change state on Error
+        connection->current_state = SMTP_ERROR;
+        return -3;
+    }
+
+    if (connection->task_pool != NULL)
+    {
+        connection->prev_state = RECEIVE_RSET_RESPONSE;
+        connection->current_state = SEND_MAIL_FROM;
+    } 
+    else 
+    {
+        connection->prev_state = connection->current_state;
+        connection->current_state = SEND_QUIT;
+    }
+
+    return 0;
 }
 
 //============//
@@ -1128,7 +1331,7 @@ int getMXrecord(struct FileDesc *connection)
     if (strncmp(connection->domain, MY_DOMAIN, len) != 0)
     {
         size = res_query(connection->domain, C_IN, T_MX, answer, 512);
-    
+
         if (size < 0)
         {
             //  current domain not resolved
@@ -1144,9 +1347,9 @@ int getMXrecord(struct FileDesc *connection)
 
         ns_initparse(answer, size, &message);
         char *pointer;
-        
+
         size = ns_msg_count(message, ns_c_in);
-        for (int J = 0; J < size; J++) 
+        for (int J = 0; J < size; J++)
         {
             ns_parserr(&message, ns_c_in, J, &rr);
             ns_sprintrr(&message, &rr, NULL, NULL, answer, sizeof(answer));
@@ -1160,7 +1363,7 @@ int getMXrecord(struct FileDesc *connection)
         struct in_addr **addr_list;
 
         he = gethostbyname(answer);
-        if (!he) 
+        if (!he)
         {
             char message[100];
             memset(message, '\0', 100);
