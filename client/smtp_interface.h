@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "structs.h"
+#include "file_viewer.h"
 
 int SMTP_Control(struct FileDesc *socket_connection);
 
