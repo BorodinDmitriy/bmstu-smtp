@@ -30,7 +30,7 @@ int handleSendLetter(struct FileDesc *connection);
 int handleResponseOfLetter(struct FileDesc *connection);
 int handleSendQUIT(struct FileDesc *connection);
 int handleResponseOfQUIT(struct FileDesc *connection);
-int handleDisponsing(struct FileDesc *connection);
+int handleDisposing(struct FileDesc *connection);
 int handleSmtpError(struct FileDesc *connection);
 int handleSolvableMistake(struct FileDesc *connection);
 int handleResponseOfRSET(struct FileDesc *connection);
@@ -104,8 +104,8 @@ int SMTP_Control(struct FileDesc *socket_connection)
             break;
 
         case DISPOSING_SOCKET:
-            state = handleDisponsing(socket_connection);
-            break;
+            state = handleDisposing(socket_connection);
+            return state;
 
         case SMTP_ERROR:
             state = handleSmtpError(socket_connection);
@@ -936,6 +936,7 @@ int handleResponseOfLetter(struct FileDesc *connection)
         next_state = SEND_MAIL_FROM;
         struct worker_task *pointer = connection->task_pool->next;
         DestroyTask(connection->task_pool);
+        connection->attempt = 0;
         connection->task_pool = pointer;
     }
     else 
@@ -1059,9 +1060,42 @@ int handleResponseOfQUIT(struct FileDesc *connection)
     return 0;   
 }
 
-int handleDisponsing(struct FileDesc *connection)
+int handleDisposing(struct FileDesc *connection)
 {
+    //  Check current and prev states
+    bool normal_mode = connection->prev_state == RECEIVE_QUIT_RESPONSE;
+    bool error_mode = connection->prev_state == SMTP_ERROR;
+    bool mistrust_mode = connection->prev_state == PREPARE_SOCKET_CONNECTION;
+
+    if (connection->current_state != DISPOSING_SOCKET || !(normal_mode || error_mode || mistrust_mode))
+    {
+        //  Set error state
+        connection->current_state = SMTP_ERROR;
+        return -1;
+    }
+
+    int state = shutdown(connection->id, 0);
+    if (state)
+    {
+        printf("Fail to shutdown connection\r\n");
+    }
+
+    state = close(connection->id);
+    if (state)
+    {
+        printf("Fail to close connection\r\n");
+    }
+
+    free(connection->domain);
+    connection->domain = NULL;
     
+    free(connection->mx_record);
+    connection->mx_record = NULL;
+
+    free(connection->meta_data.from);
+    free(connection->meta_data.to);
+
+    return 0;
 }
 
 int handleSmtpError(struct FileDesc *connection)
