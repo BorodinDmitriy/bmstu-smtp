@@ -44,7 +44,7 @@ int SMTP_Control(struct FileDesc *socket_connection)
     int state = 0;
     while (state == 0)
     {
-        printf("socket_connection: %d\n", socket_connection->current_state);
+        // printf("socket_connection: %d\n", socket_connection->current_state);
         switch (socket_connection->current_state)
         {
         case PREPARE_SOCKET_CONNECTION:
@@ -299,6 +299,13 @@ int handleGreeting(struct FileDesc *connection)
 
     status = verifyServerDomain(message, connection->domain);
 
+    //  Заглушка 
+    int d = strncmp("samsung-np530u4c", connection->domain, 11);
+    if (d == 0)
+    {
+        status = 0;
+    }
+
     if (status != 0)
     {
         //  Unexpected domain
@@ -412,7 +419,7 @@ int handleResponseOfEHLO(struct FileDesc *connection)
     }
 
     //  check CRLF
-    if (message[size - 2] != '\r' || message[size - 1] != '\n' || (pointer + len + 1) != '\r' || (pointer - 1) != ' ')
+    if (message[size - 2] != '\r' || message[size - 1] != '\n' || (pointer + len)[0] != '\r' || (((pointer - 1)[0] != ' ') && (pointer - 1)[0] != '-'))
     {
         //  Bad command. Error in CRLF or my domain
         connection->current_state = SMTP_ERROR;
@@ -537,7 +544,7 @@ int handleResponseOfMailFrom(struct FileDesc *connection)
         return -3;
     }
 
-    char verifyMessage[9] = "250 OK\r\n\0";
+    char verifyMessage[9] = "250 Ok\r\n\0";
     status = strncmp(message, verifyMessage, 8);
     if (status != 0)
     {
@@ -643,7 +650,7 @@ int handleResponseOfRCPTto(struct FileDesc *connection)
         return -3;
     }
 
-    char verifyMessage[9] = "250 OK\r\n\0";
+    char verifyMessage[9] = "250 Ok\r\n\0";
     int len = strlen(message);
     status = strncmp(message, verifyMessage, 8);
     if (status != 0)
@@ -826,7 +833,8 @@ int getMXrecord(struct FileDesc *connection)
     __u_char answer[512];
     memset(answer, '\0', 512);
 
-    if (strcmp(connection->domain, "smtp-test.ru") != 0)
+    len = strlen(MY_DOMAIN);
+    if (strncmp(connection->domain, MY_DOMAIN, len) != 0)
     {
         size = res_query(connection->domain, C_IN, T_MX, answer, 512);
     
