@@ -49,7 +49,9 @@ void run(struct worker *worker_context, struct network_controller manager)
 
     int readyFD = -1;
     int currentFD = 0;
-    int processedFD = 0;
+    int status = 0;
+    bool flag_of_belonging;
+    bool flag_of_detect;
 
     struct FileDescList *listViewer;
 
@@ -95,66 +97,87 @@ void run(struct worker *worker_context, struct network_controller manager)
             break;
         }
 
-        processedFD = 0;
         listViewer = manager.socket_list;
         //  check all sockets readers, writers and handlers
-        for (int i = 0; i < manager.readers.count; i++)
+        while (listViewer != NULL)
         {
             currentFD = listViewer->fd->id;
+            flag_of_detect = false;
 
-            //  found ready file description
-            if (FD_ISSET(currentFD, &readers_temp))
+            flag_of_belonging = FD_ISSET(currentFD, &readers_temp);
+
+            //  ready reader
+            if (flag_of_belonging)
             {
-                //  remove current FD from fd_set
                 FD_CLR(currentFD, &manager.readers.set);
-
-                //  Processing Reader socket
-
-                processedFD++;
-                if (processedFD == readyFD)
+                status = SMTP_Control(listViewer->fd);
+                if (status != 1)
                 {
-                    break;
+                    // unsolve exception or all ok, still need to remove record from dictionary and delete socket
+                    RemoveDomainRecordFromDictionary(worker_context->workerId, listViewer->fd->domain);
+                    removeSocketConnectionFromPool(&manager, listViewer->fd);
                 }
+
+                flag_of_detect = true;
             }
 
-            listViewer = listViewer->next;
-        }
+            flag_of_belonging = FD_ISSET(currentFD, &writers_temp);
 
-        listViewer = manager.socket_list;
-        for (int i = 0; i < manager.writers.count; i++)
-        {
-            currentFD = listViewer->fd->id;
-            if (FD_ISSET(currentFD, &writers_temp))
+            //  ready writer
+            if (!flag_of_detect && flag_of_belonging)
             {
                 FD_CLR(currentFD, &manager.writers.set);
+                status = SMTP_Control(listViewer->fd);
 
-                //  Processing Writers sockets
-
-                processedFD++;
-                if (processedFD == readyFD)
+                if (status != 1)
                 {
-                    break;
+                    // unsolve exception or all ok, still need to remove record from dictionary and delete socket
+                    RemoveDomainRecordFromDictionary(worker_context->workerId, listViewer->fd->domain);
+                    removeSocketConnectionFromPool(&manager, listViewer->fd);
                 }
+
+                flag_of_detect = true;
             }
 
-            listViewer = listViewer->next;
-        }
 
-        listViewer = manager.socket_list;
-        for (int i = 0; i < manager.handlers.count; i++)
-        {
-            currentFD = listViewer->fd->id;
-            if (FD_ISSET(currentFD, &handlers_temp))
+            if (flag_of_detect && status == 1)
             {
-                FD_CLR(currentFD, &manager.handlers.set);
+                //  socket will blocked, resolve to which set the socket belongs
 
-                printf("\tWorker %d receive handler event\n", worker_context->workerId);
-
-                processedFD++;
-                if (processedFD == readyFD)
+                //  readers
+                if (listViewer->fd->current_state == RECEIVE_SMTP_GREETING ||
+                    listViewer->fd->current_state == RECEIVE_EHLO_RESPONSE ||
+                    listViewer->fd->current_state == RECEIVE_MAIL_FROM_RESPONSE ||
+                    listViewer->fd->current_state == RECEIVE_RCPT_TO_RESPONSE ||
+                    listViewer->fd->current_state == RECEIVE_DATA_RESPONSE ||
+                    listViewer->fd->current_state == RECEIVE_LETTER_RESPONSE ||
+                    listViewer->fd->current_state == RECEIVE_QUIT_RESPONSE ||
+                    listViewer->fd->current_state == RECEIVE_RSET_RESPONSE)
                 {
-                    break;
+                    FD_SET(currentFD, &manager.readers.set);
                 }
+                else if (listViewer->fd->current_state == SEND_EHLO ||
+                         listViewer->fd->current_state == SEND_MAIL_FROM ||
+                         listViewer->fd->current_state == SEND_RCPT_TO ||
+                         listViewer->fd->current_state == SEND_DATA ||
+                         listViewer->fd->current_state == SEND_LETTER ||
+                         listViewer->fd->current_state == SEND_QUIT ||
+                         listViewer->fd->current_state == SEND_RSET)
+                {
+                    FD_SET(currentFD, &manager.writers.set);
+                }
+                else
+                {
+                    char message[200];
+                    memset(message, '\0', 200);
+                    sprintf(message, "Worker: run: Fail SMTP Graph STATE: current(%d), prev(%d)", listViewer->fd->current_state, listViewer->fd->prev_state);
+                    Error(message);
+
+                    //  Something went wrong and I don't know how to resolve current graph state;
+                    RemoveDomainRecordFromDictionary(worker_context->workerId, listViewer->fd->domain);
+                    removeSocketConnectionFromPool(&manager, listViewer->fd);                    
+                }
+
             }
 
             listViewer = listViewer->next;
