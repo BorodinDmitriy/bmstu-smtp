@@ -898,7 +898,7 @@ int handleResponseOfLetter(struct FileDesc *connection)
     }
 
     //  current task is resolved, we needed to move letter in current and destroy task
-    int len = strlen(connection->task_pool->path);
+    len = strlen(connection->task_pool->path);
     len += 3;
     char *new_filepath = (char *)calloc(len, sizeof(char));
 
@@ -917,6 +917,7 @@ int handleResponseOfLetter(struct FileDesc *connection)
     status = SetPathInCurrentDirectory(new_filepath, connection->task_pool->path);
     if (status < 0)
     {
+        free(new_filepath);
         char err_message[150];
         memset(err_message, '\0', 150);
         sprintf(err_message, "Worker: SMTP_Control: handleResponseOfLetter: Fail to set move path for letter");
@@ -928,6 +929,7 @@ int handleResponseOfLetter(struct FileDesc *connection)
     }
 
     MoveLetter(connection->task_pool->path, new_filepath);
+    free(new_filepath);
 
     int next_state;
 
