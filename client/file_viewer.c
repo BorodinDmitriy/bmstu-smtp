@@ -196,6 +196,7 @@ void processingLetters(struct files_record *files)
         int state = setDomainFromFile(domain, file);
         if (state)
         {
+            fclose(file);
             printf("Fail to find domain in letter %s", files->path);
             pointer = pointer->next;
             continue;
