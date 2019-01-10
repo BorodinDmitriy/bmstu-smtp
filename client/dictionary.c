@@ -94,7 +94,19 @@ void RemoveDomainRecordFromDictionary(int workerId, char *domain)
         state = strcmp(domain, pointer->domain);
         if (state == 0 && pointer->workerId == workerId) 
         {
-            prev->next = pointer->next;
+            if (prev != NULL) 
+            {
+                prev->next = pointer->next;
+            }
+            else if (pointer->next)
+            {
+                Dictionary = Dictionary->next;
+            }
+            else if (pointer == Dictionary) 
+            {
+                free(Dictionary);
+                Dictionary = NULL;
+            }
             free(pointer);
             break;
         }
