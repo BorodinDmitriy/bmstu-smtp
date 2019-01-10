@@ -64,18 +64,22 @@ int AddDomainRecordToDictionary(char *domain)
 
 int FindDomainInDictionary(char *domain)
 {
+    int result = -1;
     sem_wait(&lock);
     struct domain_record *pointer = Dictionary;
     while (pointer != NULL)
     {
         if (strcmp(pointer->domain, domain) == 0)
         {
-            return pointer->workerId;
+            result = pointer->workerId;
+            break;
         }
+
+        pointer = pointer->next;
     }
 
     sem_post(&lock);
-    return -1;
+    return result;
 }
 
 void RemoveDomainRecordFromDictionary(int workerId, char *domain)
