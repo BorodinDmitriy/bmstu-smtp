@@ -61,3 +61,6 @@ client/.vscode/
 
 # maildir_test_files
 maildir/
+
+# log_file on server
+server/server_log
