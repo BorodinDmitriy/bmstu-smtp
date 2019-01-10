@@ -78,7 +78,7 @@ int save_to_logger_file(char *new_text) {
     time_t current_time = time(NULL);
     char* time = ctime(&current_time);
     time[strlen(time) - 1] = '\0';
-    fprintf(logger_file, "[%s]: \"%s\".\n", time,new_text);
+    fprintf(logger_file, "[%s]: \"%s\".", time,new_text);
     fflush(logger_file);
 
     fclose(logger_file);
