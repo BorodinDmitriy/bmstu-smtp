@@ -1,0 +1,18 @@
+Return-Path: ilya_chizh@mail.ru
+Received: by e.mail.ru with HTTP;
+Mon, 14 May 2018 00:32:50 +0300
+From: ilya_chizh@mail.ru
+To: iu7.2@samsung-np530u4c
+Subject: Test smtp
+MIME-Version: 1.0
+Date: Mon, 14 May 2018 00:32:50 +0300
+X-Priority: 3 (Normal)
+Content-Type: text/html;
+
+<h2 style="font-weight: normal; padding-bottom: 0; margin-bottom: 0;">Статус вашего письма!</h2>
+<h4 style="font-weight: normal; padding-top: 0; margin-top: 0">Письмо</h4>
+<p>
+	статус в <b>2018-12-04 00:00:00</b> изменился: <br>
+	<b>Отправлено</b>
+</p>
+

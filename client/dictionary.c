@@ -59,7 +59,7 @@ int AddDomainRecordToDictionary(char *domain)
     }
 
     sem_post(&lock);
-    return 0;
+    return new_record->workerId;
 }
 
 int FindDomainInDictionary(char *domain)

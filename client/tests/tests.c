@@ -7,19 +7,23 @@
 
 // sudo apt-get install libcunit1 libcunit1-doc libcunit1-dev
 
-int main(void) {
-    if (CU_initialize_registry() != CUE_SUCCESS) {
-        printf("%s\n",CU_get_error_msg());
+int main(void)
+{
+    if (CU_initialize_registry() != CUE_SUCCESS)
+    {
+        printf("%s\n", CU_get_error_msg());
         exit(CU_get_error());
     }
 
     CU_pSuite suite = CUnitCreateSuite("suite_test");
-    if (suite) {
+    if (suite)
+    {
         add_to_suit_smtp_test(suite);
     }
-    else {
+    else
+    {
         CU_cleanup_registry();
-        printf("%s\n",CU_get_error_msg());
+        printf("%s\n", CU_get_error_msg());
         exit(CU_get_error());
     }
 
@@ -30,4 +34,3 @@ int main(void) {
     printf("\n");
     return CU_get_error();
 }
-
