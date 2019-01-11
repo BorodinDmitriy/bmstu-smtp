@@ -95,7 +95,7 @@ void Error(char *message)
     if (len > MAX_MSG_SIZE) 
         return;
 
-    int ready;
+    int ready = 0;
     ready = mq_send(message_queue, message, MAX_MSG_SIZE, 0);
     if (ready == -1 && errno == 11) 
     {
