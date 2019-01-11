@@ -21,6 +21,7 @@
 //      FD TYPES        //
 //======================//
 #define MY_DOMAIN "samsung-np530u4c"
+#define TEST_SERVER_DOMAIN "myserver.com"
 #define BUFFER 4096
 
 #define SOCKET_FD 0

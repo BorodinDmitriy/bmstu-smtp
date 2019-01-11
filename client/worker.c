@@ -176,6 +176,12 @@ void run(struct worker *worker_context, struct network_controller manager)
                 {
                     status = SMTP_Control(listViewer->fd);
 
+                    //  we need to handle error
+                    if (listViewer->fd->current_state == SMTP_ERROR)
+                    {
+                        status = 0;
+                    }
+
                     if (listViewer->fd->prev_state == DISPOSING_SOCKET)
                     {
                         break;

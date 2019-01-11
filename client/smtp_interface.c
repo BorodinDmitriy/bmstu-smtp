@@ -43,6 +43,7 @@ int SMTP_Control(struct FileDesc *socket_connection)
 {
     int state = 0;
 
+    // printf("%s domain: %d state\n", socket_connection->domain, socket_connection->current_state);
     switch (socket_connection->current_state)
     {
     case PREPARE_SOCKET_CONNECTION:
@@ -121,6 +122,7 @@ int SMTP_Control(struct FileDesc *socket_connection)
         state = -1;
     }
 
+    // printf("After: %s domain: %d state\n", socket_connection->domain, socket_connection->current_state);
     return state;
 }
 
@@ -301,7 +303,7 @@ int handleGreeting(struct FileDesc *connection)
     status = verifyServerDomain(message, connection->domain);
 
     //  Заглушка
-    int d = strncmp("samsung-np530u4c", connection->domain, 11);
+    int d = strncmp(TEST_SERVER_DOMAIN, connection->domain, 11);
     if (d == 0)
     {
         status = 0;
@@ -658,7 +660,7 @@ int handleResponseOfRCPTto(struct FileDesc *connection)
     {
         char err_message[150 + len];
         memset(err_message, '\0', 150 + len);
-        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail message(%s) of RCPT TO response from server %s.", message, connection->mx_record);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfRCPTto: Fail message(%s) of RCPT TO response from server %s.", message, connection->mx_record);
         Error(err_message);
 
         //  change state on Error
@@ -883,14 +885,14 @@ int handleResponseOfLetter(struct FileDesc *connection)
         return -3;
     }
 
-    char verifyMessage[9] = "250 Ok\r\n\0";
+    char verifyMessage[6] = "250 Ok";
     int len = strlen(message);
-    status = strncmp(message, verifyMessage, 8);
+    status = strncmp(message, verifyMessage, 6);
     if (status != 0)
     {
         char err_message[150 + len];
         memset(err_message, '\0', 150 + len);
-        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfMailFrom: Fail message(%s) of RCPT TO response from server %s.", message, connection->mx_record);
+        sprintf(err_message, "Worker: SMTP_Control: handleResponseOfLetter: Fail message(%s) of response about letter from server %s.", message, connection->mx_record);
         Error(err_message);
 
         //  change state on Error
@@ -1333,8 +1335,8 @@ int getMXrecord(struct FileDesc *connection)
     memset(uanswer, '\0', 512);
     memset(answer, '\0', 512);
 
-    len = strlen(MY_DOMAIN);
-    if (strncmp(connection->domain, MY_DOMAIN, len) != 0)
+    len = strlen(TEST_SERVER_DOMAIN);
+    if (strncmp(connection->domain, TEST_SERVER_DOMAIN, len) != 0)
     {
         size = res_query(connection->domain, C_IN, T_MX, uanswer, 512);
 
