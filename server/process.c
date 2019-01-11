@@ -153,7 +153,7 @@ void free_process(struct process *pr) {
 
     if (pr->listeners_list != NULL)
         delete_elem(pr->listeners_list, SOCKET_STATE_WAIT);
-    if (pr->sock_list != NULL)
+    /*if (pr->sock_list != NULL)
         delete_elem(pr->sock_list, SOCKET_STATE_INIT);
     if (pr->sock_list != NULL)
         delete_elem(pr->sock_list, SOCKET_STATE_WAIT);
@@ -166,7 +166,7 @@ void free_process(struct process *pr) {
     if (pr->sock_list != NULL)    
         delete_elem(pr->sock_list, SOCKET_STATE_DELIVERING);
     if (pr->sock_list != NULL)
-        delete_elem(pr->sock_list, SOCKET_STATE_CLOSED);
+        delete_elem(pr->sock_list, SOCKET_STATE_CLOSED);*/
 
     mq_close(*(pr->mq));
     mq_unlink(pr->queue_name);
