@@ -25,7 +25,7 @@
 
 #define SOCKET_FD 0
 #define FILE_FD 1
-#define COUNT_THREADS 2
+#define COUNT_THREADS 4
 
 #define NEW_TASK 0
 #define TASK_IS_LOCK 1
