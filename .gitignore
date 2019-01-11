@@ -54,6 +54,7 @@ dkms.conf
 # Special object files
 server/server
 server/test_client
+server/unit_tests
 client/client
 
 # VSCode file rubbish
