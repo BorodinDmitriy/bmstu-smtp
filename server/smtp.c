@@ -343,7 +343,8 @@ int handle_HELO(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
         	printf("Server: %d, HELO: %s", c_sock->fd, buffer_output);
     	}
     	free(host);
-    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    	if (c_sock->fd > 0)
+    		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     	c_sock->state = SOCKET_STATE_WAIT;
     	return 0;
 	}
@@ -359,7 +360,8 @@ int handle_EHLO(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
   		free(host);
     	sprintf(buffer_output, HEADER_250_OK);
     	printf("Server: %d, EHLO: %s", c_sock->fd, buffer_output);
-    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    	if (c_sock->fd > 0)
+    		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     	c_sock->state = SOCKET_STATE_WAIT;
     	return 0;
 	}
@@ -377,7 +379,8 @@ int handle_MAIL(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 			sprintf(buffer_output, HEADER_450_MAILBOX_UNAVAILABLE);
     		printf("Server: %d, MAIL: %s", c_sock->fd, buffer_output);
 		}
-		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+		if (c_sock->fd > 0)
+			send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     
     	return 0;
 	}
@@ -402,7 +405,8 @@ int handle_RCPT(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 			}
 		}
 
-		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+		if (c_sock->fd > 0)
+			send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     
     	return 0;
 	}
@@ -423,7 +427,8 @@ int handle_RSET(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     	}
     	c_sock->message->recepients_num = 0;
     	c_sock->state = SOCKET_STATE_WAIT;
-    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    	if (c_sock->fd > 0)
+    		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     
     	return 0;
 	}
@@ -439,7 +444,8 @@ int handle_DATA(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     	c_sock->message->body_length = 0;
     	c_sock->input_message = 1;
     	c_sock->state = SOCKET_STATE_WRITING_DATA;
-    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    	if (c_sock->fd > 0)
+    		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     
     	return 0;
 	}
@@ -449,7 +455,8 @@ int handle_DATA(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
 	sprintf(buffer_output, HEADER_221_OK);
     printf("Server: %d, QUIT: %s", c_sock->fd, buffer_output);
-    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    if (c_sock->fd > 0)
+    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     c_sock->state = SOCKET_STATE_CLOSED;
     //free(msg_buffer);
     return 1;
@@ -458,14 +465,16 @@ int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 int handle_NOOP(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
 	sprintf(buffer_output, HEADER_250_OK_NOOP);
     printf("Server: %d, NOOP: %s", c_sock->fd, buffer_output);
-    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    if (c_sock->fd > 0)
+    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     return 0;
 }
 
 int handle_NOT_IMPLEMENTED(struct client_socket *c_sock, char *msg_buffer, char buffer_output[], struct sockaddr_in *address) {
 	sprintf(buffer_output, HEADER_502_NOT_IMPLEMENTED);
     printf("Server: %d, NOT_IMPLEMENTED: %s", c_sock->fd, buffer_output);
-    send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    if (c_sock->fd > 0)
+    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     return 0;
 }
 
