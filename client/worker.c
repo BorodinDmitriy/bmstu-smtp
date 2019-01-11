@@ -7,6 +7,7 @@
 void run(struct worker *worker_context, struct network_controller manager);
 void processingTasks(struct worker *worker_context, struct network_controller *manager);
 void initWorkerSignalHandler(sigset_t *empty, sigset_t *block);
+void closingConnections(struct worker *worker_context, struct network_controller *manager);
 void shutdownWorker(struct worker *worker_context, struct network_controller *manager);
 struct FileDesc *addNewSocketConnection(struct network_controller *manager, char *domain);
 struct FileDesc *findSocketByDomain(struct network_controller *manager, char *domain);
@@ -35,7 +36,10 @@ void InitWorker(void *my_info)
     manager.socket_list = NULL;
     printf("\tWorker %d finish initinig\n", me->workerId);
     run(my_info, manager);
-    pthread_exit(0);
+    printf("\tWorker %d: exit with 0\n", me->workerId);
+    pthread_exit(NULL);
+
+    return;
 }
 
 //==========================//
@@ -52,38 +56,51 @@ void run(struct worker *worker_context, struct network_controller manager)
     int status = 0;
     bool flag_of_belonging;
     bool flag_of_detect;
+    int closing = 0;
 
     struct FileDescList *listViewer;
 
     struct timespec timer_spec;
-    timer_spec.tv_sec = 60;
+    timer_spec.tv_sec = 20;
     timer_spec.tv_nsec = 0;
 
     fd_set readers_temp;
     fd_set writers_temp;
     fd_set handlers_temp;
 
-    while (worker_context->worked)
+    while (worker_context->worked || manager.socket_list != NULL)
     {
         int fd_count = 1;
         listViewer = manager.socket_list;
-        while(listViewer) 
+        while (listViewer)
         {
             fd_count = MAX(fd_count, listViewer->fd->id);
+            printf("\tWorker %d: domain %s state: %d\n",worker_context->workerId, listViewer->fd->domain, listViewer->fd->current_state);
             listViewer = listViewer->next;
         }
         readers_temp = manager.readers.set;
         writers_temp = manager.writers.set;
         handlers_temp = manager.handlers.set;
 
+        printf("\n");
         readyFD = pselect(fd_count, &readers_temp, &writers_temp, &handlers_temp, &timer_spec, &empty_sigs);
-        printf("\tWorker %d start working\n", worker_context->workerId);
+        printf("\tWorker %d: unsleep\n", worker_context->workerId);
 
-        if (!(worker_context->worked))
+        if (!(worker_context->worked) && closing == 0)
         {
-            printf("\tWorker %d start closing\n");
-            break;
+            printf("\tWorker %d: closing connections for shutdown\n", worker_context->workerId);
+            closingConnections(worker_context, &manager);
+            closing++;
+            timer_spec.tv_sec = 5;
         }
+
+        if (closing != 0)
+        {
+            readers_temp = manager.readers.set;
+            writers_temp = manager.writers.set;
+            readyFD = 1;
+        }
+
 
         if (worker_context->count_task == 0)
         {
@@ -95,7 +112,7 @@ void run(struct worker *worker_context, struct network_controller manager)
 
         if (readyFD <= 0)
         {
-            printf("\nWorker %d: run: not ready sockets\n", worker_context->workerId);
+            printf("\tWorker %d: run: not ready sockets\n", worker_context->workerId);
             continue;
         }
 
@@ -113,18 +130,24 @@ void run(struct worker *worker_context, struct network_controller manager)
             {
                 FD_CLR(currentFD, &manager.readers.set);
                 status = SMTP_Control(listViewer->fd);
+                printf("\tWorker %d: status(%d)\n",worker_context->workerId, status);
                 if (status != 1 && status != 0)
                 {
                     // unsolve exception or all ok, still need to remove record from dictionary and delete socket
                     RemoveDomainRecordFromDictionary(listViewer->fd->domain);
                     removeSocketConnectionFromPool(&manager, listViewer->fd);
                 }
-                if (status == 0)
+                else if (status == 0)
                 {
                     removeSocketConnectionFromPool(&manager, listViewer->fd);
                 }
-
-                flag_of_detect = true;
+                else if (status == 1 && !worker_context->worked && listViewer->fd->task_pool == NULL)
+                {
+                    removeSocketConnectionFromPool(&manager, listViewer->fd);
+                    printf("\tremove\n");
+                }
+                else 
+                    flag_of_detect = true;
             }
 
             flag_of_belonging = FD_ISSET(currentFD, &writers_temp);
@@ -140,16 +163,18 @@ void run(struct worker *worker_context, struct network_controller manager)
                     // unsolve exception or all ok, still need to remove record from dictionary and delete socket
                     RemoveDomainRecordFromDictionary(listViewer->fd->domain);
                     removeSocketConnectionFromPool(&manager, listViewer->fd);
-                }
-
-                if (status == 0) 
+                } 
+                else if (status == 0)
                 {
                     removeSocketConnectionFromPool(&manager, listViewer->fd);
                 }
-
-                flag_of_detect = true;
+                else if (status == 1 && !worker_context->worked && listViewer->fd->task_pool == NULL)
+                {
+                    removeSocketConnectionFromPool(&manager, listViewer->fd);
+                }
+                else 
+                    flag_of_detect = true;
             }
-
 
             if (flag_of_detect && status == 1)
             {
@@ -186,16 +211,15 @@ void run(struct worker *worker_context, struct network_controller manager)
 
                     //  Something went wrong and I don't know how to resolve current graph state;
                     RemoveDomainRecordFromDictionary(listViewer->fd->domain);
-                    removeSocketConnectionFromPool(&manager, listViewer->fd);                    
+                    removeSocketConnectionFromPool(&manager, listViewer->fd);
                 }
-
             }
 
             listViewer = listViewer->next;
         }
     }
-    printf("\tWorker %d cancel pselect\n", worker_context->workerId);
-    shutdown(worker_context, &manager);
+    printf("\tWorker %d: cancel pselect\n", worker_context->workerId);
+    shutdownWorker(worker_context, &manager);
     return;
 }
 
@@ -203,6 +227,7 @@ void processingTasks(struct worker *worker_context, struct network_controller *m
 {
     struct FileDesc *socket_pointer;
     struct worker_task *socket_task_pointer;
+    printf("\tWorker %d: start processing tasks\n", worker_context->workerId);
     sem_wait(&worker_context->lock);
     while (worker_context->tasks)
     {
@@ -240,7 +265,7 @@ void processingTasks(struct worker *worker_context, struct network_controller *m
             sprintf(message, "Worker %d has problem on create new socket connection. Current record skipped", worker_context->workerId);
             Error(message);
             //  Revert TASK
-            
+
             int len = strlen(worker_context->tasks->path);
             char *dest = calloc(len + 1, sizeof(char));
             SetPathInNewDirectory(dest, worker_context->tasks->path);
@@ -264,11 +289,81 @@ void processingTasks(struct worker *worker_context, struct network_controller *m
     }
 
     sem_post(&worker_context->lock);
+    printf("\tWorker %d: finish processing tasks\n", worker_context->workerId);
     return;
 }
 
 void shutdownWorker(struct worker *worker_context, struct network_controller *manager)
 {
+    free(manager->socket_list);
+    return;
+}
+
+void closingConnections(struct worker *worker_context, struct network_controller *manager)
+{
+    struct FileDescList *listViewer = manager->socket_list;
+    struct FileDescList *connector = NULL;
+    struct worker_task *task_pointer = NULL;
+    struct worker_task *next_task_pointer = NULL;
+    int len;
+    char *filepath;
+    int state;
+    printf("\tWorker %d: start remove other tasks\n", worker_context->workerId);
+    while (listViewer)
+    {
+        printf("\tWorker %d: remove domain %s from dictionary\n", worker_context->workerId, listViewer->fd->domain);
+        RemoveDomainRecordFromDictionary(listViewer->fd->domain);
+        printf("\tWorker %d: success removing domain %s from dictionary\n", worker_context->workerId, listViewer->fd->domain);
+        task_pointer = listViewer->fd->task_pool;
+        if (task_pointer != NULL)
+        {
+            printf("\tWorker %d: task pool is not empty for domain %s\n", worker_context->workerId, listViewer->fd->domain);
+            if (listViewer->fd->current_state >= 2)
+            {
+                task_pointer = task_pointer->next;
+                listViewer->fd->task_pool->next = NULL;
+            }
+            else
+            {
+                listViewer->fd->task_pool = NULL;
+            }
+            
+            while (task_pointer)
+            {
+                printf("\tWorker %d: remove next task in pool for domain %s\n", worker_context->workerId, listViewer->fd->domain);
+                next_task_pointer = task_pointer->next;
+                len = strlen(task_pointer->path);
+                printf("\tWorker %d: file %s moving\n", worker_context->workerId, task_pointer->path);
+                filepath = (char *)calloc(len, sizeof(char));
+                if (!filepath)
+                {
+                    char message[100];
+                    memset(message, '\0', 100);
+                    sprintf(message, "Worker %d: closingConnections:  has problem to allocate memory for filepath (%s)", worker_context->workerId, task_pointer->path);
+                    Error(message);
+                }
+                else
+                {
+                    state = SetPathInNewDirectory(filepath, task_pointer->path);
+                    if (state != 0)
+                    {
+                        char message[100];
+                        memset(message, '\0', 100);
+                        sprintf(message, "Worker %d: closingConnections:  has problem to set new filepath for file(%s)", worker_context->workerId, task_pointer->path);
+                        Error(message);
+                    }
+                    MoveLetter(task_pointer->path, filepath);
+                }
+                free(filepath);
+                DestroyTask(task_pointer);
+                task_pointer = next_task_pointer;
+            }
+            
+        }
+
+        connector = listViewer;
+        listViewer = listViewer->next;
+    }
     return;
 }
 
@@ -390,18 +485,21 @@ void removeSocketConnectionFromPool(struct network_controller *manager, struct F
         if (pool_pointer->fd->id == socket_connection->id)
         {
             //  Removing
-            if (pool_pointer_prev != NULL) 
+            if (pool_pointer_prev != NULL)
             {
                 pool_pointer_prev->next = pool_pointer->next;
-            } 
-            else if (pool_pointer->next) 
+            }
+            else if (pool_pointer->next)
             {
                 manager->socket_list = manager->socket_list->next;
             }
             else
             {
+                free(socket_connection->domain);
+                free(socket_connection);
                 free(manager->socket_list);
                 manager->socket_list = NULL;
+                break;
             }
 
             free(socket_connection->domain);
@@ -442,18 +540,18 @@ void initWorkerSignalHandler(sigset_t *empty, sigset_t *block)
     sigaddset(block, SIGUSR1);
     sigaddset(block, SIGINT);
     pthread_sigmask(SIG_BLOCK, block, empty);
-    struct sigaction signals;
-    signals.sa_handler = handler;
-    signals.sa_flags = 0;
-    sigemptyset(&signals.sa_mask);
-    sigaction(SIGUSR1, &signals, NULL);
+    // struct sigaction signals;
+    // signals.sa_handler = handler;
+    // signals.sa_flags = 0;
+    // sigemptyset(&signals.sa_mask);
+    // sigaction(SIGUSR1, &signals, NULL);
     return;
 }
 
-void handler(int signum)
-{
-    if (signum == SIGUSR1)
-        printf("\tWorker unsleep by main thread\n");
+// void handler(int signum)
+// {
+//     if (signum == SIGUSR1)
+//         printf("\tWorker unsleep by main thread\n");
 
-    return;
-}
+//     return;
+// }
