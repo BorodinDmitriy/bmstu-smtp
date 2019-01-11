@@ -123,7 +123,7 @@ struct fd_linked_list * init_sockets_using_clients(int client_number) {
     	}
 
 
-		// принудительное связывание сокета с портом (8080)
+		// принудительное связывание сокета с портом (2525)
 		// установка опций
 		// SOL_SOCKET - 
 		// SO_REUSEADDR - 
@@ -150,7 +150,7 @@ struct fd_linked_list * init_sockets_using_clients(int client_number) {
 
     	sock_address.sin_family = AF_INET;
     	sock_address.sin_addr.s_addr = INADDR_ANY;
-    	sock_address.sin_port = htons( 8080 );
+    	sock_address.sin_port = htons( 2525 );
       
     	if (bind(socket_fd, (struct sockaddr *)&(sock_address), sizeof(sock_address)) < 0) {
         	perror("bind failed");
