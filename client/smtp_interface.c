@@ -1385,6 +1385,8 @@ int getMXrecord(struct FileDesc *connection)
         strncpy(answer, "127.0.0.1", 16);
     }
 
+    size = strlen(answer);
+    connection->mx_record = NULL;
     connection->mx_record = (char *)calloc(size + 1, sizeof(char));
     if (!connection->mx_record)
     {
@@ -1395,7 +1397,7 @@ int getMXrecord(struct FileDesc *connection)
         return -2;
     }
 
-    size = strlen(answer);
+    
     memset(connection->mx_record, '\0', size + 1);
     strncpy(connection->mx_record, answer, size);
     return 0;
