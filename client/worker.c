@@ -334,7 +334,7 @@ void closingConnections(struct worker *worker_context, struct network_controller
                 next_task_pointer = task_pointer->next;
                 len = strlen(task_pointer->path);
                 printf("\tWorker %d: file %s moving\n", worker_context->workerId, task_pointer->path);
-                filepath = (char *)calloc(len, sizeof(char));
+                filepath = (char *)calloc(len + 1, sizeof(char));
                 if (!filepath)
                 {
                     char message[100];
@@ -344,6 +344,7 @@ void closingConnections(struct worker *worker_context, struct network_controller
                 }
                 else
                 {
+                    memset(filepath, '\0', len + 1);
                     state = SetPathInNewDirectory(filepath, task_pointer->path);
                     if (state != 0)
                     {
