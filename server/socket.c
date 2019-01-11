@@ -182,7 +182,7 @@ struct client_socket init_client_socket(int fd, int buffer_size, int state, int 
 	result.fd = fd;
 	result.buffer = NULL;
 	if (buffer_size > 0) {
-		result.buffer = malloc(buffer_size * sizeof(int));
+		result.buffer = malloc(buffer_size * sizeof(char));
 	}
 	result.state = state;
 	result.buffer_offset = 0;

@@ -6,7 +6,7 @@ RFLAGS= -Wall -O
 
 DFLAGS= -Wall -g 
 
-TESTS= tests/utils.c tests/tests.c
+TESTS= tests/utils.c tests/test_smtp.c tests/tests.c socket.c
 
 all: clean server test_client unit_tests
 
@@ -22,4 +22,4 @@ unit_tests:
 	
 
 clean: 
-	rm -rf *.o server test_client
+	rm -rf *.o server test_client unit_tests
