@@ -42,93 +42,85 @@ int handleResponseOfRSET(struct FileDesc *connection);
 int SMTP_Control(struct FileDesc *socket_connection)
 {
     int state = 0;
-    while (state == 0)
+
+    switch (socket_connection->current_state)
     {
-        // printf("socket_connection: %d\n", socket_connection->current_state);
-        switch (socket_connection->current_state)
-        {
-        case PREPARE_SOCKET_CONNECTION:
-            state = handlePrepareSocketConnection(socket_connection);
-            break;
+    case PREPARE_SOCKET_CONNECTION:
+        state = handlePrepareSocketConnection(socket_connection);
+        break;
 
-        case RECEIVE_SMTP_GREETING:
-            state = handleGreeting(socket_connection);
-            break;
+    case RECEIVE_SMTP_GREETING:
+        state = handleGreeting(socket_connection);
+        break;
 
-        case SEND_EHLO:
-            state = handleSendEHLO(socket_connection);
-            break;
+    case SEND_EHLO:
+        state = handleSendEHLO(socket_connection);
+        break;
 
-        case RECEIVE_EHLO_RESPONSE:
-            state = handleResponseOfEHLO(socket_connection);
-            break;
+    case RECEIVE_EHLO_RESPONSE:
+        state = handleResponseOfEHLO(socket_connection);
+        break;
 
-        case SEND_MAIL_FROM:
-            state = handleSendMailFrom(socket_connection);
-            break;
+    case SEND_MAIL_FROM:
+        state = handleSendMailFrom(socket_connection);
+        break;
 
-        case RECEIVE_MAIL_FROM_RESPONSE:
-            state = handleResponseOfMailFrom(socket_connection);
-            break;
+    case RECEIVE_MAIL_FROM_RESPONSE:
+        state = handleResponseOfMailFrom(socket_connection);
+        break;
 
-        case SEND_RCPT_TO:
-            state = handleSendRCPTto(socket_connection);
-            break;
+    case SEND_RCPT_TO:
+        state = handleSendRCPTto(socket_connection);
+        break;
 
-        case RECEIVE_RCPT_TO_RESPONSE:
-            state = handleResponseOfRCPTto(socket_connection);
-            break;
+    case RECEIVE_RCPT_TO_RESPONSE:
+        state = handleResponseOfRCPTto(socket_connection);
+        break;
 
-        case SEND_DATA:
-            state = handleSendDATA(socket_connection);
-            break;
+    case SEND_DATA:
+        state = handleSendDATA(socket_connection);
+        break;
 
-        case RECEIVE_DATA_RESPONSE:
-            state = handleResponseOfDATA(socket_connection);
-            break;
+    case RECEIVE_DATA_RESPONSE:
+        state = handleResponseOfDATA(socket_connection);
+        break;
 
-        case SEND_LETTER:
-            state = handleSendLetter(socket_connection);
-            break;
+    case SEND_LETTER:
+        state = handleSendLetter(socket_connection);
+        break;
 
-        case RECEIVE_LETTER_RESPONSE:
-            state = handleResponseOfLetter(socket_connection);
-            break;
+    case RECEIVE_LETTER_RESPONSE:
+        state = handleResponseOfLetter(socket_connection);
+        break;
 
-        case SEND_QUIT:
-            state = handleSendQUIT(socket_connection);
-            break;
+    case SEND_QUIT:
+        state = handleSendQUIT(socket_connection);
+        break;
 
-        case RECEIVE_QUIT_RESPONSE:
-            state = handleResponseOfQUIT(socket_connection);
-            break;
+    case RECEIVE_QUIT_RESPONSE:
+        state = handleResponseOfQUIT(socket_connection);
+        break;
 
-        case DISPOSING_SOCKET:
-            state = handleDisposing(socket_connection);
-            return state;
+    case DISPOSING_SOCKET:
+        state = handleDisposing(socket_connection);
+        return state;
 
-        case SMTP_ERROR:
-            state = handleSmtpError(socket_connection);
-            break;
+    case SMTP_ERROR:
+        state = handleSmtpError(socket_connection);
+        break;
 
-        case SEND_RSET:
-            state = handleSolvableMistake(socket_connection);
-            break;
+    case SEND_RSET:
+        state = handleSolvableMistake(socket_connection);
+        break;
 
-        case RECEIVE_RSET_RESPONSE:
-            state = handleResponseOfRSET(socket_connection);
-            break;
+    case RECEIVE_RSET_RESPONSE:
+        state = handleResponseOfRSET(socket_connection);
+        break;
 
-        default:
-            state = -1;
-        }
-
-        //  wait letters by current domain
-        if (socket_connection->prev_state == PREPARE_SOCKET_CONNECTION)
-        {
-            break;
-        }
+    default:
+        state = -1;
     }
+
     return state;
 }
 
@@ -168,7 +160,6 @@ int handlePrepareSocketConnection(struct FileDesc *connection)
     //  Resolve MX_RECORD
     state = getMXrecord(connection);
 
-    printf("\t2\n");
     if (state < 0)
     {
         return -2;
@@ -1093,6 +1084,9 @@ int handleDisposing(struct FileDesc *connection)
     free(connection->meta_data.from);
     free(connection->meta_data.to);
 
+    connection->prev_state = DISPOSING_SOCKET;
+    connection->current_state = NULL_POINTER;
+
     return 0;
 }
 
@@ -1180,7 +1174,7 @@ int handleSmtpError(struct FileDesc *connection)
         }
         else
         {
-            //  with current letter we have problem 
+            //  with current letter we have problem
             if (connection->meta_data.file)
             {
                 fclose(connection->meta_data.file);
@@ -1198,7 +1192,7 @@ int handleSmtpError(struct FileDesc *connection)
                 sprintf(err_message, "Worker: SMTP_Control: handleSmtpError: Fail to allocate memory for new filepath of file(%s). Errno: %d", errno, connection->task_pool->path);
                 Error(err_message);
             }
-            else 
+            else
             {
                 state = SetPathInNewDirectory(filepath, connection->task_pool->path);
                 if (state != 0)
@@ -1209,8 +1203,8 @@ int handleSmtpError(struct FileDesc *connection)
                     Error(err_message);
                 }
                 else
-                {   
-                    MoveLetter(connection->task_pool->path, filepath);                    
+                {
+                    MoveLetter(connection->task_pool->path, filepath);
                 }
                 free(filepath);
             }
@@ -1315,8 +1309,8 @@ int handleResponseOfRSET(struct FileDesc *connection)
     {
         connection->prev_state = RECEIVE_RSET_RESPONSE;
         connection->current_state = SEND_MAIL_FROM;
-    } 
-    else 
+    }
+    else
     {
         connection->prev_state = connection->current_state;
         connection->current_state = SEND_QUIT;
@@ -1367,7 +1361,7 @@ int getMXrecord(struct FileDesc *connection)
             ns_sprintrr(&message, &rr, NULL, NULL, answer, sizeof(answer));
             len = strlen(answer);
             pointer = answer + len;
-            while(pointer[0] != ' ')
+            while (pointer[0] != ' ')
             {
                 pointer--;
             }
@@ -1416,7 +1410,6 @@ int getMXrecord(struct FileDesc *connection)
         return -2;
     }
 
-    
     memset(connection->mx_record, '\0', size + 1);
     strncpy(connection->mx_record, answer, size);
     return 0;
