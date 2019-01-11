@@ -1,0 +1,130 @@
+\documentclass[a4paper,12pt]{report}
+
+\input{header.tex}
+
+
+\title{Отчёт по лабораторной работе \textnumero 1}
+\author{(Ф.~И.~О)}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\addcontentsline{toc}{chapter}{Введение}
+\chapter*{Введение}
+
+Два предложения о содержании отчёта. Для нового абзаца в исходном тексте должна быть пустая строка.
+
+Это~-- шаблон отчёта (вот как оформляется длинное тире, перед котрым идёт неразрывный пробел).
+
+
+Здесь должно быть вербальное задание.
+
+А вот так оформляются списки:
+\begin{itemize}
+\item элемент списка;
+\item последний элемент списка.
+\end{itemize}
+
+Нумерованный список выглядит следующим образом.
+\begin{enumerate}
+\item Первый элемент.
+\item Второй элемент.
+\end{enumerate}
+
+% \chapter{Аналитический раздел}
+
+\chapter{Конструкторский раздел}
+
+\section{Конечный автомат состояний сервера}
+
+Рис.~\ref{fig:fsm} нагенерил самодельный \textit{fsm2dot} из \textit{autogen} и \textit{dot2tex} на пару \textit{dot}. Никто не мешает изменить параметры типа \textit{rankdir} прямо в \textit{fsm2dot}, если он будет лучше смотреться, например, сверху-вниз.
+
+\begin{figure}
+\centering
+% \includegraphics[width=\textwidth]{include/server_def_dot.pdf}
+\caption{Состояния сервера}
+\label{fig:fsm}
+\end{figure}
+
+\section{Синтаксис команд протокола}
+
+\begin{description}
+\item[Команда выхода из сеанса]
+% \input{include/re_cmd_quit_re.tex}
+\item[Команда передачи имени пользователя]
+% \input{include/re_cmd_user_re.tex}
+\end{description}
+
+Для грамматики можно использовать вставку из файла и оформление \textbackslash{}begin\{verbatim\} и \textbackslash{}end\{verbatim\} или пакет \textit{listings}\footnote{На дворе XXI век, но пакет \textit{listings} всё ещё не пашет с русскими комментариями без бубна, и лично я его пока не победил.}.
+
+Для примера воспользуемся автоматической вставкой файла описания параметров программы (не забудьте перенести это в технологический раздел) через утилитку \textit{src2tex}.
+
+% \input{include/checkoptn.def.tex}
+% \lstset{language=C}
+% \lstinputlisting{../src/checkoptn.def}
+
+\chapter{Технологический раздел}
+
+Нужно отметьть, что символ <<\_>> необходимо оформлять как <<\textbackslash\_>>.
+
+\section{Сборка программы}
+
+Сборка программы описана в файле \textit{Makefile} системы сборки \textit{make}. Рис.~\ref{fig:make} нагенерили самодельные \textit{makesimple} и \textit{makefile2dot}, а также \textit{dot2tex} и \textit{dot}.
+
+\begin{figure}
+\centering
+% \includegraphics[width=\textwidth]{include/Makefile_1_dot.pdf}
+\caption{Сборка программы}
+\label{fig:make}
+\end{figure}
+
+Отмечу, что за исключения целей типа \textit{all}, \textit{install}, \textit{clean}, \textit{tests}, все имена целей в файле систем сборки \textit{make} обычно совпадают с именами файлов (такой вот низкоуровневый инструмент). То есть вместо цели \textit{lexer} следует использовать цель \textit{src/lexer.c}.
+
+\section{Основные функции программы}
+
+Весь это раздел сгеренерировал doxygen из части комментированных исходников программы. В файле конфигурации \textbf{doxyggen.cfg} был отключён параметр \textbf{HAVE\_DOT}, поскольку для рисования графов вызовов используется \textit{cflow}.
+
+% \input{include/files}
+
+% \input{include/server-state_8h.tex}
+% \input{include/server-state_8c.tex}
+% \input{include/server-re_8h.tex}
+% \input{include/server-cmd_8h.tex}
+% \input{include/server-cmd_8c.tex}
+% \input{include/server-parse_8h.tex}
+% \input{include/server-parse_8c.tex}
+% \input{include/server-run_8h.tex}
+% \input{include/server-run_8c.tex}
+% \input{include/server_8c.tex}
+
+
+\section{Графы вызова функций}
+
+Поскольку функций много, графы вызовов разбиты на два рисунка. На рис.~\ref{fig:ccflow01} показаны основные функции, на рис.~\ref{fig:scflow01}~-- функции обработки команд. Файл \textbf{cflow.ignore} содержит список функций (точнее, шабловнов поиска), использыемых программой \textit{grep} для удаления малоинтересных стандартных функций\footnote{Функции по работе с сокетами, ipc и привилегиями к малоинтересным ни в коем случае не относятся.}.
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{include/ccflow01_dot.pdf}
+\caption{Граф вызовов, основные функции}
+\label{fig:ccflow01}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{include/scflow01_dot.pdf}
+\caption{Граф вызовов, функции обработки команд}
+\label{fig:scflow01}
+\end{figure}
+
+Графы созданы с помощью \textit{cflow}, \textit{cflow2dot}, \textit{dot}.
+
+\addcontentsline{toc}{chapter}{Выводы}
+\chapter*{Выводы}
+
+Что вы сделали и поняли.
+
+
+\end{document}

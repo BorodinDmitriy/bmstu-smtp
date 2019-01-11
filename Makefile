@@ -1,5 +1,8 @@
 DOTDIR = report/dot
 DOXDIR = report/doxygen
+TEXDIR = report/tex
+TEXINCDIR = $(TEXDIR)/include
+
 CDIR = client
 SDIR = server
 UDIR = report/utils
@@ -7,6 +10,27 @@ UDIR = report/utils
 CFLOW=cflow --level "0= "
 SIMPLECFLOW=grep -v -f cflow.ignore
 CFLOW2DOT=$(UDIR)/cflow2dot
+
+REPORT = report.pdf
+
+# latex -> pdf
+PDFLATEX = pdflatex -interaction=nonstopmode
+
+# Отчёт. PDFLATEX вызывается дважды для нормального 
+# создания ссылок, это НЕ опечатка.
+$(REPORT): $(TEXS) $(addprefix $(TEXINCDIR)/, ccflow01_dot.pdf scflow01_dot.pdf)
+	cd $(TEXDIR) && $(PDFLATEX) report.tex && $(PDFLATEX) report.tex && cp $(REPORT) ..
+
+# Файлы latex
+TEXS = $(wildcard $(TEXDIR)/*.tex)
+
+# .dot -> _dot.tex
+$(TEXINCDIR)/%_dot.tex: $(DOTDIR)/%.dot
+	dot2tex -ftikz --autosize --crop  $< > $@
+
+# _dot.tex -> _dot.pdf
+$(TEXINCDIR)/%_dot.pdf: $(TEXINCDIR)/%_dot.tex
+	$(PDFLATEX) -output-directory $(TEXINCDIR) $<
 
 code: $(DOTDIR)/ccflow01.dot $(DOTDIR)/scflow01.dot
 
