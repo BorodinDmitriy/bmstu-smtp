@@ -1,0 +1,33 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import os
+import os.path
+import sys
+
+def run_cmd2(args):
+    cmd = " ".join(args)
+    return os.popen(cmd).readlines()
+
+def convert_file(src_name, first_line, last_line):
+    print '\\begin{verbatim}'
+    output = run_cmd2([
+        # Заменяем табуляцию на четыре пробела.
+        'awk', '\'{gsub("\t","    ");print}\'', src_name])
+    output = output[first_line - 1 : last_line]
+    print "".join([l for l in output + ['\\end{verbatim}'] if len(l.strip()) > 0])
+
+try:
+    file = sys.argv[1]
+except:
+    print "usage: file [first_line] [last_line]"
+    exit
+try:
+    first_line = int(sys.argv[2])
+except:
+    first_line = 1
+try:
+    last_line = int(sys.argv[3])
+except:
+    last_line = 100000
+convert_file(file, first_line, last_line)

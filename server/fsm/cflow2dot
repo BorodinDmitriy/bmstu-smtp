@@ -1,0 +1,48 @@
+#!/usr/bin/python
+
+"""Perform cflow-to-dot conversion
+
+Example:
+
+  cflow --level "0= " | cflow2dot <function-name> <raw dot data>
+
+"""
+
+import sys, re
+
+
+def main():
+    hfunction = ''
+    fmap = set()
+    flist = None
+    for line in sys.stdin:
+        if len(line.strip()) == 0:
+            continue
+        if re.match('\S', line):
+            flist = [re.split('\(', line)[0]]
+        else:
+            f = re.split('\S', line, 1)
+            if flist:
+                flist.insert(len(f[0]), re.split('\(', re.split(f[0], line)[1])[0])
+                fmap.add(flist[len(f[0])-1]+'->'+flist[len(f[0])])
+    print 'digraph map {'
+    print 'rankdir=LR;'
+    # Let's make graph more compact
+    print 'ranksep=0.1; nodesep=0.1; defaultdist = 0.1; len = 0.1;'
+    if len(sys.argv) > 1:
+        hfunction = sys.argv[1]
+    if len(sys.argv) > 2:
+        for item in sys.argv[2:]:
+            sys.stdout.write(item+'\n')
+    for item in fmap:
+        sys.stdout.write(item)
+        f0, f1 = re.split('->', item)
+        #if f0  == hfunction:
+            #sys.stdout.write('[color=blue]')
+        #elif f1 == hfunction:
+            #sys.stdout.write('[color=green]')
+        sys.stdout.write(';\n')
+    sys.stdout.write('}\n')
+
+if __name__ == "__main__":
+    main()
