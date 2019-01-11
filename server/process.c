@@ -135,6 +135,7 @@ int * init_processes(int count, struct fd_linked_list *socket_fds, struct sockad
                 init_signal_catch(&empty, &block);
 
                 int a = run_process(pr);
+                free_process(pr);
                 kill(getpid(),SIGTERM);
             }
         	default: {
@@ -146,4 +147,30 @@ int * init_processes(int count, struct fd_linked_list *socket_fds, struct sockad
     	}
 	}
     return result_pid_array;
+}
+
+void free_process(struct process *pr) {
+
+    if (pr->listeners_list != NULL)
+        delete_elem(pr->listeners_list, SOCKET_STATE_WAIT);
+    if (pr->sock_list != NULL)
+        delete_elem(pr->sock_list, SOCKET_STATE_INIT);
+    if (pr->sock_list != NULL)
+        delete_elem(pr->sock_list, SOCKET_STATE_WAIT);
+    if (pr->sock_list != NULL)
+        delete_elem(pr->sock_list, SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS);
+    if (pr->sock_list != NULL)    
+        delete_elem(pr->sock_list, SOCKET_STATE_RECEPIENTS_SET);
+    if (pr->sock_list != NULL)    
+        delete_elem(pr->sock_list, SOCKET_STATE_WRITING_DATA);
+    if (pr->sock_list != NULL)    
+        delete_elem(pr->sock_list, SOCKET_STATE_DELIVERING);
+    if (pr->sock_list != NULL)
+        delete_elem(pr->sock_list, SOCKET_STATE_CLOSED);
+
+    mq_close(*(pr->mq));
+    mq_unlink(pr->queue_name);
+    free(pr->logger_name);
+    free(pr->queue_name);
+    free(pr);
 }

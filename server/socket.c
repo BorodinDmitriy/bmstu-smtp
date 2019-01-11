@@ -196,3 +196,74 @@ struct client_socket init_client_socket(int fd, int buffer_size, int state, int 
 	}
     return result;
 }
+
+int count_list_elems(struct client_socket_list *root) {
+	int result = 0;
+	while (root != NULL) {
+		result++;
+		root = root->next;
+	}
+	return result;
+}
+
+
+struct client_socket_list* delete_elem(struct client_socket_list* curr, int state_value)
+{
+  	/* See if we are at end of list. */
+  	if (curr == NULL)
+    	return NULL;
+
+  	/*
+  	 * Check to see if current node is one
+   	 * to be deleted.
+   	*/
+  	if (curr->c_sock.state == state_value) {
+  		//close(curr->c_sock.fd);
+    	struct client_socket_list* temp;
+
+    	/* Save the next pointer in the node. */
+    	temp= curr->next;
+
+    	/* Deallocate the node. */
+    	free_client_socket(curr->c_sock);
+    	//free(curr);
+
+    	/*
+     	* Return the NEW pointer to where we
+     	* were called from.  I.e., the pointer
+     	* the previous call will use to "skip
+     	* over" the removed node.
+     	*/
+    	return temp;
+  	}
+
+  	/*
+   	* Check the rest of the list, fixing the next
+   	* pointer in case the next node is the one
+   	* removed.
+   	*/
+  	curr->next = delete_elem(curr->next, state_value);
+
+
+  	/*
+   	* Return the pointer to where we were called
+   	* from.  Since we did not remove this node it
+   	* will be the same.
+   	*/
+  	return curr;
+}
+
+void free_client_socket(struct client_socket *c_sock) {
+	close(c_sock->fd);
+	free(c_sock->buffer);
+	if (c_sock->message != NULL) {
+		int i = 0;
+		for (i = 0; i < c_sock->message->recepients_num; i++) {
+			free(c_sock->message->to[i]);
+		}
+		free(c_sock->message->from);
+		free(c_sock->message->body);
+		free(c_sock->message);
+	}
+	free(c_sock);
+}

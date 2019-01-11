@@ -2,61 +2,6 @@
 #include "smtp.h"
 #include "process.h"
 
-int count_list_elems(struct client_socket_list *root) {
-	int result = 0;
-	while (root != NULL) {
-		result++;
-		root = root->next;
-	}
-	return result;
-}
-
-
-struct client_socket_list* delete_elem(struct client_socket_list* curr, int state_value)
-{
-  	/* See if we are at end of list. */
-  	if (curr == NULL)
-    	return NULL;
-
-  	/*
-  	 * Check to see if current node is one
-   	 * to be deleted.
-   	*/
-  	if (curr->c_sock.state == state_value) {
-  		close(curr->c_sock.fd);
-    	struct client_socket_list* temp;
-
-    	/* Save the next pointer in the node. */
-    	temp= curr->next;
-
-    	/* Deallocate the node. */
-    	free(curr);
-
-    	/*
-     	* Return the NEW pointer to where we
-     	* were called from.  I.e., the pointer
-     	* the previous call will use to "skip
-     	* over" the removed node.
-     	*/
-    	return temp;
-  	}
-
-  	/*
-   	* Check the rest of the list, fixing the next
-   	* pointer in case the next node is the one
-   	* removed.
-   	*/
-  	curr->next = delete_elem(curr->next, state_value);
-
-
-  	/*
-   	* Return the pointer to where we were called
-   	* from.  Since we did not remove this node it
-   	* will be the same.
-   	*/
-  	return curr;
-}
-
 // -1 - error
 // 0 - timeout
 // else - amount of clients
@@ -78,8 +23,7 @@ int check_clients_by_timeout(struct client_socket_list *clients, int max_fd, str
 }
 
 int run_process(struct process *pr) {
-	struct mesg_buffer message;
-	char logger_buffer[SERVER_BUFFER_SIZE];
+	char logger_buffer[SERVER_BUFFER_SIZE] = "";
 
 	printf("SMTP run process start\n");
 	sprintf(logger_buffer, "SMTP run process start\n");
@@ -88,7 +32,7 @@ int run_process(struct process *pr) {
     }
 
 	int received_bytes_count;				// число прочитанных байт
-	char buffer_output[SERVER_BUFFER_SIZE];	// выходной буфер для записи ответа
+	char buffer_output[SERVER_BUFFER_SIZE] = "";	// выходной буфер для записи ответа
 
 	char smtp_stub[SERVER_BUFFER_SIZE] = "Hi, you've come to smtp server";
 	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
@@ -333,6 +277,7 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 			if (err_code < 0) {
 				allowed_commands(c_sock, buffer_output);
 			}
+			free(message_buffer);
 		} else {
 			handle_TEXT(c_sock,buffer_output,"../maildir/");
 		}
