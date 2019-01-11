@@ -1,0 +1,31 @@
+autogen definitions fsm;
+
+method = case;
+type   = reentrant;
+cookie = "const char *cmd";
+cookie = "void *state";
+
+prefix = smtp_fsm;
+
+state = smtp_error, prepare_socket_connection, connect, receive_smtp_greeting, send_ehlo, receive_ehlo_response, send_mail_from, receive_mail_from_response, send_rcpt_to, receive_rcpt_to_response, send_data, receive_data_response, send_letter, receive_letter_response, send_quit, receive_quit_response, disposing_socket, next_letter, send_rset, receive_rset_response;
+event = connection, handle_smtp_greeting, handle_send_ehlo, handle_ehlo_response, handle_send_mail_from, handle_mail_from_response, handle_send_rcpt_to, handle_rcpt_to_response, handle_send_data, handle_data_response, handle_send_letter, handle_letter_response, handle_send_quit, handle_quit_response, handle_disposing_socket, handle_next_letter, handle_new_letter, handle_send_rset, handle_rset_response, handle_error;
+
+transition =
+{ tst  = prepare_socket_connection;	tev = connection; next = connect; },
+{ tst  = connect; tev = handle_smtp_greeting; next = receive_smtp_greeting; },
+{ tst  = receive_smtp_greeting; tev = handle_send_ehlo; next = send_ehlo; },
+{ tst  = send_ehlo; tev = handle_ehlo_response; next = receive_ehlo_response; },
+{ tst  = receive_ehlo_response; tev = handle_send_mail_from; next = send_mail_from; },
+{ tst  = send_mail_from; tev = handle_mail_from_response;  next = receive_mail_from_response;},
+{ tst  = receive_mail_from_response; tev = handle_send_rcpt_to;  next = send_rcpt_to;},
+{ tst  = send_rcpt_to; tev = handle_rcpt_to_response;  next = receive_rcpt_to_response;},
+{ tst  = receive_rcpt_to_response; tev = handle_send_data;  next = send_data;},
+{ tst  = send_data; tev = handle_data_response;  next = receive_data_response;},
+{ tst  = receive_data_response; tev = handle_send_letter;  next = send_letter;},
+{ tst  = send_letter; tev = handle_letter_response; next = receive_letter_response;},
+{ tst  = receive_letter_response; tev = handle_next_letter; next = next_letter;},
+{ tst  = next_letter; tev = handle_new_letter; next = receive_ehlo_response;},
+{ tst  = receive_letter_response; tev = handle_send_quit; next = send_quit;},
+{ tst  = send_quit; tev = handle_send_quit; next = receive_quit_response;},
+{ tst  = receive_quit_response; tev = handle_quit_response; next = disposing_socket;},
+{ tst  = "*"; tev = handle_error;  next = smtp_error; };

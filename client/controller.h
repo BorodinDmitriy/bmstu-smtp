@@ -10,10 +10,11 @@
 #include <pthread.h>
 #include <signal.h>
 #include "structs.h"
-#include "smtp_socket.h"
+#include "smtp_interface.h"
 #include "file_viewer.h"
 #include "worker.h"
 #include "logger.h"
+#include "dictionary.h"
 
 #define STATE_START_INIT 0
 #define STATE_FINISH_INIT 1

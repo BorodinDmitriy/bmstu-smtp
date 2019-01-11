@@ -5,15 +5,15 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
+#include <arpa/nameser.h>
+#include <netinet/in.h>
+#include <resolv.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "structs.h"
+#include "file_viewer.h"
 
-int GiveControlToSocket(struct FileDesc *fd);
-int SmtpInitSocket(char *domain, struct FileDesc *fd);
-int CloseConnection(struct FileDesc fd);
-
-#define BUFFER 4096
+int SMTP_Control(struct FileDesc *socket_connection);
 
 #endif //SMTP_SOCKET_H
