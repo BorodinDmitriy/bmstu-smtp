@@ -60,6 +60,7 @@ new_smtp_handler_with_states->send;
 handle_NOT_IMPLEMENTED->send;
 run_process->FD_ZERO;
 new_smtp_handler_with_states->memmove;
+run_process->send;
 new_smtp_handler_with_states->handle_HELO;
 run_process->select;
 smtp_handler->memmove;

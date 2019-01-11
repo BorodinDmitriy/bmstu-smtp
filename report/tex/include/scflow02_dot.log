@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.18)  11 JAN 2019 16:59
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.18)  12 JAN 2019 00:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -832,7 +832,7 @@ Package: preview 2017/04/24 11.91 (AUCTeX/preview-latex)
 \pr@box=\box60
 \pr@output=\toks34
 )
-No file scflow02_dot.aux.
+(report/tex/include/scflow02_dot.aux)
 \openout1 = `scflow02_dot.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 16.
@@ -847,6 +847,7 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 16.
 LaTeX Font Info:    ... okay on input line 16.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 16.
 LaTeX Font Info:    ... okay on input line 16.
+
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count120
@@ -920,7 +921,7 @@ ABD: EveryShipout initializing macros
 Preview: Fontsize 10pt
 Preview: PDFoutput 1
 
-Overfull \hbox (407.80304pt too wide) in paragraph at lines 130--130
+Overfull \hbox (407.80304pt too wide) in paragraph at lines 131--131
 [][] 
  []
 
@@ -928,16 +929,16 @@ Preview: Tightpage 0 0 0 0
 [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
 (report/tex/include/scflow02_dot.aux) ) 
 Here is how much of TeX's memory you used:
- 15996 strings out of 494397
- 347316 string characters out of 6172287
- 442004 words of memory out of 5000000
- 19021 multiletter control sequences out of 15000+600000
+ 15999 strings out of 494397
+ 347402 string characters out of 6172287
+ 443826 words of memory out of 5000000
+ 19022 multiletter control sequences out of 15000+600000
  3640 words of font info for 14 fonts, out of 8000000 for 9000
  430 hyphenation exceptions out of 8191
- 55i,7n,76p,508b,611s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 55i,7n,76p,513b,611s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/typ
 e1/public/amsfonts/cm/cmr10.pfb>
-Output written on report/tex/include/scflow02_dot.pdf (1 page, 31348 bytes).
+Output written on report/tex/include/scflow02_dot.pdf (1 page, 31720 bytes).
 PDF statistics:
  15 PDF objects out of 1000 (max. 8388607)
  10 compressed objects within 1 object stream
