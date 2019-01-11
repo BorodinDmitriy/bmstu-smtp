@@ -129,7 +129,22 @@ void run(struct worker *worker_context, struct network_controller manager)
             if (flag_of_belonging)
             {
                 FD_CLR(currentFD, &manager.readers.set);
-                status = SMTP_Control(listViewer->fd);
+                status = 0;
+                while (status == 0)
+                {
+                    status = SMTP_Control(listViewer->fd);
+
+                    //  we need to handle error
+                    if (listViewer->fd->current_state == SMTP_ERROR)
+                    {
+                        status = 0;
+                    }
+
+                    if (listViewer->fd->prev_state == DISPOSING_SOCKET)
+                    {
+                        break;
+                    }
+                }
                 printf("\tWorker %d: status(%d)\n",worker_context->workerId, status);
                 if (status != 1 && status != 0)
                 {
@@ -156,7 +171,16 @@ void run(struct worker *worker_context, struct network_controller manager)
             if (!flag_of_detect && flag_of_belonging)
             {
                 FD_CLR(currentFD, &manager.writers.set);
-                status = SMTP_Control(listViewer->fd);
+                status = 0;
+                while (status == 0)
+                {
+                    status = SMTP_Control(listViewer->fd);
+
+                    if (listViewer->fd->prev_state == DISPOSING_SOCKET)
+                    {
+                        break;
+                    }
+                }
 
                 if (status != 1 && status != 0)
                 {
