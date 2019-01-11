@@ -3,6 +3,7 @@
 #include <CUnit/Basic.h>
 
 #include "utils.h"
+#include "test_smtp.h"
 
 // sudo apt-get install libcunit1 libcunit1-doc libcunit1-dev
 
@@ -14,7 +15,7 @@ int main(void) {
 
     CU_pSuite suite = CUnitCreateSuite("suite_test");
     if (suite) {
-
+        add_to_suit_smtp_test(suite);
     }
     else {
         CU_cleanup_registry();
