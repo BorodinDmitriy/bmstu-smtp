@@ -104,7 +104,7 @@ void run(struct worker *worker_context, struct network_controller manager)
 
         if (worker_context->count_task == 0)
         {
-            printf("\tWorker %d: I don't have task\n");
+            printf("\tWorker %d: I don't have task\n", worker_context->workerId);
             continue;
         }
 
