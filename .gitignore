@@ -64,3 +64,6 @@ maildir/
 
 # log_file on server
 server/server_log
+
+# temporary gedit files
+*~
