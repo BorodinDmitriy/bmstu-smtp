@@ -20,6 +20,7 @@
  strncat()
  sprintf()
  sleep()
+ Error()
 OPT_
 SERVER_
  regexec()
