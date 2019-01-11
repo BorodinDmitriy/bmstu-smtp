@@ -448,7 +448,7 @@ int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     printf("Server: %d, QUIT: %s", c_sock->fd, buffer_output);
     send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
     c_sock->state = SOCKET_STATE_CLOSED;
-    free(msg_buffer);
+    //free(msg_buffer);
     return 1;
 }
 
