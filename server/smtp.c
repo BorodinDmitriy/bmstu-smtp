@@ -212,8 +212,11 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 
 	int buffer_left = SERVER_BUFFER_SIZE - c_sock->buffer_offset - 1;
 	if (buffer_left == 0) {
-		printf("500: Too long\n");
-		// TODO: handle too long commands
+		//printf(HEADER_500_TOO_LONG);
+		sprintf(buffer_output, HEADER_500_TOO_LONG);
+    	printf("Server: %d, TOO_LONG: %s", c_sock->fd, buffer_output);
+    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+		c_sock->buffer_offset = 0;
 	}
 
 	received_bytes_count = recv(c_sock->fd, c_sock->buffer + c_sock->buffer_offset, buffer_left, 0);

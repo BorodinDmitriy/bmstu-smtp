@@ -23,7 +23,7 @@
 #define CLIENT_MAIL_DIR_PATH "./maildir/"
 #define STR_EQUAL(a,b)	(strcmp(a, b) == 0)
 // данные сервера
-#define SERVER_PORT 15565
+#define SERVER_PORT 2525
 #define SERVER_PORT_STRING "2525"
 #define SERVER_BUFFER_SIZE 1024
 #define SERVER_BACKLOG_SIZE 3
@@ -43,6 +43,7 @@
 #define HEADER_450_MAILBOX_UNAVAILABLE "450 Requested mail action not taken: mailbox unavailable\r\n"
 #define HEADER_451_EXCEEDED_RECIPIENTS "451 Unable to complete command: number of recipients exceeded\r\n"
 #define HEADER_451_COMMAND_NOT_ALLOWED "451 Unable to complete command: command not allowed\r\n"
+#define HEADER_500_TOO_LONG "500 Too long\r\n"
 #define HEADER_502_NOT_IMPLEMENTED "502 Command Not Implemented\r\n"
 
 
