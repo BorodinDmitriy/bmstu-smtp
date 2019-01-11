@@ -25,6 +25,7 @@
 // данные сервера
 #define SERVER_PORT 2525
 #define SERVER_PORT_STRING "2525"
+#define SERVER_DOMAIN " myserver.com "
 #define SERVER_BUFFER_SIZE 1024
 #define SERVER_BACKLOG_SIZE 3
 #define SERVER_MAX_RECIPIENTS 10
@@ -32,8 +33,10 @@
 #define SERVER_EXIT_FAILURE -1
 
 // заголовки сервера
+#define HEADER_220 "220 "
 #define HEADER_221_OK "221 Ok\r\n"
 #define HEADER_250_OK "250 Ok\r\n"
+#define HEADER_250_OK_WITH_NAME "250-"
 #define HEADER_250_OK_NOOP "250 Ok noop\r\n"
 #define HEADER_250_OK_RECIPIENT "250 Ok recipient\r\n"
 #define HEADER_250_OK_RESET "250 Ok reset\r\n"

@@ -133,6 +133,12 @@ int run_process(struct process *pr) {
 						// принимаем соединение
     					new_socket = accept(p->c_sock.fd, (struct sockaddr *) &(pr->serv_address),  (socklen_t*) &(pr->addrlen));
     					printf("new_socket = %d pid = %d\n", new_socket, getpid());
+
+    					sprintf(logger_buffer, "%s %s SMTP CCSMTP\n",HEADER_220,SERVER_DOMAIN);
+    					printf("Server: %d, 220: %s", new_socket, logger_buffer);
+    					if (new_socket > 0)
+    						send(new_socket, logger_buffer, strlen(logger_buffer), 0);
+
     					sprintf(logger_buffer, "new_socket = %d pid = %d\n", new_socket, getpid());
     					if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
         					perror(logger_buffer);
@@ -357,11 +363,20 @@ int handle_EHLO(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
     	int addrlen = sizeof(*address);
     	getpeername(c_sock->fd, (struct sockaddr*)address, (socklen_t*)&addrlen);
     
-  		free(host);
-    	sprintf(buffer_output, HEADER_250_OK);
-    	printf("Server: %d, EHLO: %s", c_sock->fd, buffer_output);
+    	/*char* host_ip = ip_to_hostname(inet_ntoa(address->sin_addr));
+    	printf("%s\n", host_ip);
+    	if (strcmp(host, host_ip) == 0) {
+        	sprintf(buffer_output, "%s %s\r\n", HEADER_250_OK_WITH_NAME, host);
+        	printf("Server: %d, EHLO: %s", c_sock->fd, buffer_output);
+    	} else {
+        	sprintf(buffer_output, "%s %s\r\n", HEADER_252_OK, host);
+        	printf("Server: %d, EHLO: %s", c_sock->fd, buffer_output);
+    	}*/
+    	sprintf(buffer_output, "%s %s\r\n", HEADER_250_OK_WITH_NAME, host);
+        printf("Server: %d, EHLO: %s", c_sock->fd, buffer_output);
     	if (c_sock->fd > 0)
     		send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    	free(host);
     	c_sock->state = SOCKET_STATE_WAIT;
     	return 0;
 	}
