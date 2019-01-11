@@ -1,0 +1,40 @@
+autogen definitions fsm;
+
+method = case;
+type   = reentrant;
+cookie = "const char *cmd";
+cookie = "void *state";
+
+prefix = smtp_server_fsm;
+
+state = SOCKET_STATE_INIT, SOCKET_STATE_WAIT, SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS, SOCKET_STATE_RECEPIENTS_SET, SOCKET_STATE_WRITING_DATA, SOCKET_STATE_DELIVERING, SOCKET_STATE_CLOSED
+event = handle_HELO, handle_EHLO, handle_MAIL, handle_RCPT, handle_RSET, handle_DATA, handle_QUIT, handle_NOOP, handle_NOT_IMPLEMENTED, handle_TEXT, connection_established, connection_failed, message_saved, text, CLRF_dot_CLRF
+
+transition =
+{ tst  = '*';	tev = connection_established; next = SOCKET_STATE_INIT; },
+{ tst  = SOCKET_STATE_INIT;	tev = handle_NOOP; next = SOCKET_STATE_INIT; },
+{ tst  = SOCKET_STATE_INIT;	tev = handle_HELO; next = SOCKET_STATE_WAIT; },
+{ tst  = SOCKET_STATE_INIT;	tev = handle_QUIT; next = SOCKET_STATE_CLOSED; },
+{ tst  = SOCKET_STATE_INIT;	tev = handle_NOOP; next = SOCKET_STATE_INIT; },
+{ tst  = SOCKET_STATE_WAIT;	tev = handle_NOOP; next = SOCKET_STATE_WAIT; },
+{ tst  = SOCKET_STATE_WAIT;	tev = handle_RSET; next = SOCKET_STATE_WAIT; },
+{ tst  = SOCKET_STATE_WAIT;	tev = handle_MAIL; next = SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS; },
+{ tst  = SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS;	tev = handle_NOOP; next = SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS; },
+{ tst  = SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS;	tev = handle_RSET; next = SOCKET_STATE_WAIT; },
+{ tst  = SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS;	tev = handle_RCPT; next = SOCKET_STATE_RECEPIENTS_SET; },
+{ tst  = SOCKET_STATE_RECEPIENTS_SET;	tev = handle_RCPT; next = SOCKET_STATE_RECEPIENTS_SET; },
+{ tst  = SOCKET_STATE_RECEPIENTS_SET;	tev = handle_NOOP; next = SOCKET_STATE_RECEPIENTS_SET; },
+{ tst  = SOCKET_STATE_RECEPIENTS_SET;	tev = handle_RSET; next = SOCKET_STATE_WAIT; },
+{ tst  = SOCKET_STATE_RECEPIENTS_SET;	tev = handle_DATA; next = SOCKET_STATE_WRITING_DATA; },
+{ tst  = SOCKET_STATE_WRITING_DATA;	tev = text; next = SOCKET_STATE_WRITING_DATA; },
+{ tst  = SOCKET_STATE_WRITING_DATA;	tev = CLRF_dot_CLRF; next = SOCKET_STATE_DELIVERING; },
+{ tst  = SOCKET_STATE_DELIVERING;	tev = message_saved; next = SOCKET_STATE_WAIT; },
+{ tst  = SOCKET_STATE_WAIT;	tev = handle_QUIT; next = SOCKET_STATE_CLOSED; },
+{ tst  = SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS;	tev = handle_QUIT; next = SOCKET_STATE_CLOSED; },
+{ tst  = SOCKET_STATE_RECEPIENTS_SET;	tev = handle_QUIT; next = SOCKET_STATE_CLOSED; },
+
+{ tst  = SOCKET_STATE_INIT;	tev = connection_failed; next = SOCKET_STATE_CLOSED; },
+{ tst  = SOCKET_STATE_WAIT;	tev = connection_failed; next = SOCKET_STATE_CLOSED; },
+{ tst  = SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS;	tev = connection_failed; next = SOCKET_STATE_CLOSED; },
+{ tst  = SOCKET_STATE_RECEPIENTS_SET;	tev = connection_failed; next = SOCKET_STATE_CLOSED; },
+{ tst  = SOCKET_STATE_WRITING_DATA;	tev = connection_failed; next = SOCKET_STATE_CLOSED; };
