@@ -106,6 +106,7 @@ void RemoveDomainRecordFromDictionary(char *domain)
             {
                 free(Dictionary);
                 Dictionary = NULL;
+                break;
             }
             free(pointer);
             break;
@@ -119,7 +120,7 @@ void RemoveDomainRecordFromDictionary(char *domain)
     return;
 }
 
-void freeDicrionary()
+void FreeDictionary()
 {
     sem_wait(&lock);
     struct domain_record *pointer = Dictionary;
