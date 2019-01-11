@@ -154,11 +154,21 @@ int handlePrepareSocketConnection(struct FileDesc *connection)
         return -1;
     }
 
+    if (connection->domain == NULL)
+    {
+        char message[150];
+        memset(message, '\0', 150);
+        sprintf(message, "Worker: handlePrepareSocketConnection: unexpected current_state (%d) and prev_state(%d) for socket with domain %s", connection->current_state, connection->prev_state, connection->domain);
+        Error(message);
+        return -2;
+    }
+
     // State is OK
 
     //  Resolve MX_RECORD
     state = getMXrecord(connection);
 
+    printf("\t2\n");
     if (state < 0)
     {
         return -2;
@@ -1324,13 +1334,15 @@ int getMXrecord(struct FileDesc *connection)
     int state = 0;
     int size;
     int len;
-    __u_char answer[512];
+    __u_char uanswer[512];
+    char answer[512];
+    memset(uanswer, '\0', 512);
     memset(answer, '\0', 512);
 
     len = strlen(MY_DOMAIN);
     if (strncmp(connection->domain, MY_DOMAIN, len) != 0)
     {
-        size = res_query(connection->domain, C_IN, T_MX, answer, 512);
+        size = res_query(connection->domain, C_IN, T_MX, uanswer, 512);
 
         if (size < 0)
         {
@@ -1345,16 +1357,23 @@ int getMXrecord(struct FileDesc *connection)
         ns_msg message;
         ns_rr rr;
 
-        ns_initparse(answer, size, &message);
+        ns_initparse(uanswer, size, &message);
         char *pointer;
 
-        size = ns_msg_count(message, ns_c_in);
+        size = ns_msg_count(message, ns_s_an);
         for (int J = 0; J < size; J++)
         {
-            ns_parserr(&message, ns_c_in, J, &rr);
+            ns_parserr(&message, ns_s_an, J, &rr);
             ns_sprintrr(&message, &rr, NULL, NULL, answer, sizeof(answer));
-            pointer = strstr(answer, ".\t");
-            len = strlen(answer) - strlen(pointer);
+            len = strlen(answer);
+            pointer = answer + len;
+            while(pointer[0] != ' ')
+            {
+                pointer--;
+            }
+            pointer++;
+            len = strlen(pointer) - 1;
+            strncpy(answer, pointer, len);
             answer[len] = '\0';
             break;
         }
