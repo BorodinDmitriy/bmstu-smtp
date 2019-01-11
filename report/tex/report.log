@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.18)  11 JAN 2019 16:29
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.18)  11 JAN 2019 17:01
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -646,7 +646,11 @@ Package: array 2016/10/06 v2.4d Tabular extension package (FMi)
 \backup@length=\skip48
 )
 \tmplength=\skip49
-) (./report.aux)
+) (./report.aux
+
+LaTeX Warning: Label `fig:scflow01' multiply defined.
+
+)
 \openout1 = `report.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 9.
@@ -667,8 +671,7 @@ LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 9.
 LaTeX Font Info:    ... okay on input line 9.
 LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 9.
 LaTeX Font Info:    ... okay on input line 9.
-
-(/usr/share/texlive/texmf-dist/tex/latex/ucs/ucsencs.def
+ (/usr/share/texlive/texmf-dist/tex/latex/ucs/ucsencs.def
 File: ucsencs.def 2011/01/21 Fixes to fontencodings LGR, T3
 )
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
@@ -830,75 +833,97 @@ Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 104.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 104.
-<include/ccflow01_dot.pdf, id=90, 1266.70836pt x 1427.5071pt>
+<include/ccflow01_dot.pdf, id=90, 1017.22533pt x 588.95735pt>
 File: include/ccflow01_dot.pdf Graphic file (type pdf)
 <use include/ccflow01_dot.pdf>
 Package pdftex.def Info: include/ccflow01_dot.pdf  used on input line 110.
-(pdftex.def)             Requested size: 483.69684pt x 545.09395pt.
-<include/scflow01_dot.pdf, id=91, 1485.54301pt x 541.40973pt>
+(pdftex.def)             Requested size: 483.69684pt x 280.04523pt.
+<include/ccflow02_dot.pdf, id=91, 685.66864pt x 652.81593pt>
+File: include/ccflow02_dot.pdf Graphic file (type pdf)
+<use include/ccflow02_dot.pdf>
+Package pdftex.def Info: include/ccflow02_dot.pdf  used on input line 117.
+(pdftex.def)             Requested size: 483.69684pt x 460.52417pt.
+<include/scflow01_dot.pdf, id=92, 570.48631pt x 288.16156pt>
 File: include/scflow01_dot.pdf Graphic file (type pdf)
 <use include/scflow01_dot.pdf>
-Package pdftex.def Info: include/scflow01_dot.pdf  used on input line 117.
-(pdftex.def)             Requested size: 483.69684pt x 176.27826pt.
+Package pdftex.def Info: include/scflow01_dot.pdf  used on input line 124.
+(pdftex.def)             Requested size: 483.69684pt x 244.32729pt.
+<include/scflow02_dot.pdf, id=93, 752.8035pt x 560.27422pt>
+File: include/scflow02_dot.pdf Graphic file (type pdf)
+<use include/scflow02_dot.pdf>
+Package pdftex.def Info: include/scflow02_dot.pdf  used on input line 131.
+(pdftex.def)             Requested size: 483.69684pt x 359.99342pt.
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 124.
+(babel)             in language  on input line 138.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 124.
+(babel)             in language  on input line 138.
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
 [4
 
 ]
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
  [5 <./include/ccflow01_dot.pdf>]
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 125.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 125.
- [6 <./include/scflow01_dot.pdf>]
+(babel)             in language  on input line 139.
+ [6 <./include/ccflow02_dot.pdf>]
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 130.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 130.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 130.
+(babel)             in language  on input line 139.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 130.
- [7
+(babel)             in language  on input line 139.
+ [7 <./include/scflow01_dot.pdf> <./include/scflow02_dot.pdf>]
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 144.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 144.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 144.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 144.
+ [8
 
 ]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 130.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 130.
-
-(./report.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 130.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 130.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 144.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 144.
+ (./report.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 144.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 144.
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: BFC1A33FA1ACA3E282A490DA74AC77D1;1884.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 130.
+(rerunfilecheck)             Checksum: CD9C1ECE1336E2FB5D44C87CA8D389EE;1884.
+
+
+LaTeX Warning: There were multiply-defined labels.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 144.
  ) 
 Here is how much of TeX's memory you used:
- 23257 strings out of 494397
- 446675 string characters out of 6172287
- 502233 words of memory out of 5000000
- 26187 multiletter control sequences out of 15000+600000
+ 23271 strings out of 494397
+ 447025 string characters out of 6172287
+ 503354 words of memory out of 5000000
+ 26196 multiletter control sequences out of 15000+600000
  17924 words of font info for 39 fonts, out of 8000000 for 9000
  430 hyphenation exceptions out of 8191
  57i,8n,76p,775b,676s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -915,10 +940,10 @@ our/lh/lh-t2a/labx2488.600pk> </home/dafferrus/.texlive2017/texmf-var/fonts/pk/
 ljfour/lh/lh-t2a/larm1440.600pk> </home/dafferrus/.texlive2017/texmf-var/fonts/
 pk/ljfour/lh/lh-t2a/larm2074.600pk></usr/share/texlive/texmf-dist/fonts/type1/p
 ublic/amsfonts/cm/cmr10.pfb>
-Output written on report.pdf (8 pages, 174801 bytes).
+Output written on report.pdf (9 pages, 171417 bytes).
 PDF statistics:
- 460 PDF objects out of 1000 (max. 8388607)
- 154 compressed objects within 2 object streams
- 26 named destinations out of 1000 (max. 500000)
- 95 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 477 PDF objects out of 1000 (max. 8388607)
+ 167 compressed objects within 2 object streams
+ 29 named destinations out of 1000 (max. 500000)
+ 105 words of extra memory for PDF output out of 10000 (max. 10000000)
 
