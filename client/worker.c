@@ -65,7 +65,13 @@ void run(struct worker *worker_context, struct network_controller manager)
 
     while (worker_context->worked)
     {
-        int fd_count = manager.writers.count + manager.readers.count + manager.handlers.count + 1;
+        int fd_count = 1;
+        listViewer = manager.socket_list;
+        while(listViewer) 
+        {
+            fd_count = MAX(fd_count, listViewer->fd->id);
+            listViewer = listViewer->next;
+        }
         readers_temp = manager.readers.set;
         writers_temp = manager.writers.set;
         handlers_temp = manager.handlers.set;
@@ -87,14 +93,10 @@ void run(struct worker *worker_context, struct network_controller manager)
 
         processingTasks(worker_context, &manager);
 
-        if (readyFD < 0)
+        if (readyFD <= 0)
         {
-            printf("\nWorker %d has problem on pselect\n", worker_context->workerId);
-            char message[100];
-            memset(message, '\0', 100);
-            sprintf(message, "Worker %d has problem on pselect. Current state: STATE_FAIL_WORK. It's over", worker_context->workerId);
-            Error(message);
-            break;
+            printf("\nWorker %d: run: not ready sockets\n", worker_context->workerId);
+            continue;
         }
 
         listViewer = manager.socket_list;
@@ -111,10 +113,14 @@ void run(struct worker *worker_context, struct network_controller manager)
             {
                 FD_CLR(currentFD, &manager.readers.set);
                 status = SMTP_Control(listViewer->fd);
-                if (status != 1)
+                if (status != 1 && status != 0)
                 {
                     // unsolve exception or all ok, still need to remove record from dictionary and delete socket
-                    RemoveDomainRecordFromDictionary(worker_context->workerId, listViewer->fd->domain);
+                    RemoveDomainRecordFromDictionary(listViewer->fd->domain);
+                    removeSocketConnectionFromPool(&manager, listViewer->fd);
+                }
+                if (status == 0)
+                {
                     removeSocketConnectionFromPool(&manager, listViewer->fd);
                 }
 
@@ -129,10 +135,15 @@ void run(struct worker *worker_context, struct network_controller manager)
                 FD_CLR(currentFD, &manager.writers.set);
                 status = SMTP_Control(listViewer->fd);
 
-                if (status != 1)
+                if (status != 1 && status != 0)
                 {
                     // unsolve exception or all ok, still need to remove record from dictionary and delete socket
-                    RemoveDomainRecordFromDictionary(worker_context->workerId, listViewer->fd->domain);
+                    RemoveDomainRecordFromDictionary(listViewer->fd->domain);
+                    removeSocketConnectionFromPool(&manager, listViewer->fd);
+                }
+
+                if (status == 0) 
+                {
                     removeSocketConnectionFromPool(&manager, listViewer->fd);
                 }
 
@@ -174,7 +185,7 @@ void run(struct worker *worker_context, struct network_controller manager)
                     Error(message);
 
                     //  Something went wrong and I don't know how to resolve current graph state;
-                    RemoveDomainRecordFromDictionary(worker_context->workerId, listViewer->fd->domain);
+                    RemoveDomainRecordFromDictionary(listViewer->fd->domain);
                     removeSocketConnectionFromPool(&manager, listViewer->fd);                    
                 }
 
@@ -190,21 +201,20 @@ void run(struct worker *worker_context, struct network_controller manager)
 
 void processingTasks(struct worker *worker_context, struct network_controller *manager)
 {
-    struct worker_task *worker_task_pointer = worker_context->tasks;
     struct FileDesc *socket_pointer;
     struct worker_task *socket_task_pointer;
     sem_wait(&worker_context->lock);
-    while (worker_task_pointer)
+    while (worker_context->tasks)
     {
-        socket_pointer = findSocketByDomain(manager, worker_task_pointer->domain);
+        socket_pointer = findSocketByDomain(manager, worker_context->tasks->domain);
         //  if socket with current domain is exist
         if (socket_pointer)
         {
             socket_task_pointer = socket_pointer->task_pool;
             if (socket_task_pointer == NULL)
             {
-                socket_pointer->task_pool = worker_task_pointer;
-                worker_task_pointer = worker_task_pointer->next;
+                socket_pointer->task_pool = worker_context->tasks;
+                worker_context->tasks = worker_context->tasks->next;
                 socket_pointer->task_pool->next = NULL;
                 continue;
             }
@@ -214,29 +224,41 @@ void processingTasks(struct worker *worker_context, struct network_controller *m
                 socket_task_pointer = socket_task_pointer->next;
             }
 
-            socket_task_pointer->next = worker_task_pointer;
-            worker_task_pointer = worker_task_pointer->next;
+            socket_task_pointer->next = worker_context->tasks;
+            worker_context->tasks = worker_context->tasks->next;
             socket_task_pointer = socket_task_pointer->next;
             socket_task_pointer->next = NULL;
             continue;
         }
 
         //  socket with current domain isn't exist
-        socket_pointer = addNewSocketConnection(manager, worker_task_pointer->domain);
-        if (!socket_pointer)
+        socket_pointer = addNewSocketConnection(manager, worker_context->tasks->domain);
+        if (!socket_pointer || socket_pointer->id < 0)
         {
             char message[100];
             memset(message, '\0', 100);
             sprintf(message, "Worker %d has problem on create new socket connection. Current record skipped", worker_context->workerId);
             Error(message);
-            worker_task_pointer = worker_task_pointer->next;
+            //  Revert TASK
+            
+            int len = strlen(worker_context->tasks->path);
+            char *dest = calloc(len + 1, sizeof(char));
+            SetPathInNewDirectory(dest, worker_context->tasks->path);
+            MoveLetter(worker_context->tasks->path, dest);
+            free(dest);
+
+            struct worker_task *task_pointer = worker_context->tasks->next;
+            DestroyTask(worker_context->tasks);
+
+            worker_context->tasks = task_pointer;
             continue;
         }
 
-        FD_SET(socket_pointer->id, &manager->readers.set);
+        // FD_SET(socket_pointer->id, &manager->readers.set);
+        FD_SET(socket_pointer->id, &manager->writers.set);
 
-        socket_pointer->task_pool = worker_task_pointer;
-        worker_task_pointer = worker_task_pointer->next;
+        socket_pointer->task_pool = worker_context->tasks;
+        worker_context->tasks = worker_context->tasks->next;
         socket_pointer->task_pool->next = NULL;
         continue;
     }
@@ -333,7 +355,7 @@ struct FileDesc *addNewSocketConnection(struct network_controller *manager, char
     new_socket_connection->prev_state = NULL_POINTER;
     new_socket_connection->current_state = PREPARE_SOCKET_CONNECTION;
     state = SMTP_Control(new_socket_connection);
-    if (state != 0 || state != 1)
+    if (state != 0 && state != 1)
     {
         char message[100];
         memset(message, '\0', 100);
@@ -362,12 +384,25 @@ struct FileDesc *addNewSocketConnection(struct network_controller *manager, char
 void removeSocketConnectionFromPool(struct network_controller *manager, struct FileDesc *socket_connection)
 {
     struct FileDescList *pool_pointer = manager->socket_list;
-    struct FileDescList *pool_pointer_prev;
+    struct FileDescList *pool_pointer_prev = NULL;
     while (pool_pointer)
     {
         if (pool_pointer->fd->id == socket_connection->id)
         {
-            pool_pointer_prev->next = pool_pointer->next;
+            //  Removing
+            if (pool_pointer_prev != NULL) 
+            {
+                pool_pointer_prev->next = pool_pointer->next;
+            } 
+            else if (pool_pointer->next) 
+            {
+                manager->socket_list = manager->socket_list->next;
+            }
+            else
+            {
+                free(manager->socket_list);
+                manager->socket_list = NULL;
+            }
 
             free(socket_connection->domain);
             free(socket_connection);
