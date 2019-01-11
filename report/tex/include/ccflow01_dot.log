@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.18)  11 JAN 2019 16:59
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.18)  11 JAN 2019 21:40
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -832,7 +832,7 @@ Package: preview 2017/04/24 11.91 (AUCTeX/preview-latex)
 \pr@box=\box60
 \pr@output=\toks34
 )
-No file ccflow01_dot.aux.
+(report/tex/include/ccflow01_dot.aux)
 \openout1 = `ccflow01_dot.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 16.
@@ -847,6 +847,7 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 16.
 LaTeX Font Info:    ... okay on input line 16.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 16.
 LaTeX Font Info:    ... okay on input line 16.
+
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count120
@@ -928,8 +929,8 @@ Preview: Tightpage 0 0 0 0
 [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
 (report/tex/include/ccflow01_dot.aux) ) 
 Here is how much of TeX's memory you used:
- 16072 strings out of 494397
- 349786 string characters out of 6172287
+ 16074 strings out of 494397
+ 349856 string characters out of 6172287
  450307 words of memory out of 5000000
  19097 multiletter control sequences out of 15000+600000
  3640 words of font info for 14 fonts, out of 8000000 for 9000
