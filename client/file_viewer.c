@@ -12,9 +12,7 @@ void setUserDirectory(char *dest, char *directory_name);
 void processingLetters(struct files_record *files);
 int setDomainFromFile(char *domain, FILE *file);
 int setPathInTempDirectory(char *dest, char *path);
-int moveLetter(char *from, char *to);
 struct worker_task *createTaskForLetter(char *domain, char *path);
-void destroyTask(struct worker_task *task);
 
 //==========================//
 //      PUBLIC METHODS      //
@@ -22,11 +20,11 @@ void destroyTask(struct worker_task *task);
 
 int InitFileViewer()
 {
-    return 0;  
+    return 0;
 }
 
 void DestroyFileViewer()
-{    
+{
     return;
 }
 
@@ -158,6 +156,7 @@ void SearchNewFiles()
     {
         pointer = pointer->next;
         free(queue);
+        queue = pointer;
     }
 
     processingLetters(file_queue);
@@ -216,19 +215,19 @@ void processingLetters(struct files_record *files)
             tryes++;
         }
 
-        if (workerId < 0) 
+        if (workerId < 0)
         {
-            destroyTask(task);
+            DestroyTask(task);
             pointer = pointer->next;
             continue;
         }
 
-        moveLetter(pointer->path, task->path);
+        MoveLetter(pointer->path, task->path);
         state = DelegateTaskToWorker(workerId, task);
-        if (state) 
+        if (state)
         {
-            moveLetter(task->path, pointer->path);
-            destroyTask(task);
+            MoveLetter(task->path, pointer->path);
+            DestroyTask(task);
         }
         pointer = pointer->next;
     }
@@ -268,6 +267,7 @@ int setDomainFromFile(char *domain, FILE *file)
         }
 
         len = strlen(pointer);
+        memset(domain, '\0', len - 2);
         strncpy(domain, pointer + 1, len - 3);
         return 0;
     }
@@ -287,15 +287,15 @@ struct worker_task *createTaskForLetter(char *domain, char *path)
 
     int len = strlen(path) + 1;
     task->path = (char *)calloc(len, sizeof(char));
-    if (!task->path) 
+    if (!task->path)
     {
         printf("\nFail to create path in task");
         free(task);
         return NULL;
     }
-    
+
     int state = setPathInTempDirectory(task->path, path);
-    if (state) 
+    if (state)
     {
         printf("Fail to receive tmp place of file");
         free(task);
@@ -311,14 +311,14 @@ struct worker_task *createTaskForLetter(char *domain, char *path)
         free(task);
         return NULL;
     }
-    
+
     memset(task->domain, '\0', len);
     strncpy(task->domain, domain, len);
     task->next = NULL;
     return task;
 }
 
-void destroyTask(struct worker_task *task)
+void DestroyTask(struct worker_task *task)
 {
     free(task->domain);
     free(task->path);
@@ -337,13 +337,35 @@ int setPathInTempDirectory(char *dest, char *path)
     return 0;
 }
 
-int moveLetter(char *from, char *to)
+int SetPathInNewDirectory(char *dest, char *path)
+{
+    char *pattern = "/tmp/";
+    char *pos = strstr(path, pattern);
+    int count = pos - path;
+    strncpy(dest, path, count);
+    strcat(dest, "/new/");
+    strcat(dest, path + count + 5);
+    return 0;
+}
+
+int SetPathInCurrentDirectory(char *dest, char *path)
+{
+    char *pattern = "/tmp/";
+    char *pos = strstr(path, pattern);
+    int count = pos - path;
+    strncpy(dest, path, count);
+    strcat(dest, "/current/");
+    strcat(dest, path + count + 5);
+    return 0;
+}
+
+int MoveLetter(char *from, char *to)
 {
     int state = 0;
     state = rename(from, to);
-    if (state < 0) 
+    if (state < 0)
     {
-        printf("Fail to move file from %s to %s", from, to);   
+        printf("Fail to move file from %s to %s", from, to);
     }
     return state;
 }

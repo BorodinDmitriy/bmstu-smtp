@@ -20,6 +20,10 @@ struct files_record
 
 int InitFileViewer();
 void DestroyFileViewer();
+void DestroyTask(struct worker_task *task);
 void SearchNewFiles();
+int MoveLetter(char *from, char *to);
+int SetPathInNewDirectory(char *dest, char *path);
+int SetPathInCurrentDirectory(char *dest, char *path);
 
 #endif //FILE_VIEWER_H
