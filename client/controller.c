@@ -120,7 +120,7 @@ void Dispose()
     }
 
     free(Workers.pool);
-    // DisposeFileViewer();
+    FreeDictionary();
 
     printf("Success");
     return;
@@ -213,6 +213,7 @@ int createWorker(int index)
 
 void destroyWorker(int index)
 {
+    sem_destroy(&(Workers.pool[index]->lock));
     free(Workers.pool[index]);
     return;
 }
