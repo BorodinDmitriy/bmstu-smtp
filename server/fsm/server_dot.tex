@@ -1,0 +1,95 @@
+\documentclass{article}
+\usepackage[x11names, rgb]{xcolor}
+\usepackage[utf8]{inputenc}
+\usepackage{tikz}
+\usetikzlibrary{snakes,arrows,shapes}
+\usepackage{amsmath}
+%
+%
+
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+\setlength\PreviewBorder{0pt}%
+
+%
+
+\begin{document}
+\pagestyle{empty}
+%
+%
+%
+
+\enlargethispage{100cm}
+% Start of code
+\begin{tikzpicture}[>=latex',line join=bevel,]
+%%
+\node (SOCKET STATE INIT) at (230bp,259bp) [draw,ellipse] {SOCKET STATE INIT};
+  \node (SOCKET STATE WRITING DATA) at (1582bp,21bp) [draw,ellipse] {SOCKET STATE WRITING DATA};
+  \node (SOCKET STATE MAIL CREATED NO RECEPIENTS) at (830bp,136bp) [draw,ellipse] {SOCKET STATE MAIL CREATED NO RECEPIENTS};
+  \node (SOCKET STATE DELIVERING) at (1912bp,9bp) [draw,ellipse] {SOCKET STATE DELIVERING};
+  \node (SOCKET STATE CLOSED) at (1912bp,173bp) [draw,ellipse] {SOCKET STATE CLOSED};
+  \node (SOCKET STATE WAIT) at (480bp,164bp) [draw,ellipse] {SOCKET STATE WAIT};
+  \node (SOCKET STATE RECEPIENTS SET) at (1237bp,45bp) [draw,ellipse] {SOCKET STATE RECEPIENTS SET};
+  \node ('*') at (13bp,259bp) [draw,ellipse] {'*'};
+  \draw [->] (SOCKET STATE MAIL CREATED NO RECEPIENTS) ..controls (715.88bp,147.58bp) and (677.11bp,151.22bp)  .. (642bp,154bp) .. controls (616.73bp,156bp) and (589.19bp,157.84bp)  .. (SOCKET STATE WAIT);
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (606bp,168.5bp) node {handle RSET};
+  \draw [->] (SOCKET STATE INIT) ..controls (316.52bp,276.84bp) and (403.64bp,292bp)  .. (479bp,292bp) .. controls (479bp,292bp) and (479bp,292bp)  .. (1583bp,292bp) .. controls (1678.5bp,292bp) and (1708.1bp,301.19bp)  .. (1796bp,264bp) .. controls (1836.8bp,246.77bp) and (1875.2bp,210.99bp)  .. (SOCKET STATE CLOSED);
+  \draw (1061bp,301.5bp) node {connection failed};
+  \draw [->] (SOCKET STATE INIT) ..controls (357.03bp,259bp) and (421.74bp,259bp)  .. (479bp,259bp) .. controls (479bp,259bp) and (479bp,259bp)  .. (1583bp,259bp) .. controls (1696.6bp,259bp) and (1825.2bp,210.16bp)  .. (SOCKET STATE CLOSED);
+  \draw (1061bp,269.5bp) node {handle QUIT};
+  \draw [->] (SOCKET STATE RECEPIENTS SET) ..controls (1376.2bp,35.331bp) and (1434.6bp,31.243bp)  .. (SOCKET STATE WRITING DATA);
+  \draw (1413bp,45.5bp) node {handle DATA};
+  \draw [->] (SOCKET STATE WRITING DATA) ..controls (1548.6bp,33.81bp) and (1559bp,37bp)  .. (1582bp,37bp) .. controls (1591.9bp,37bp) and (1599.4bp,36.411bp)  .. (SOCKET STATE WRITING DATA);
+  \draw (1582bp,46.5bp) node {text};
+  \draw [->] (SOCKET STATE WAIT) ..controls (519.1bp,147.71bp) and (545.7bp,137.98bp)  .. (570bp,134bp) .. controls (622.61bp,125.37bp) and (682.05bp,125.16bp)  .. (SOCKET STATE MAIL CREATED NO RECEPIENTS);
+  \draw (606bp,143.5bp) node {handle MAIL};
+  \draw [->] (SOCKET STATE WAIT) ..controls (467.71bp,176.99bp) and (471.63bp,180bp)  .. (480bp,180bp) .. controls (481.44bp,180bp) and (482.74bp,179.91bp)  .. (SOCKET STATE WAIT);
+  \draw (480bp,189.5bp) node {handle RSET};
+  \draw [->] (SOCKET STATE WAIT) ..controls (450.59bp,183.94bp) and (456.62bp,199bp)  .. (480bp,199bp) .. controls (497.53bp,199bp) and (505.31bp,190.53bp)  .. (SOCKET STATE WAIT);
+  \draw (480bp,208.5bp) node {handle NOOP};
+  \draw [->] (SOCKET STATE INIT) ..controls (298.76bp,233.04bp) and (395.59bp,195.95bp)  .. (SOCKET STATE WAIT);
+  \draw (353bp,235.5bp) node {handle HELO};
+  \draw [->] (SOCKET STATE RECEPIENTS SET) ..controls (1012.7bp,56.705bp) and (816.3bp,71.992bp)  .. (650bp,104bp) .. controls (599.02bp,113.81bp) and (542.75bp,136.3bp)  .. (SOCKET STATE WAIT);
+  \draw (830bp,113.5bp) node {handle RSET};
+  \draw [->] (SOCKET STATE MAIL CREATED NO RECEPIENTS) ..controls (1061.4bp,148.72bp) and (1226.4bp,157.08bp)  .. (1370bp,162bp) .. controls (1523.7bp,167.27bp) and (1702.1bp,170.3bp)  .. (SOCKET STATE CLOSED);
+  \draw (1413bp,174.5bp) node {connection failed};
+  \draw [->] (SOCKET STATE MAIL CREATED NO RECEPIENTS) ..controls (1131.5bp,133.38bp) and (1304.2bp,134.02bp)  .. (1456bp,140bp) .. controls (1589bp,145.24bp) and (1743.4bp,157.82bp)  .. (SOCKET STATE CLOSED);
+  \draw (1413bp,150.5bp) node {handle QUIT};
+  \draw [->] (SOCKET STATE WAIT) ..controls (537.8bp,174.46bp) and (554.6bp,177.13bp)  .. (570bp,179bp) .. controls (605.4bp,183.3bp) and (614.37bp,183.67bp)  .. (650bp,185bp) .. controls (1086.2bp,201.33bp) and (1607.7bp,184.95bp)  .. (SOCKET STATE CLOSED);
+  \draw (1237bp,202.5bp) node {handle QUIT};
+  \draw [->] (SOCKET STATE WAIT) ..controls (567.11bp,190.51bp) and (707.92bp,229bp)  .. (829bp,229bp) .. controls (829bp,229bp) and (829bp,229bp)  .. (1583bp,229bp) .. controls (1688.1bp,229bp) and (1809.4bp,200.73bp)  .. (SOCKET STATE CLOSED);
+  \draw (1237bp,238.5bp) node {connection failed};
+  \draw [->] (SOCKET STATE RECEPIENTS SET) ..controls (1219.8bp,57.99bp) and (1225.3bp,61bp)  .. (1237bp,61bp) .. controls (1240.3bp,61bp) and (1243.1bp,60.762bp)  .. (SOCKET STATE RECEPIENTS SET);
+  \draw (1237bp,70.5bp) node {handle RCPT};
+  \draw [->] (SOCKET STATE RECEPIENTS SET) ..controls (1196.1bp,65.259bp) and (1204.7bp,80bp)  .. (1237bp,80bp) .. controls (1262bp,80bp) and (1272.8bp,71.182bp)  .. (SOCKET STATE RECEPIENTS SET);
+  \draw (1237bp,89.5bp) node {handle NOOP};
+  \draw [->] (SOCKET STATE WRITING DATA) ..controls (1725.6bp,15.784bp) and (1765.9bp,14.309bp)  .. (SOCKET STATE DELIVERING);
+  \draw (1752bp,26.5bp) node {CLRF dot CLRF};
+  \draw [->] (SOCKET STATE WRITING DATA) ..controls (1698.3bp,37.64bp) and (1782.3bp,50.89bp)  .. (1796bp,58bp) .. controls (1841.3bp,81.514bp) and (1880bp,129.17bp)  .. (SOCKET STATE CLOSED);
+  \draw (1752bp,67.5bp) node {connection failed};
+  \draw [->] (SOCKET STATE RECEPIENTS SET) ..controls (1289.9bp,63.46bp) and (1332.4bp,77.666bp)  .. (1370bp,87bp) .. controls (1513.2bp,122.57bp) and (1553.9bp,102.72bp)  .. (1700bp,123bp) .. controls (1743.1bp,128.98bp) and (1753.6bp,132.11bp)  .. (1796bp,142bp) .. controls (1821.1bp,147.87bp) and (1849.1bp,155.39bp)  .. (SOCKET STATE CLOSED);
+  \draw (1582bp,132.5bp) node {connection failed};
+  \draw [->] (SOCKET STATE RECEPIENTS SET) ..controls (1347bp,58.336bp) and (1409.1bp,65.341bp)  .. (1464bp,70bp) .. controls (1568.7bp,78.89bp) and (1597.6bp,60.35bp)  .. (1700bp,84bp) .. controls (1745bp,94.404bp) and (1753.4bp,106.05bp)  .. (1796bp,124bp) .. controls (1824.7bp,136.09bp) and (1857.4bp,150.02bp)  .. (SOCKET STATE CLOSED);
+  \draw (1582bp,94.5bp) node {handle QUIT};
+  \draw [->] (SOCKET STATE MAIL CREATED NO RECEPIENTS) ..controls (946.05bp,110.15bp) and (1105.8bp,74.247bp)  .. (SOCKET STATE RECEPIENTS SET);
+  \draw (1061bp,103.5bp) node {handle RCPT};
+  \draw [->] (SOCKET STATE INIT) ..controls (205.76bp,271.81bp) and (213.32bp,275bp)  .. (230bp,275bp) .. controls (235.99bp,275bp) and (240.81bp,274.59bp)  .. (SOCKET STATE INIT);
+  \draw (230bp,284.5bp) node {handle NOOP};
+  \draw [->] ('*') ..controls (47.535bp,259bp) and (97.144bp,259bp)  .. (SOCKET STATE INIT);
+  \draw (89bp,268.5bp) node {connection established};
+  \draw [->] (SOCKET STATE DELIVERING) ..controls (1749.2bp,2.5681bp) and (1660.9bp,0bp)  .. (1583bp,0bp) .. controls (829bp,0bp) and (829bp,0bp)  .. (829bp,0bp) .. controls (691.02bp,0bp) and (549.1bp,106.81bp)  .. (SOCKET STATE WAIT);
+  \draw (1237bp,10.5bp) node {message saved};
+  \draw [->] (SOCKET STATE MAIL CREATED NO RECEPIENTS) ..controls (785.5bp,148.81bp) and (799.38bp,152bp)  .. (830bp,152bp) .. controls (844.83bp,152bp) and (855.74bp,151.25bp)  .. (SOCKET STATE MAIL CREATED NO RECEPIENTS);
+  \draw (830bp,161.5bp) node {handle NOOP};
+%
+\end{tikzpicture}
+% End of code
+
+%
+\end{document}
+%
+
+
+

@@ -7,8 +7,8 @@ cookie = "void *state";
 
 prefix = smtp_server_fsm;
 
-state = SOCKET_STATE_INIT, SOCKET_STATE_WAIT, SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS, SOCKET_STATE_RECEPIENTS_SET, SOCKET_STATE_WRITING_DATA, SOCKET_STATE_DELIVERING, SOCKET_STATE_CLOSED
-event = handle_HELO, handle_EHLO, handle_MAIL, handle_RCPT, handle_RSET, handle_DATA, handle_QUIT, handle_NOOP, handle_NOT_IMPLEMENTED, handle_TEXT, connection_established, connection_failed, message_saved, text, CLRF_dot_CLRF
+state = SOCKET_STATE_INIT, SOCKET_STATE_WAIT, SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS, SOCKET_STATE_RECEPIENTS_SET, SOCKET_STATE_WRITING_DATA, SOCKET_STATE_DELIVERING, SOCKET_STATE_CLOSED;
+event = handle_HELO, handle_EHLO, handle_MAIL, handle_RCPT, handle_RSET, handle_DATA, handle_QUIT, handle_NOOP, handle_NOT_IMPLEMENTED, handle_TEXT, connection_established, connection_failed, message_saved, text, CLRF_dot_CLRF;
 
 transition =
 { tst  = '*';	tev = connection_established; next = SOCKET_STATE_INIT; },
