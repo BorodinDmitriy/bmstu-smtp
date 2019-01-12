@@ -25,7 +25,7 @@
 // данные сервера
 #define SERVER_PORT 2525
 #define SERVER_PORT_STRING "2525"
-#define SERVER_DOMAIN " myserver.com "
+#define SERVER_DOMAIN "myserver.com"
 #define SERVER_BUFFER_SIZE 1024
 #define SERVER_BACKLOG_SIZE 3
 #define SERVER_MAX_RECIPIENTS 10

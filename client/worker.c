@@ -61,7 +61,7 @@ void run(struct worker *worker_context, struct network_controller manager)
     struct FileDescList *listViewer;
 
     struct timespec timer_spec;
-    timer_spec.tv_sec = 20;
+    timer_spec.tv_sec = 60;
     timer_spec.tv_nsec = 0;
 
     fd_set readers_temp;
@@ -175,6 +175,12 @@ void run(struct worker *worker_context, struct network_controller manager)
                 while (status == 0)
                 {
                     status = SMTP_Control(listViewer->fd);
+
+                    //  we need to handle error
+                    if (listViewer->fd->current_state == SMTP_ERROR)
+                    {
+                        status = 0;
+                    }
 
                     if (listViewer->fd->prev_state == DISPOSING_SOCKET)
                     {
