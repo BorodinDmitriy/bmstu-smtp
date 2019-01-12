@@ -81,9 +81,7 @@ int run_process(struct process *pr) {
 		// then add client sockets if exist
 		if (pr->sock_list != NULL) {
 			for (p = pr->sock_list; p != NULL; p = p->next) {
-				if (p->c_sock.flag == 1)
     				FD_SET(p->c_sock.fd, &(pr->socket_set));
-    			else
     				FD_SET(p->c_sock.fd, &temp);
     			printf("client_socket%d = %d SOCKET_STATE = %d\n", getpid(), p->c_sock.fd, p->c_sock.state);
     			sprintf(logger_buffer, "client_socket%d = %d SOCKET_STATE = %d\n", getpid(), p->c_sock.fd, p->c_sock.state);
