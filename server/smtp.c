@@ -39,7 +39,7 @@ int run_process(struct process *pr) {
 
 	while (pr->state_worked) {
 		struct timeval tv; // timeval используется внутри select для выхода из ожидания по таймауту
-		tv.tv_sec = 15;
+		tv.tv_sec = 45;
 		tv.tv_usec = 0;
 		fd_set temp;
 
