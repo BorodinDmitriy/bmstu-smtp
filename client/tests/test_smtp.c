@@ -73,7 +73,7 @@ TEST_FUNCT(greeting_bad_graph_state)
 	connection->domain = (char *)calloc(20, sizeof(char));
 	CU_ASSERT_PTR_NOT_EQUAL(connection->domain, NULL);
 	memset(connection->domain, '\0', 20);
-	strcpy(connection->domain, MY_DOMAIN);
+	strcpy(connection->domain, TEST_SERVER_DOMAIN);
 
 	connection->prev_state = NULL_POINTER;
 	connection->current_state = PREPARE_SOCKET_CONNECTION;
@@ -97,7 +97,7 @@ TEST_FUNCT(in_greeting_not_correct_domain)
 	connection->domain = (char *)calloc(20, sizeof(char));
 	CU_ASSERT_PTR_NOT_EQUAL(connection->domain, NULL);
 	memset(connection->domain, '\0', 20);
-	strcpy(connection->domain, "samsung-np530u4c");
+	strcpy(connection->domain, TEST_SERVER_DOMAIN);
 
 	connection->prev_state = NULL_POINTER;
 	connection->current_state = PREPARE_SOCKET_CONNECTION;
@@ -124,7 +124,7 @@ TEST_FUNCT(in_greeting_421_status)
 	connection->domain = (char *)calloc(20, sizeof(char));
 	CU_ASSERT_PTR_NOT_EQUAL(connection->domain, NULL);
 	memset(connection->domain, '\0', 20);
-	strcpy(connection->domain, "samsung-np530u4c");
+	strcpy(connection->domain, TEST_SERVER_DOMAIN);
 
 	connection->prev_state = NULL_POINTER;
 	connection->current_state = PREPARE_SOCKET_CONNECTION;
@@ -150,7 +150,7 @@ TEST_FUNCT(send_ehlo_and_correct_result)
 	connection->domain = (char *)calloc(20, sizeof(char));
 	CU_ASSERT_PTR_NOT_EQUAL(connection->domain, NULL);
 	memset(connection->domain, '\0', 20);
-	strcpy(connection->domain, "samsung-np530u4c");
+	strcpy(connection->domain, TEST_SERVER_DOMAIN);
 	fd_set temp;
 	FD_ZERO(&temp);
 
@@ -198,7 +198,7 @@ TEST_FUNCT(send_ehlo_and_change_state_on_error)
 	connection->domain = (char *)calloc(20, sizeof(char));
 	CU_ASSERT_PTR_NOT_EQUAL(connection->domain, NULL);
 	memset(connection->domain, '\0', 20);
-	strcpy(connection->domain, "samsung-np530u4c");
+	strcpy(connection->domain, TEST_SERVER_DOMAIN);
 	connection->task_pool = NULL;
 	fd_set temp;
 	FD_ZERO(&temp);
@@ -264,7 +264,7 @@ TEST_FUNCT(send_and_recv_ehlo_send_and_recv_mail_from_correct)
 	connection->domain = (char *)calloc(20, sizeof(char));
 	CU_ASSERT_PTR_NOT_EQUAL(connection->domain, NULL);
 	memset(connection->domain, '\0', 20);
-	strcpy(connection->domain, "samsung-np530u4c");
+	strcpy(connection->domain, TEST_SERVER_DOMAIN);
 	connection->task_pool = NULL;
 	connection->task_pool = (struct worker_task *)malloc(sizeof(struct worker_task));
 	connection->task_pool->domain = NULL;
