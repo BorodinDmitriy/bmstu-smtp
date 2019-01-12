@@ -37,15 +37,13 @@ int run_process(struct process *pr) {
 	char smtp_stub[SERVER_BUFFER_SIZE] = "Hi, you've come to smtp server";
 	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
 
-	FD_ZERO(&(pr->socket_set));
-
 	while (pr->state_worked) {
 		struct timeval tv; // timeval используется внутри select для выхода из ожидания по таймауту
 		tv.tv_sec = 15;
 		tv.tv_usec = 0;
 		fd_set temp;
 
-
+		FD_ZERO(&(pr->socket_set));
 		// delete all closed sockets
 		if (pr->sock_list != NULL) {
 			int before = 0;
