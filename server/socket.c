@@ -187,6 +187,7 @@ struct client_socket init_client_socket(int fd, int buffer_size, int state, int 
 	result.state = state;
 	result.buffer_offset = 0;
 	result.message = NULL;
+	result.flag = 1;
 	if (needs_message) {
 		result.message = malloc(sizeof(struct msg));
 		result.message->to = malloc(max_recepients * sizeof(char*));
