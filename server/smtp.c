@@ -76,17 +76,15 @@ int run_process(struct process *pr) {
 			for (p = pr->listeners_list; p != NULL; p = p->next) {
 				if (p->c_sock.flag == 0)
     				FD_SET(p->c_sock.fd, &(pr->socket_set));
-    			else 
-    				FD_SET(p->c_sock.fd, &temp);
     			//printf("lisening_socket = %d\n", p->c_sock.fd);
     		}
 		}
 		// then add client sockets if exist
 		if (pr->sock_list != NULL) {
 			for (p = pr->sock_list; p != NULL; p = p->next) {
-    			if (p->c_sock.flag == 0)
+				if (p->c_sock.flag == 0)
     				FD_SET(p->c_sock.fd, &(pr->socket_set));
-    			else 
+    			else
     				FD_SET(p->c_sock.fd, &temp);
     			printf("client_socket%d = %d SOCKET_STATE = %d\n", getpid(), p->c_sock.fd, p->c_sock.state);
     			sprintf(logger_buffer, "client_socket%d = %d SOCKET_STATE = %d\n", getpid(), p->c_sock.fd, p->c_sock.state);
@@ -102,7 +100,7 @@ int run_process(struct process *pr) {
 
 		
 		// now we can use select with timeout
-		rc = select(pr->max_fd + 1, &temp,  &(pr->socket_set), NULL, &tv);
+		rc = select(pr->max_fd + 1, &(pr->socket_set), &temp, NULL, &tv);
 		if (rc == 0) {
 			// no sockets are ready - timeout
 			printf("no sockets are ready - timeout\n");
