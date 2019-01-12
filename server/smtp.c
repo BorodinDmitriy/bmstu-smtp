@@ -343,6 +343,7 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
 		memmove(c_sock->buffer, eol + 2, SERVER_BUFFER_SIZE - (eol + 2 - c_sock->buffer));
 
 		}
+		c_sock->flag = 0;
 	}
 }
 
@@ -359,7 +360,6 @@ int allowed_commands(struct client_socket *c_sock,char buffer_output[]) {
 					return 1;
 				}
 			}
-			c_sock->flag = 0;
 			break;
 		}
 		case SOCKET_STATE_WAIT: {
@@ -369,7 +369,6 @@ int allowed_commands(struct client_socket *c_sock,char buffer_output[]) {
 					return 1;
 				}
 			}
-			c_sock->flag = 0;
 			break;
 		}
 		case SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS: {
@@ -379,7 +378,6 @@ int allowed_commands(struct client_socket *c_sock,char buffer_output[]) {
 					return 1;
 				}
 			}
-			c_sock->flag = 0;
 			break;
 		}
 		case SOCKET_STATE_RECEPIENTS_SET: {
@@ -389,7 +387,6 @@ int allowed_commands(struct client_socket *c_sock,char buffer_output[]) {
 					return 1;
 				}
 			}
-			c_sock->flag = 0;
 			break;
 		}
 		case SOCKET_STATE_WRITING_DATA: {
@@ -399,7 +396,6 @@ int allowed_commands(struct client_socket *c_sock,char buffer_output[]) {
 					return 1;
 				}
 			}
-			c_sock->flag = 0;
 			break;
 		}
 		default: {
@@ -429,7 +425,6 @@ int handle_HELO(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 					return 1;
 				}
     		}
-    		c_sock->flag = 0;
     	}
     	c_sock->state = SOCKET_STATE_WAIT;
     	return 0;
@@ -460,7 +455,6 @@ int handle_EHLO(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 					return 1;
 				}
     		}
-    		c_sock->flag = 0;
     	}
     	free(host);
     	c_sock->state = SOCKET_STATE_WAIT;
@@ -486,7 +480,6 @@ int handle_MAIL(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 					return 1;
 				}
 			}
-			c_sock->flag = 0;
 		}
     
     	return 0;
@@ -518,7 +511,6 @@ int handle_RCPT(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 					return 1;
 				}
 			}
-			c_sock->flag = 0;
 		}
     
     	return 0;
@@ -546,7 +538,6 @@ int handle_RSET(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 					return 1;
 				}
     		}
-    		c_sock->flag = 0;
     	}
     
     	return 0;
@@ -566,12 +557,11 @@ int handle_DATA(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 				}
     		} else {
     			c_sock->message->body = (char *)malloc(1);
-    			c_sock->message->body[0] = '\0';
-    			c_sock->message->body_length = 0;
-    			c_sock->input_message = 1;
-    			c_sock->state = SOCKET_STATE_WRITING_DATA;
+    	c_sock->message->body[0] = '\0';
+    	c_sock->message->body_length = 0;
+    	c_sock->input_message = 1;
+    	c_sock->state = SOCKET_STATE_WRITING_DATA;
     		}
-    		c_sock->flag = 0;
     	}
     
     	return 0;
@@ -588,7 +578,6 @@ int handle_QUIT(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 				return 1;
 			}
     	}
-    	c_sock->flag = 0;
     }
     c_sock->state = SOCKET_STATE_CLOSED;
     //free(msg_buffer);
@@ -604,7 +593,6 @@ int handle_NOOP(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 				return 1;
 			}
     	}
-    	c_sock->flag = 0;
     }
     return 0;
 }
@@ -618,7 +606,6 @@ int handle_NOT_IMPLEMENTED(struct client_socket *c_sock, char *msg_buffer, char 
 				return 1;
 			}
     	}
-    	c_sock->flag = 0;
     }
     return 0;
 }
@@ -647,7 +634,6 @@ int handle_TEXT(struct client_socket *c_sock, char buffer_output[],char* maildir
 		c_sock->message->body[len] = '\n';
 		c_sock->message->body[len + 1] = '\0';
 	}
-	c_sock->flag = 0;
 	return 0;
 }
 
