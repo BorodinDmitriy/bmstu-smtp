@@ -4,7 +4,7 @@
 
 
 \title{Отчёт по курсовому проекту}
-\author{(Бородин Дмитрий Сергеевич  Федоров Павел Вячеславович)}
+\author{(Бородин Дмитрий Сергеевич, Федоров Павел Вячеславович)}
 
 \begin{document}
 
@@ -116,31 +116,195 @@
 
 \subsection{Словарь}
 Для контроля распределения заявок между воркерами, а так же отправки писем через одну соединение, хоть это и не обязательно, решено использовать словарь. В данном словаре хранится информация о распределении доменов между воркерами. Во время поиска писем, главный поток узнает ответственный домен и смотрит свой словарь доменов. Если в нем нет воркера, который уже работает с данным доменом, то выбирается наимение загруженный воркер. В случае если есть воркер, то новое письмо делегируется ему.
-Рабочий процесс также взаимодействует с данным словарем. Когда список заданий для какого-либо определенного домена закончился, соединение переходит в режим "завершения" отправки писем. В данный момент и воркер удаляет запись в словаре для данного домена.
+Рабочий процесс также взаимодействует с данным словарем. Когда список заданий для какого-либо определенного домена закончился, соединение переходит в режим "завершения" отправки писем. В данный момент и воркер удаляет запись в словаре для данного домена. Таким образом, система старается(не гарантирует) отправить все письма адресованные одному домену через одно активное соединение.
 
 \subsection{Рабочий поток}
-Каждый рабочий поток обладает записью с необходимой информацией о себе. Данная информация передается ему при создании. С помощью общей с главным потоком блоком информации, воркер может получать новые задания узнавать о текущем состоянии работы программы. 
+Каждый рабочий поток обладает записью с необходимой информацией о себе. Данная информация передается ему при создании. С помощью общей с главным потоком блоком информации, воркер может получать новые задания узнавать о текущем состоянии работы программы. В данном блоке целесообразно хранить следующую информацию:
+\begin{itemize}
+    \item ссылку на очередь новых заданий
+    \item личный идентификатор (удобно для логгирования)
+    \item состояние работы
+    \item количество заданий
+\end{itemize}
+Доступ к очереди заданий рабочего процесса имею два потока: главный и сам рабочий поток. Для исключения коллизий, потери данных необходимо использовать объект синхронизации. В качестве такого объекта синхронизации является семафор. 
+Для корректной работы, каждый воркер создает во время подготовки структуру, с помощью которой будет осуществляться контроль соединений и их состояний. Разграничение между состояниями соединений необходимо учитывать во время передачи данных. Для этого в данной структуре содержатся множества ожидающих на запись и ожидающих на чтение соединений. 
 
-\section{Синтаксис команд протокола}
+Параметр состояния работы, указывает рабочему процессу на необходимость корректного и быстрого завершения работы. В связи с этим, рабочий процесс, узнав о необходимости завершения, убирает все задания, которые еще не выполнялись у каждого соединения. Также изменяется время ожидания активизации соединений. Это необходимость обусловлена неблокируемостью сокетов, из-за чего у соединения нет как такого \textit{timeout} на получение или отправку. Стоит отметить, что у каждого соединения текущее задание остается для корректного завершения обмена информацией с серверами.
 
-\begin{description}
-\item[Команда выхода из сеанса]
-% \input{include/re_cmd_quit_re.tex}
-\item[Команда передачи имени пользователя]
-% \input{include/re_cmd_user_re.tex}
-\end{description}
+Каждое активное соединение обрабатывается с помощью SMTP контроллера
 
-Для грамматики можно использовать вставку из файла и оформление \textbackslash{}begin\{verbatim\} и \textbackslash{}end\{verbatim\} или пакет \textit{listings}\footnote{На дворе XXI век, но пакет \textit{listings} всё ещё не пашет с русскими комментариями без бубна, и лично я его пока не победил.}.
+\subsection{Активное соедиение}
+Каждое соедиенние должно быть однозначно определено. Для контроля соединений целесообразно описать соединение следующим образом
+\begin{itemize}
+    \item идентификатор соединения
+    \item домен сервера
+    \item адрес сервера
+    \item текущее состояние соединения
+    \item предыдущее состояние соединения
+    \item количество попыток отправки одного письма
+    \item список писем
+    \item данные текущего письма
+\end{itemize}
 
-Для примера воспользуемся автоматической вставкой файла описания параметров программы (не забудьте перенести это в технологический раздел) через утилитку \textit{src2tex}.
+Во время подготовки к соединению необходимо разрешить адрес сервера. Для этого для указанного домена необходимо запросить MX запись. Из этой записи получается доменное имя самого SMTP сервера, с которым необходимо обмениваться данными. Однако, для корректного обмена необходимо узнать его IP адрес в сети. Для этого полученной записи запрашивается список IP адресов и выбирается первый успешно обработанный. 
+Для оптимальной обработки писем, целесообразно хранить в памяти только служебную информацию, которая необходима для передачи письма. Для этих целей выделена отдельный блок "данные письма". В данной блоке хранится адресат и адресант письма. Это позволяет сократить время на открытия файл и взаимодействия с ним во время установленного соединения
 
-% \input{include/checkoptn.def.tex}
-% \lstset{language=C}
-% \lstinputlisting{../src/checkoptn.def}
+\subsection{SMTP контроллер}
+SMTP контроллер отвечает за корректность общения с серверами. Для контроля обмена информацией данный контроллер ослеживает состояния общения и ведет их учет. Таким образом исключается возможность непредвиденных переходов, отправки некорректного сообщения, а так же исключается очередность отправки/получения сообщений между SMTP клиентом и SMTP сервером. Состояния соединений и переходы между ними отображены на Рис. ~\ref{fig:smtp-client-states}
+
+\begin{figure}
+    \centering
+    \includegraphics[height=\textheight]{static/ClientDiagram_Final.jpg}
+    \caption{Конечный автомат cостояний соединений SMTP клиента}
+    \label{fig:smtp-client-states}
+\end{figure}
+
+Стоит отметить, что во при переходе к завершению обмена данными по данному соединение именно SMTP контроллер удаляет запись из \textit{словаря}. Это необходимо для исключения появления писем по закрывающемуся соединению. Таким образом, главный поток не будет делегировать письма воркеру, который завершает процесс передачи для данного домена и выберет наиболее свободного воркера.
+Отправка команд протокола SMTP сопровождается верификацией ответов от сервера. Каждый ответ сервера проверяется на соблюдение регламента передачи. Так, во время подключения к SMTP серверу и получения сообщения от сервера с доменным именем за который он отвечает, происходит верификация статуса ответа и самого домена. В случае нарушения соглашения: некорректный ответ или указанный в сообщение домен не совпадает с указанным в соединение, возникает ошибка, которая разрешается закрытием соединения и освобождению ресурсов.
+
+\subsection{Синтаксис поддерживаемых команд протокола}
+В данном разделе приведены поддерживаемые клиентом команды протокола SMTP.
+
+\begin{itemize}
+    \item \textbf{EHLO}: {\it EHLO [w+]+\/}
+    \item \textbf{MAIL}: {\it MAIL FROM: <[\textbackslash w]+@[\textbackslash w]+\.[\textbackslash w]+>\/}
+    \item \textbf{RCPT}: {\it RCPT To:<[\textbackslash w]+@[\textbackslash w]+\.[\textbackslash w]+>\/}
+    \item \textbf{DATA}: {\it DATA\/}
+    \item \textbf{RSET}: {\it RSET\/}
+    \item \textbf{QUIT}: {\it QUIT\/}
+\end{itemize}
+
+% \begin{itemize}
+%     \item EHLO <my_domain><CRLF>
+%     \item MAIL FROM:< <sender> > <CRLF>
+%     \item RCPT To:< <destination> > <CRLF>
+%     \item DATA <CRLF> 
+%     \item QUIT <CRLF>
+%     \item RSET <CRLF>
+% \end{itemize}
 
 \chapter{Технологический раздел}
 
-Нужно отметьть, что символ <<\_>> необходимо оформлять как <<\textbackslash\_>>.
+\section{Сервер}
+
+\section{Клиент}
+
+\subsection{Графы вызова функций}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{include/ccflow01_dot.pdf}
+    \caption{Граф вызовов, основные функции}
+    \label{fig:ccflow01}
+\end{figure}
+    
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{include/ccflow02_dot.pdf}
+    \caption{Граф вызовов, взаимодействие с сервером}
+    \label{fig:ccflow02}
+\end{figure}
+
+\subsection{Основные данные}
+
+Стркутура рабочего процесса
+\begin{verbatim}
+    struct worker
+    {
+        pthread_t thread;
+        sem_t lock;
+        struct worker_task *tasks;
+        int workerId;
+        int count_task;
+        bool worked;
+    };
+\end{verbatim}
+
+Структура соединения
+\begin{verbatim}
+    struct FileDesc
+    {
+        int id;
+        char *domain;
+        char *mx_record;
+        struct sockaddr_in addr;
+        int current_state;
+        int prev_state;
+        int attempt;
+        struct worker_task *task_pool;
+        struct letter_info meta_data;
+    };
+\end{verbatim} 
+
+\subsection{Тестирование}
+
+\begin{verbatim}
+    CUnit - A unit testing framework for C - Version 2.1-3
+     http://cunit.sourceforge.net/
+
+
+    Suite: suite_test
+    Test: domain_is_NULL ...passed
+    Test: bad_domain ...passed
+    Test: connection_is_blocked ...passed
+    Test: greeting_bad_graph_state ...passed
+    Test: in_greeting_not_correct_domain ...passed
+    Test: send_ehlo_and_correct_result ...passed
+    Test: send_ehlo_and_change_state_on_error ...passed
+
+    Run Summary:    Type  Total    Ran Passed Failed Inactive
+                suites      1      1    n/a      0        0
+                tests      7      7      7      0        0
+                asserts     24     24     24      0      n/a
+
+    Elapsed time =    0.004 seconds
+\end{verbatim}
+
+\subsection{Valgrind}
+
+\begin{verbatim}
+    ==24216== LEAK SUMMARY:
+    ==24216==    definitely lost: 326 bytes in 6 blocks
+    ==24216==    indirectly lost: 1,056 bytes in 4 blocks
+    ==24216==      possibly lost: 272 bytes in 1 blocks
+    ==24216==    still reachable: 1,638 bytes in 4 blocks
+    ==24216==         suppressed: 0 bytes in 0 blocks
+    ==24216== Reachable blocks (those to which a pointer was found) are not shown.
+    ==24216== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+    ==24216== 
+    ==24216== For counts of detected and suppressed errors, rerun with: -v
+    ==24216== Use --track-origins=yes to see where uninitialised values come from
+    ==24216== ERROR SUMMARY: 33 errors from 21 contexts (suppressed: 0 from 0)
+\end{verbatim}
+
+\subsection{Пример работы относительно сервер}
+
+\begin{verbatim}
+    11 Jan 2019 00:07:51 DEBUG org.subethamail.smtp.server.Session - Server: 220 samsung-np530u4c ESMTP SubEthaSMTP null
+    11 Jan 2019 00:07:51 DEBUG org.subethamail.smtp.server.Session - Client: EHLO samsung-np530u4c
+    11 Jan 2019 00:07:51 DEBUG org.subethamail.smtp.server.Session - Server: 250-samsung-np530u4c
+    250-8BITMIME
+    250-AUTH LOGIN
+    250 Ok
+    11 Jan 2019 00:07:58 DEBUG org.subethamail.smtp.server.Session - Client: MAIL FROM:<mail.ru>
+    11 Jan 2019 00:07:58 DEBUG org.subethamail.smtp.server.Session - Server: 250 Ok
+    11 Jan 2019 00:07:58 DEBUG org.subethamail.smtp.server.Session - Client: RCPT To: <samsung-np530u4c>
+    11 Jan 2019 00:07:58 DEBUG org.subethamail.smtp.server.Session - Server: 250 Ok
+    11 Jan 2019 00:08:01 DEBUG org.subethamail.smtp.server.Session - Client: DATA
+    11 Jan 2019 00:08:01 DEBUG org.subethamail.smtp.server.Session - Server: 354 End data with <CR><LF>.<CR><LF>
+    11 Jan 2019 00:08:02 DEBUG org.subethamail.smtp.server.Session - Server: 250 Ok
+    11 Jan 2019 00:08:07 DEBUG org.subethamail.smtp.server.Session - Client: MAIL FROM:<mail.ru>
+    11 Jan 2019 00:08:07 DEBUG org.subethamail.smtp.server.Session - Server: 250 Ok
+    11 Jan 2019 00:08:07 DEBUG org.subethamail.smtp.server.Session - Client: RCPT To: <samsung-np530u4c>
+    11 Jan 2019 00:08:07 DEBUG org.subethamail.smtp.server.Session - Server: 250 Ok
+    11 Jan 2019 00:08:08 DEBUG org.subethamail.smtp.server.Session - Client: DATA
+    11 Jan 2019 00:08:08 DEBUG org.subethamail.smtp.server.Session - Server: 354 End data with <CR><LF>.<CR><LF>
+    11 Jan 2019 00:08:10 DEBUG org.subethamail.smtp.server.Session - Server: 250 Ok
+    11 Jan 2019 00:08:17 DEBUG org.subethamail.smtp.server.Session - Client: QUIT
+    11 Jan 2019 00:08:17 DEBUG org.subethamail.smtp.server.Session - Server: 221 Bye
+\end{verbatim}
+
+% Нужно отметьть, что символ <<\_>> необходимо оформлять как <<\textbackslash\_>>.
 
 \section{Сборка программы}
 
@@ -179,20 +343,6 @@
 
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{include/ccflow01_dot.pdf}
-\caption{Граф вызовов, основные функции}
-\label{fig:ccflow01}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{include/ccflow02_dot.pdf}
-\caption{Граф вызовов, основные функции}
-\label{fig:ccflow02}
-\end{figure}
-
-\begin{figure}
-\centering
 \includegraphics[width=\textwidth]{include/scflow01_dot.pdf}
 \caption{Граф вызовов, функции обработки команд}
 \label{fig:scflow01}
@@ -204,8 +354,6 @@
 \caption{Граф вызовов, функции обработки команд}
 \label{fig:scflow01}
 \end{figure}
-
-Графы созданы с помощью \textit{cflow}, \textit{cflow2dot}, \textit{dot}.
 
 \addcontentsline{toc}{chapter}{Выводы}
 \chapter*{Выводы}
