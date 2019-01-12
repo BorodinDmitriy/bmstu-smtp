@@ -37,10 +37,14 @@ int run_process(struct process *pr) {
 	char smtp_stub[SERVER_BUFFER_SIZE] = "Hi, you've come to smtp server";
 	int new_socket;								// файловый дескриптор сокета, соединяющегося с сервером
 
+	FD_ZERO(&(pr->socket_set));
+
 	while (pr->state_worked) {
 		struct timeval tv; // timeval используется внутри select для выхода из ожидания по таймауту
 		tv.tv_sec = 15;
 		tv.tv_usec = 0;
+		fd_set temp;
+
 
 		// delete all closed sockets
 		if (pr->sock_list != NULL) {
@@ -67,7 +71,7 @@ int run_process(struct process *pr) {
         	perror(logger_buffer);
     	}
 
-		FD_ZERO(&(pr->socket_set));
+		
 		// first add listeners
 		if (pr->listeners_list != NULL) {
 			for (p = pr->listeners_list; p != NULL; p = p->next) {
@@ -91,8 +95,9 @@ int run_process(struct process *pr) {
 			FD_SET(*(pr->mq), &(pr->socket_set));
 		}
 
+		temp = pr->socket_set;
 		// now we can use select with timeout
-		rc = select(pr->max_fd + 1, &(pr->socket_set), NULL, NULL, &tv);
+		rc = select(pr->max_fd + 1, &temp, NULL, NULL, &tv);
 		if (rc == 0) {
 			// no sockets are ready - timeout
 			printf("no sockets are ready - timeout\n");
@@ -101,7 +106,7 @@ int run_process(struct process *pr) {
         		perror(logger_buffer);
     		}
 			for (p = pr->sock_list; p != NULL; p = p->next) {
-				if (!FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
+				if (!FD_ISSET(p->c_sock.fd, &temp)) {
 					p->c_sock.state = SOCKET_STATE_CLOSED;
 				}
 			}
@@ -109,7 +114,7 @@ int run_process(struct process *pr) {
 			// some sockets are ready
 			// check mqueue
 			if (*(pr->mq) != NULL) {
-				if (FD_ISSET(*(pr->mq), &(pr->socket_set))) {
+				if (FD_ISSET(*(pr->mq), &temp)) {
 					char msg_buffer[SERVER_BUFFER_SIZE];
 					memset(msg_buffer, 0x00, sizeof(msg_buffer));
         			int bytes_read = mq_receive(*(pr->mq), msg_buffer, SERVER_BUFFER_SIZE, NULL);
@@ -128,16 +133,11 @@ int run_process(struct process *pr) {
 			if (pr->listeners_list != NULL) {
 				// проходим по списку сокетов в поисках установленного соединения
 				for (p = pr->listeners_list; p != NULL; p = p->next) {
-					if (FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
+					if (FD_ISSET(p->c_sock.fd, &temp)) {
 
 						// принимаем соединение
     					new_socket = accept(p->c_sock.fd, (struct sockaddr *) &(pr->serv_address),  (socklen_t*) &(pr->addrlen));
     					printf("new_socket = %d pid = %d\n", new_socket, getpid());
-
-    					sprintf(logger_buffer, "%s %s SMTP CCSMTP\n",HEADER_220,SERVER_DOMAIN);
-    					printf("Server: %d, 220: %s", new_socket, logger_buffer);
-    					if (new_socket > 0)
-    						send(new_socket, logger_buffer, strlen(logger_buffer), 0);
 
     					sprintf(logger_buffer, "new_socket = %d pid = %d\n", new_socket, getpid());
     					if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
@@ -175,7 +175,7 @@ int run_process(struct process *pr) {
         					continue;
     					}
 
-    					struct client_socket cl_sock = init_client_socket(new_socket, SERVER_BUFFER_SIZE, SOCKET_STATE_INIT, SERVER_MAX_RECIPIENTS, 1);
+    					struct client_socket cl_sock = init_client_socket(new_socket, SERVER_BUFFER_SIZE, SOCKET_STATE_SEND_GREETING, SERVER_MAX_RECIPIENTS, 1);
 
         				// добавить новый сокет в список сокетов процесса
         				struct client_socket_list *new_scket = malloc(sizeof(struct client_socket_list));
@@ -194,7 +194,7 @@ int run_process(struct process *pr) {
 			// check clients
 			if (pr->sock_list != NULL) {
 				for (p = pr->sock_list; p != NULL; p = p->next) {
-					if (FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
+					if (FD_ISSET(p->c_sock.fd, &temp)) {
 
         				// call smtp_handler for socket
         				new_smtp_handler_with_states(&(p->c_sock));
@@ -216,84 +216,128 @@ void new_smtp_handler_with_states(struct client_socket *c_sock) {
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons( SERVER_PORT );
 
+    if (c_sock->state == SOCKET_STATE_SEND_GREETING) {
+        sprintf(buffer_output, "%s %s SMTP CCSMTP\n",HEADER_220,SERVER_DOMAIN);
+    	printf("Server: %d, 220: %s", c_sock->fd, buffer_output);
+    	if (c_sock->fd > 0){
+    		int sc = 0;
+    		sc = send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    		if (sc > 0) {
+    			c_sock->state = SOCKET_STATE_INIT;
+    			c_sock->flag = 0; // на чтение
+    			return;
+    		} else {
+    			if (errno == EWOULDBLOCK) {
+    				return;
+    			} else {
+    				c_sock->state = SOCKET_STATE_CLOSED;
+					return;
+    			}
+    		}
+    	}
+    }
+
 	int buffer_left = SERVER_BUFFER_SIZE - c_sock->buffer_offset - 1;
 	if (buffer_left == 0) {
 		//printf(HEADER_500_TOO_LONG);
 		sprintf(buffer_output, HEADER_500_TOO_LONG);
     	printf("Server: %d, TOO_LONG: %s", c_sock->fd, buffer_output);
-    	send(c_sock->fd, buffer_output, strlen(buffer_output), 0);
+    	if (send(c_sock->fd, buffer_output, strlen(buffer_output), 0) == -1) {
+    		if (errno == EWOULDBLOCK) {
+    			return;
+    		} else {
+    			c_sock->state = SOCKET_STATE_CLOSED;
+				return;
+    		}
+    	} 
 		c_sock->buffer_offset = 0;
-	}
-
-	received_bytes_count = recv(c_sock->fd, c_sock->buffer + c_sock->buffer_offset, buffer_left, 0);
-
-	// считали 0 байт - клиент перестал отправлять данные
-	if (received_bytes_count == 0) {
-		printf("remote host closed socket %d\n", c_sock->fd);
-		c_sock->state = SOCKET_STATE_CLOSED;
-		return;
-	}
-	if (received_bytes_count == -1) {
-		printf("problems with socket %d\n", c_sock->fd);
-		c_sock->state = SOCKET_STATE_CLOSED;
+		c_sock->flag = 0; // на чтение
 		return;
 	}
 
-	printf("Server: %d - receive ok\n");
+	if (c_sock->flag == 0) {
+		received_bytes_count = recv(c_sock->fd, c_sock->buffer + c_sock->buffer_offset, buffer_left, 0);
 
-	while (strstr(c_sock->buffer, "\r\n")) {
-		eol = strstr(c_sock->buffer, "\r\n");
-		eol[0] = '\0'; 
-
-		// обработка ключевых слов
-		printf("Client: %d, message: %s\n", c_sock->fd, c_sock->buffer);
-
-		if (!c_sock->input_message) {
-			char *message_buffer = (char *) malloc (SERVER_BUFFER_SIZE);
-			strcpy(message_buffer, c_sock->buffer);
-			// конец строки для сравнения (потом переделать под разделение на данные и команды)
-			c_sock->buffer[4] = '\0';
-			int err_code = 0;
-
-			if (STR_EQUAL(c_sock->buffer, "HELO")) { 
-				// начальное приветствие
-				err_code = handle_HELO(c_sock,message_buffer,buffer_output,&address);
-			} else if (STR_EQUAL(c_sock->buffer, "EHLO")) { 
-				// улучшенное начальное приветствие
-				err_code = handle_EHLO(c_sock,message_buffer,buffer_output,&address);
-			} else if (STR_EQUAL(c_sock->buffer, "MAIL")) { 
-				// получено новое письмо от
-				err_code = handle_MAIL(c_sock,message_buffer,buffer_output,&address);
-			} else if (STR_EQUAL(c_sock->buffer, "RCPT")) { 
-				// письмо направлено ... 
-				err_code = handle_RCPT(c_sock,message_buffer,buffer_output,&address);
-			} else if (STR_EQUAL(c_sock->buffer, "DATA")) { 
-				// содержимое письма
-				err_code = handle_DATA(c_sock,message_buffer,buffer_output,&address);
-			} else if (STR_EQUAL(c_sock->buffer, "RSET")) { 
-				// сброс отправителя/получателей
-				err_code = handle_RSET(c_sock,message_buffer,buffer_output,&address);
-			} else if (STR_EQUAL(c_sock->buffer, "NOOP")) { 
-				// ничего не делать
-				err_code = handle_NOOP(c_sock,message_buffer,buffer_output,&address);
-			} else if (STR_EQUAL(c_sock->buffer, "QUIT")) { 
-				// закрыть соединение
-				return handle_QUIT(c_sock,message_buffer,buffer_output,&address);
-			} else { 
-				// метод не был определен
-				handle_NOT_IMPLEMENTED(c_sock,message_buffer,buffer_output,&address);
-			}
-			if (err_code < 0) {
-				allowed_commands(c_sock, buffer_output);
-			}
-			free(message_buffer);
+		// считали 0 байт - клиент перестал отправлять данные
+		if (received_bytes_count == 0) {
+			printf("remote host closed socket %d\n", c_sock->fd);
+			c_sock->state = SOCKET_STATE_CLOSED;
+			return;
 		} else {
+			if (received_bytes_count < 0) {
+				if (errno == EWOULDBLOCK) {
+					return;
+				} else {
+					printf("problems with socket %d\n", c_sock->fd);
+					c_sock->state = SOCKET_STATE_CLOSED;
+					return;
+				}
+			} else {
+				if (strstr(c_sock->buffer, "\r\n")) {
+					c_sock->flag = 1;
+					return;
+				}
+			}
+		}
+		
+	} else {
+		printf("Server: %d - receive ok\n");
+
+		while (strstr(c_sock->buffer, "\r\n")) {
+			eol = strstr(c_sock->buffer, "\r\n");
+			eol[0] = '\0'; 
+
+			// обработка ключевых слов
+			printf("Client: %d, message: %s\n", c_sock->fd, c_sock->buffer);
+
+			if (!c_sock->input_message) {
+				char *message_buffer = (char *) malloc (SERVER_BUFFER_SIZE);
+				strcpy(message_buffer, c_sock->buffer);
+				// конец строки для сравнения (потом переделать под разделение на данные и команды)
+				c_sock->buffer[4] = '\0';
+				int err_code = 0;
+
+				if (STR_EQUAL(c_sock->buffer, "HELO")) { 
+					// начальное приветствие
+					err_code = handle_HELO(c_sock,message_buffer,buffer_output,&address);
+				} else if (STR_EQUAL(c_sock->buffer, "EHLO")) { 
+					// улучшенное начальное приветствие
+					err_code = handle_EHLO(c_sock,message_buffer,buffer_output,&address);
+				} else if (STR_EQUAL(c_sock->buffer, "MAIL")) { 
+					// получено новое письмо от
+					err_code = handle_MAIL(c_sock,message_buffer,buffer_output,&address);
+				} else if (STR_EQUAL(c_sock->buffer, "RCPT")) { 
+					// письмо направлено ... 
+					err_code = handle_RCPT(c_sock,message_buffer,buffer_output,&address);
+				} else if (STR_EQUAL(c_sock->buffer, "DATA")) { 
+					// содержимое письма
+					err_code = handle_DATA(c_sock,message_buffer,buffer_output,&address);
+				} else if (STR_EQUAL(c_sock->buffer, "RSET")) { 
+					// сброс отправителя/получателей
+					err_code = handle_RSET(c_sock,message_buffer,buffer_output,&address);
+				} else if (STR_EQUAL(c_sock->buffer, "NOOP")) { 
+					// ничего не делать
+					err_code = handle_NOOP(c_sock,message_buffer,buffer_output,&address);
+				} else if (STR_EQUAL(c_sock->buffer, "QUIT")) { 
+					// закрыть соединение
+					return handle_QUIT(c_sock,message_buffer,buffer_output,&address);
+				} else { 
+					// метод не был определен
+					handle_NOT_IMPLEMENTED(c_sock,message_buffer,buffer_output,&address);
+				}
+				if (err_code < 0) {
+					allowed_commands(c_sock, buffer_output);
+				}
+				free(message_buffer);
+			} else {
 			handle_TEXT(c_sock,buffer_output,"../maildir/");
 		}
 
 		// смещаем буфер для обработки следующей команды
 		memmove(c_sock->buffer, eol + 2, SERVER_BUFFER_SIZE - (eol + 2 - c_sock->buffer));
 
+		}
+		c_sock->flag = 0;
 	}
 }
 

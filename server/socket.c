@@ -225,8 +225,8 @@ struct client_socket_list* delete_elem(struct client_socket_list* curr, int stat
     	temp= curr->next;
 
     	/* Deallocate the node. */
-    	free_client_socket(curr->c_sock);
-    	//free(curr);
+    	//free_client_socket(curr->c_sock);
+    	free(curr);
 
     	/*
      	* Return the NEW pointer to where we
@@ -255,15 +255,22 @@ struct client_socket_list* delete_elem(struct client_socket_list* curr, int stat
 
 void free_client_socket(struct client_socket *c_sock) {
 	close(c_sock->fd);
-	free(c_sock->buffer);
+	if (c_sock->buffer != NULL)
+		free(c_sock->buffer);
 	if (c_sock->message != NULL) {
 		int i = 0;
 		for (i = 0; i < c_sock->message->recepients_num; i++) {
-			free(c_sock->message->to[i]);
+			if (c_sock->message->to[i] != NULL)
+				free(c_sock->message->to[i]);
 		}
-		free(c_sock->message->from);
-		free(c_sock->message->body);
-		free(c_sock->message);
+		if (c_sock->message->from != NULL)
+			free(c_sock->message->from);
+		if (c_sock->message->body != NULL)
+			free(c_sock->message->body);
+		if (c_sock->message != NULL)
+			free(c_sock->message);
 	}
-	free(c_sock);
+	if (c_sock!= NULL)
+		free(c_sock);
+	return;
 }

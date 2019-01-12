@@ -11,6 +11,7 @@
 #define SOCKET_STATE_SEND_STUB 8
 #define SOCKET_STATE_RECEIVE_DATA 9
 
+#define SOCKET_STATE_SEND_GREETING 6
 #define SOCKET_STATE_INIT 7
 #define SOCKET_STATE_WAIT 8
 #define SOCKET_STATE_MAIL_CREATED_NO_RECEPIENTS 9
@@ -31,6 +32,7 @@ struct client_socket {
 	int buffer_offset;
 	int input_message;
 	int state;
+	int flag;
 	struct msg *message;
 };
 

@@ -36,7 +36,7 @@ int server_init() {
 	serv.addrlen = sizeof(serv.address);
 	serv.socket_fds = init_sockets();
 	//serv.socket_fds = init_sockets_using_clients(10);
-	serv.process_count = 1;
+	serv.process_count = 2;
 	serv.logger_pid = init_logger(serv.address);
 	serv.pids = init_processes(serv.process_count, serv.socket_fds, serv.address, serv.logger_pid);
 
@@ -73,7 +73,7 @@ int server_run() {
 	while (serv.state == SERVER_START_WORK) {
 		char buffer[SERVER_BUFFER_SIZE] = "SERVER_WORKS\n";
         
-        if (mq_send(mq, buffer, SERVER_BUFFER_SIZE, 0)) {
+        if (mq_send(mq, buffer, SERVER_BUFFER_SIZE, 0) < 0) {
             printf("errno = %d\n", errno);
         }
 		sleep(100);
