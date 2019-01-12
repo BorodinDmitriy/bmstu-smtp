@@ -74,15 +74,14 @@ int run_process(struct process *pr) {
 		// first add listeners
 		if (pr->listeners_list != NULL) {
 			for (p = pr->listeners_list; p != NULL; p = p->next) {
-				if (p->c_sock.flag == 0)
-    				FD_SET(p->c_sock.fd, &(pr->socket_set));
+    			FD_SET(p->c_sock.fd, &(pr->socket_set));
     			//printf("lisening_socket = %d\n", p->c_sock.fd);
     		}
 		}
 		// then add client sockets if exist
 		if (pr->sock_list != NULL) {
 			for (p = pr->sock_list; p != NULL; p = p->next) {
-				if (p->c_sock.flag == 0)
+				if (p->c_sock.flag == 1)
     				FD_SET(p->c_sock.fd, &(pr->socket_set));
     			else
     				FD_SET(p->c_sock.fd, &temp);
