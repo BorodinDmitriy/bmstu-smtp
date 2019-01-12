@@ -1,4 +1,12 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
 This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2018.9.14)  12 JAN 2019 05:26
+=======
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.18)  12 JAN 2019 05:24
+>>>>>>> Репорт
+=======
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2018.9.14)  12 JAN 2019 05:04
+>>>>>>> Revert "Репорт"
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -699,8 +707,10 @@ Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 12.
  [1
 
+<<<<<<< HEAD
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./report.toc
 LaTeX Font Info:    External font `cmex10' loaded for size
+<<<<<<< HEAD
 (Font)              <12> on input line 3.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <8> on input line 3.
@@ -722,6 +732,17 @@ l.37 ...rt }\IeC {\cyrery }}{19}{subsection.3.4.5}
                                                    [1
 
 ])
+=======
+(Font)              <12> on input line 4.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 4.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 4.
+)
+>>>>>>> Репорт
+=======
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./report.toc)
+>>>>>>> Revert "Репорт"
 \tf@toc=\write5
 \openout5 = `report.toc'.
 
@@ -773,6 +794,7 @@ Package babel Info: Redefining russian shorthand "~
 [3
 
 ]
+<<<<<<< HEAD
 {\cyrillictext \CYRG \cyrl \cyra \cyrv \cyra } 1.
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 71.
@@ -786,29 +808,37 @@ Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 73.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 73.
+<<<<<<< HEAD
 <static/ER_diagram_field.png, id=238, 462.72874pt x 201.75375pt>
+=======
+<static/ER_diagram_field.png, id=184, 462.72874pt x 201.75375pt>
+>>>>>>> Репорт
+=======
+<static/ER_diagram_field.png, id=44, 462.72874pt x 201.75375pt>
+>>>>>>> Revert "Репорт"
 File: static/ER_diagram_field.png Graphic file (type png)
 
 <use static/ER_diagram_field.png>
 Package pdftex.def Info: static/ER_diagram_field.png used on input line 85.
 (pdftex.def)             Requested size: 483.69684pt x 210.89949pt.
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 90.
+(babel)             in language  on input line 100.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 90.
+(babel)             in language  on input line 100.
 Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 91.
+(babel)             in language  on input line 100.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 91.
-Package babel Info: Redefining russian shorthand "|
+<<<<<<< HEAD
 (babel)             in language  on input line 98.
-Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 98.
-Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 98.
-Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 98.
+<<<<<<< HEAD
  [4
+=======
+[3
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 100.
+ [3
+>>>>>>> Revert "Репорт"
 
 ]
 (/usr/share/texlive/texmf-dist/tex/latex/ucs/data/uni-32.def
@@ -822,7 +852,12 @@ Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 113.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 113.
+<<<<<<< HEAD
+<<<<<<< HEAD
  [5 <./static/ER_diagram_field.png>]
+=======
+ [4 <./static/ER_diagram_field.png>]
+>>>>>>> Репорт
 {\cyrillictext \CYRG \cyrl \cyra \cyrv \cyra } 2.
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 113.
@@ -836,13 +871,23 @@ Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 117.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 117.
+<<<<<<< HEAD
 <static/server_dot.pdf, id=251, 2027.07214pt x 310.14772pt>
+=======
+<static/server_dot.pdf, id=197, 2027.07214pt x 310.14772pt>
+>>>>>>> Репорт
+=======
+ [4 <./static/ER_diagram_field.png>] <static/server_dot.pdf, id=62, 2027.07214p
+t x 310.14772pt>
+>>>>>>> Revert "Репорт"
 File: static/server_dot.pdf Graphic file (type pdf)
 
 <use static/server_dot.pdf>
 Package pdftex.def Info: static/server_dot.pdf used on input line 123.
 (pdftex.def)             Requested size: 483.69684pt x 74.0063pt.
+<<<<<<< HEAD
 Package babel Info: Redefining russian shorthand "|
+<<<<<<< HEAD
 (babel)             in language  on input line 128.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 128.
@@ -852,12 +897,24 @@ Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 141.
 
 <static/Server_Class_Diagram.png, id=252, 854.19125pt x 482.80376pt>
+=======
+(babel)             in language  on input line 141.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 141.
+<static/Server_Class_Diagram.png, id=198, 854.19125pt x 482.80376pt>
+>>>>>>> Репорт
+=======
+
+<static/Server_Class_Diagram.png, id=63, 854.19125pt x 482.80376pt>
+>>>>>>> Revert "Репорт"
 File: static/Server_Class_Diagram.png Graphic file (type png)
 
 <use static/Server_Class_Diagram.png>
 Package pdftex.def Info: static/Server_Class_Diagram.png used on input line 146
 .
 (pdftex.def)             Requested size: 483.69684pt x 273.38872pt.
+<<<<<<< HEAD
+<<<<<<< HEAD
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 149.
 Package babel Info: Redefining russian shorthand "~
@@ -870,11 +927,16 @@ Package babel Info: Redefining russian shorthand "~
 
  <./static/server_dot.pdf>]
 <static/Physical_data.png, id=274, 593.21625pt x 201.75375pt>
+=======
+
+<static/Physical_data.png, id=64, 593.21625pt x 201.75375pt>
+>>>>>>> Revert "Репорт"
 File: static/Physical_data.png Graphic file (type png)
 
 <use static/Physical_data.png>
 Package pdftex.def Info: static/Physical_data.png used on input line 153.
 (pdftex.def)             Requested size: 483.69684pt x 164.5125pt.
+<<<<<<< HEAD
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 159.
 Package babel Info: Redefining russian shorthand "~
@@ -911,6 +973,336 @@ Overfull \hbox (108.95844pt too wide) in paragraph at lines 209--209
 []\T2A/cmtt/m/n/12 \> \> ������� �� ������ ���������� ������� �������� ������ �
  ���������� "SOCKET_STATE_CLOSED" \\[] 
  []
+=======
+=======
+>>>>>>> Revert "Репорт"
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 162.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 162.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 162.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 162.
+ [5
+
+ <./static/server_dot.pdf>]
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 162.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 162.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 162.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 162.
+ [6 <./static/Server_Class_Diagram.png> <./static/Physical_data.png>]
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 171.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 171.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 171.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 171.
+ [7]
+! Missing $ inserted.
+<inserted text> 
+                $
+l.178 \> ПОКА (процесс_
+                                  работает == 1) \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 178.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 178.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 178.
+! Missing { inserted.
+<to be read again> 
+                   \begingroup 
+l.178 \> ПОКА (процесс_р
+                                    аботает == 1) \\
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+
+LaTeX Warning: Command \cyrr invalid in math mode on input line 178.
+
+
+LaTeX Warning: Command \cyra invalid in math mode on input line 178.
+
+
+LaTeX Warning: Command \cyrb invalid in math mode on input line 178.
+
+
+LaTeX Warning: Command \cyro invalid in math mode on input line 178.
+
+
+LaTeX Warning: Command \cyrt invalid in math mode on input line 178.
+
+
+LaTeX Warning: Command \cyra invalid in math mode on input line 178.
+
+
+LaTeX Warning: Command \cyre invalid in math mode on input line 178.
+
+
+LaTeX Warning: Command \cyrt invalid in math mode on input line 178.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.178 ...(процесс_работает == 1) \\
+                                                  
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.178 ...(процесс_работает == 1) \\
+                                                  
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+! Missing $ inserted.
+<inserted text> 
+                $
+l.179 ...кеты с состоянием "SOCKET_
+                                                  STATE_CLOSED" \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.179 ...стоянием "SOCKET_STATE_CLOSED" \\
+                                                  
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.185 \> \> ЕСЛИ (количество_
+                                           свободных_сокетов...
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing { inserted.
+<to be read again> 
+                   \begingroup 
+l.185 \> \> ЕСЛИ (количество_с
+                                             вободных_сокетов...
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+
+LaTeX Warning: Command \cyrs invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyrv invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyro invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyrb invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyro invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyrd invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyrn invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyrery invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyrh invalid in math mode on input line 185.
+
+! Missing { inserted.
+<to be read again> 
+                   \begingroup 
+l.185 ...�оличество_свободных_с
+                                                  окетов == 0) ТО \\
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+
+LaTeX Warning: Command \cyrs invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyro invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyrk invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyre invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyrt invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyro invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \cyrv invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \CYRT invalid in math mode on input line 185.
+
+
+LaTeX Warning: Command \CYRO invalid in math mode on input line 185.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.185 ...бодных_сокетов == 0) ТО \\
+                                                  
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.185 ...бодных_сокетов == 0) ТО \\
+                                                  
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.185 ...бодных_сокетов == 0) ТО \\
+                                                  
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr8!
+Missing character: There is no � in font cmr6!
+Missing character: There is no � in font cmr6!
+Missing character: There is no � in font cmr6!
+Missing character: There is no � in font cmr6!
+Missing character: There is no � in font cmr6!
+Missing character: There is no � in font cmr6!
+Missing character: There is no � in font cmr6!
+Missing character: There is no � in font cmr6!
+Missing character: There is no � in font cmr6!
+! Missing $ inserted.
+<inserted text> 
+                $
+l.186 ...океты в состояние "SOCKET_
+                                                  STATE_CLOSED" \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.186 ...остояние "SOCKET_STATE_CLOSED" \\
+                                                  
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.191 \> \> \> \> \> процесс_
+                                    работает = 0 \\
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing { inserted.
+<to be read again> 
+                   \begingroup 
+l.191 \> \> \> \> \> процесс_р
+                                      аботает = 0 \\
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+
+LaTeX Warning: Command \cyrr invalid in math mode on input line 191.
+
+
+LaTeX Warning: Command \cyra invalid in math mode on input line 191.
+
+
+LaTeX Warning: Command \cyrb invalid in math mode on input line 191.
+
+
+LaTeX Warning: Command \cyro invalid in math mode on input line 191.
+
+
+LaTeX Warning: Command \cyrt invalid in math mode on input line 191.
+
+
+LaTeX Warning: Command \cyra invalid in math mode on input line 191.
+
+
+LaTeX Warning: Command \cyre invalid in math mode on input line 191.
+
+
+LaTeX Warning: Command \cyrt invalid in math mode on input line 191.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.191 ...\> процесс_работает = 0 \\
+                                                  
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing } inserted.
+<inserted text> 
+                }
+l.191 ...\> процесс_работает = 0 \\
+                                                  
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
+>>>>>>> Репорт
 
 
 Overfull \hbox (108.95844pt too wide) in paragraph at lines 209--209
@@ -918,11 +1310,16 @@ Overfull \hbox (108.95844pt too wide) in paragraph at lines 209--209
 � ��������� "SOCKET_STATE_CLOSED" \\[] 
  []
 
+<<<<<<< HEAD
+<<<<<<< HEAD
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 210.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 210.
 <static/ClientDiagram_Final.jpg, id=288, 834.11626pt x 2050.66125pt>
+=======
+<static/ClientDiagram_Final.jpg, id=105, 834.11626pt x 2050.66125pt>
+>>>>>>> Revert "Репорт"
 File: static/ClientDiagram_Final.jpg Graphic file (type jpg)
 
 <use static/ClientDiagram_Final.jpg>
@@ -933,6 +1330,7 @@ Package pdftex.def Info: static/ClientDiagram_Final.jpg used on input line 216.
 
 LaTeX Warning: Float too large for page by 26.83276pt on input line 219.
 
+<<<<<<< HEAD
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 223.
 Package babel Info: Redefining russian shorthand "~
@@ -955,6 +1353,18 @@ Package babel Info: Redefining russian shorthand "|
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 227.
  [10 <./static/ClientDiagram_Final.jpg>]
+=======
+=======
+>>>>>>> Revert "Репорт"
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 219.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 219.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 219.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 219.
+[8]
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 253.
 Package babel Info: Redefining russian shorthand "~
@@ -962,8 +1372,31 @@ Package babel Info: Redefining russian shorthand "~
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 253.
 Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 253.
+ [9]
+>>>>>>> Репорт
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 253.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 253.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 253.
+Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
 (babel)             in language  on input line 253.
  [11]
+=======
+(babel)             in language  on input line 248.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 252.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 252.
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 253.
+ [10 <./static/ClientDiagram_Final.jpg>]
+>>>>>>> Revert "Репорт"
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 254.
 Package babel Info: Redefining russian shorthand "~
@@ -976,6 +1409,8 @@ Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 262.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 262.
+<<<<<<< HEAD
+<<<<<<< HEAD
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 266.
 Package babel Info: Redefining russian shorthand "~
@@ -1002,6 +1437,27 @@ Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 293.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 293.
+=======
+ [10]
+=======
+ [11]
+>>>>>>> Revert "Репорт"
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 292.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 292.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 292.
+Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+(babel)             in language  on input line 285.
+ [11]
+<static/ClientDiagram_Final.jpg, id=264, 834.11626pt x 2050.66125pt>
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 292.
+ [12]
+>>>>>>> Revert "Репорт"
 File: static/ClientDiagram_Final.jpg Graphic file (type jpg)
 
 <use static/ClientDiagram_Final.jpg>
@@ -1013,6 +1469,8 @@ Package pdftex.def Info: static/ClientDiagram_Final.jpg used on input line 298.
 LaTeX Warning: Float too large for page by 26.44397pt on input line 301.
 
 Package babel Info: Redefining russian shorthand "|
+<<<<<<< HEAD
+<<<<<<< HEAD
 (babel)             in language  on input line 306.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 306.
@@ -1025,19 +1483,71 @@ Package babel Info: Redefining russian shorthand "|
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 327.
 [14]
+=======
+(babel)             in language  on input line 296.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 296.
 Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 317.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 317.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 317.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 317.
+[12]
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 317.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 317.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 317.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 317.
+ [13 <./static/ClientDiagram_Final.jpg>]
+{\cyrillictext \CYRG \cyrl \cyra \cyrv \cyra } 3.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 317.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 317.
+>>>>>>> Репорт
+=======
 (babel)             in language  on input line 327.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 327.
+>>>>>>> Revert "Репорт"
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 327.
 Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
+(babel)             in language  on input line 327.
+=======
+(babel)             in language  on input line 319.
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 327.
+[13]
+>>>>>>> Revert "Репорт"
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 327.
+Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
 (babel)             in language  on input line 327.
  [15]
 {\cyrillictext \CYRG \cyrl \cyra \cyrv \cyra } 3.
+=======
+(babel)             in language  on input line 329.
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 327.
+>>>>>>> Revert "Репорт"
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 327.
 Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
 (babel)             in language  on input line 327.
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 329.
@@ -1054,19 +1564,43 @@ Package babel Info: Redefining russian shorthand "~
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 343.
 <include/scflow01_dot.pdf, id=334, 571.99194pt x 288.16156pt>
+=======
+(babel)             in language  on input line 331.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 333.
+<include/scflow01_dot.pdf, id=279, 571.99194pt x 288.16156pt>
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 327.
+ [14]
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 343.
+ <include/scflow01_dot.pdf, id=164, 571.99194pt x 288.16156pt>
+>>>>>>> Revert "Репорт"
 File: include/scflow01_dot.pdf Graphic file (type pdf)
 
 <use include/scflow01_dot.pdf>
 Package pdftex.def Info: include/scflow01_dot.pdf used on input line 348.
 (pdftex.def)             Requested size: 483.69684pt x 243.68533pt.
+<<<<<<< HEAD
+<<<<<<< HEAD
 
 <include/scflow02_dot.pdf, id=335, 752.8035pt x 586.92773pt>
+=======
+<include/scflow02_dot.pdf, id=280, 752.8035pt x 586.92773pt>
+>>>>>>> Репорт
+=======
+
+<include/scflow02_dot.pdf, id=165, 752.8035pt x 586.92773pt>
+>>>>>>> Revert "Репорт"
 File: include/scflow02_dot.pdf Graphic file (type pdf)
 
 <use include/scflow02_dot.pdf>
 Package pdftex.def Info: include/scflow02_dot.pdf used on input line 355.
 (pdftex.def)             Requested size: 483.69684pt x 377.11913pt.
+<<<<<<< HEAD
 Package babel Info: Redefining russian shorthand "|
+<<<<<<< HEAD
 (babel)             in language  on input line 363.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 363.
@@ -1076,22 +1610,61 @@ Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 365.
 
 <include/ccflow01_dot.pdf, id=336, 1020.23659pt x 574.90486pt>
+=======
+(babel)             in language  on input line 353.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 353.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 355.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 355.
+<include/ccflow01_dot.pdf, id=281, 1020.23659pt x 574.90486pt>
+>>>>>>> Репорт
+=======
+
+<include/ccflow01_dot.pdf, id=166, 1020.23659pt x 574.90486pt>
+>>>>>>> Revert "Репорт"
 File: include/ccflow01_dot.pdf Graphic file (type pdf)
 
 <use include/ccflow01_dot.pdf>
 Package pdftex.def Info: include/ccflow01_dot.pdf used on input line 369.
 (pdftex.def)             Requested size: 483.69684pt x 272.56508pt.
+<<<<<<< HEAD
+<<<<<<< HEAD
 
 <include/ccflow02_dot.pdf, id=337, 686.6724pt x 653.43825pt>
+=======
+<include/ccflow02_dot.pdf, id=282, 686.6724pt x 653.43825pt>
+>>>>>>> Репорт
+=======
+
+<include/ccflow02_dot.pdf, id=167, 686.6724pt x 653.43825pt>
+>>>>>>> Revert "Репорт"
 File: include/ccflow02_dot.pdf Graphic file (type pdf)
 
 <use include/ccflow02_dot.pdf>
 Package pdftex.def Info: include/ccflow02_dot.pdf used on input line 376.
 (pdftex.def)             Requested size: 483.69684pt x 460.29514pt.
+<<<<<<< HEAD
 Package babel Info: Redefining russian shorthand "|
+<<<<<<< HEAD
 (babel)             in language  on input line 381.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 381.
+=======
+(babel)             in language  on input line 371.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 371.
+LaTeX Font Info:    Try loading font information for T2A+cmtt on input line 374
+=======
+LaTeX Font Info:    Try loading font information for T2A+cmtt on input line 384
+>>>>>>> Revert "Репорт"
+.
+
+(/usr/share/texlive/texmf-dist/tex/latex/cyrillic/t2acmtt.fd
+File: t2acmtt.fd 2001/08/11 v1.0a Computer Modern Cyrillic font definitions
+)
+>>>>>>> Репорт
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 394.
 Package babel Info: Redefining russian shorthand "~
@@ -1099,6 +1672,8 @@ Package babel Info: Redefining russian shorthand "~
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 394.
 Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
 (babel)             in language  on input line 394.
  [16
 
@@ -1135,35 +1710,106 @@ Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 416.
 
 Overfull \hbox (238.60178pt too wide) in paragraph at lines 490--490
+=======
+(babel)             in language  on input line 384.
+ [14
+=======
+(babel)             in language  on input line 394.
+ [15
+>>>>>>> Revert "Репорт"
+
+]
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 490.
+ [16 <./include/scflow01_dot.pdf>]
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+(babel)             in language  on input line 406.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 406.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 406.
+ [16 <./include/scflow02_dot.pdf>]
+Overfull \hbox (238.60178pt too wide) in paragraph at lines 480--480
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 490.
+ [17 <./include/scflow02_dot.pdf>]
+Overfull \hbox (238.60178pt too wide) in paragraph at lines 490--490
+>>>>>>> Revert "Репорт"
 []  \T2A/cmtt/m/n/12 Test: handle_mail_incorrect_command ...Server: 0, MAIL: 45
 0 Requested mail action not taken: mailbox unavailable \\[] 
  []
 
-Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 490.
-Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 490.
-Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 490.
-Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 490.
-[19 <./include/ccflow01_dot.pdf>]
-Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 490.
-Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 490.
-Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 490.
-Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 490.
- [20 <./include/ccflow02_dot.pdf>]
+
 Overfull \hbox (238.60178pt too wide) in paragraph at lines 490--490
 []  \T2A/cmtt/m/n/12 Test: handle_rcpt_incorrect_command ...Server: 0, MAIL: 45
 0 Requested mail action not taken: mailbox unavailable \\[] 
  []
 
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
+(babel)             in language  on input line 490.
+[19 <./include/ccflow01_dot.pdf>]
+=======
+(babel)             in language  on input line 480.
+[17 <./include/ccflow01_dot.pdf>]
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 490.
+[18 <./include/ccflow01_dot.pdf>]
+>>>>>>> Revert "Репорт"
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
+(babel)             in language  on input line 490.
+ [20 <./include/ccflow02_dot.pdf>]
+Overfull \hbox (238.60178pt too wide) in paragraph at lines 490--490
+=======
+(babel)             in language  on input line 480.
+ [18 <./include/ccflow02_dot.pdf>]
+Overfull \hbox (238.60178pt too wide) in paragraph at lines 480--480
+>>>>>>> Репорт
+[]  \T2A/cmtt/m/n/12 Test: handle_rcpt_incorrect_command ...Server: 0, MAIL: 45
+0 Requested mail action not taken: mailbox unavailable \\[] 
+ []
 
+
+<<<<<<< HEAD
 Overfull \hbox (16.35605pt too wide) in paragraph at lines 490--490
+=======
+Overfull \hbox (16.35605pt too wide) in paragraph at lines 480--480
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 490.
+ [19 <./include/ccflow02_dot.pdf>]
+Overfull \hbox (16.35605pt too wide) in paragraph at lines 490--490
+>>>>>>> Revert "Репорт"
 []\T2A/cmtt/m/n/12 Server: 0, RCPT: 451 Unable to complete command: number of r
 ecipients exceeded \\[] 
  []
@@ -1189,10 +1835,8 @@ LEMENTED: 502 Command Not Implemented \\[]
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 490.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 490.
-Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 490.
-Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
 (babel)             in language  on input line 490.
 [21]
 Package babel Info: Redefining russian shorthand "|
@@ -1201,6 +1845,25 @@ Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 491.
 
 Underfull \hbox (badness 10000) in paragraph at lines 492--493
+=======
+(babel)             in language  on input line 480.
+[19]
+=======
+(babel)             in language  on input line 490.
+>>>>>>> Revert "Репорт"
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 490.
+Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+(babel)             in language  on input line 481.
+
+Underfull \hbox (badness 10000) in paragraph at lines 482--483
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 490.
+[20]
+Underfull \hbox (badness 10000) in paragraph at lines 492--493
+>>>>>>> Revert "Репорт"
 
  []
 
@@ -1223,9 +1886,21 @@ Package babel Info: Redefining russian shorthand "~
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 571.
 Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
 (babel)             in language  on input line 571.
 [22]
 Overfull \hbox (4.00906pt too wide) in paragraph at lines 571--571
+=======
+(babel)             in language  on input line 561.
+[20]
+Overfull \hbox (4.00906pt too wide) in paragraph at lines 561--561
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 571.
+[21]
+Overfull \hbox (4.00906pt too wide) in paragraph at lines 571--571
+>>>>>>> Revert "Репорт"
 []\T2A/cmtt/m/n/12 ==6833== Reachable blocks (those to which a pointer was foun
 d) are not shown.\\[] 
  []
@@ -1239,10 +1914,8 @@ d) are not shown.\\[]
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 593.
 Package babel Info: Redefining russian shorthand "~
-(babel)             in language  on input line 593.
-Package babel Info: Redefining russian shorthand "|
-(babel)             in language  on input line 593.
-Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
 (babel)             in language  on input line 593.
 [23]
 Package babel Info: Redefining russian shorthand "|
@@ -1251,6 +1924,25 @@ Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 595.
 
 Overfull \hbox (22.52954pt too wide) in paragraph at lines 610--610
+=======
+(babel)             in language  on input line 583.
+[21]
+=======
+(babel)             in language  on input line 593.
+>>>>>>> Revert "Репорт"
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 593.
+Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+(babel)             in language  on input line 585.
+
+Overfull \hbox (22.52954pt too wide) in paragraph at lines 600--600
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 593.
+[22]
+Overfull \hbox (22.52954pt too wide) in paragraph at lines 610--610
+>>>>>>> Revert "Репорт"
 []    \T2A/cmtt/m/n/12 ==24216== Reachable blocks (those to which a pointer was
  found) are not shown.[] 
  []
@@ -1261,10 +1953,19 @@ Overfull \hbox (16.35605pt too wide) in paragraph at lines 610--610
 ised values come from[] 
  []
 
+<<<<<<< HEAD
 Package babel Info: Redefining russian shorthand "|
+<<<<<<< HEAD
 (babel)             in language  on input line 612.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 612.
+=======
+(babel)             in language  on input line 602.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 602.
+>>>>>>> Репорт
+=======
+>>>>>>> Revert "Репорт"
 
 Overfull \hbox (257.12225pt too wide) in paragraph at lines 637--637
 []    \T2A/cmtt/m/n/12 11 Jan 2019 00:07:51 DEBUG org.subethamail.smtp.server.S
@@ -1331,7 +2032,9 @@ Overfull \hbox (108.95844pt too wide) in paragraph at lines 637--637
 ession - Client: MAIL FROM:<mail.ru>[] 
  []
 
+<<<<<<< HEAD
 Package babel Info: Redefining russian shorthand "|
+<<<<<<< HEAD
 (babel)             in language  on input line 637.
 Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 637.
@@ -1341,6 +2044,21 @@ Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 637.
 [24]
 Overfull \hbox (28.70303pt too wide) in paragraph at lines 637--637
+=======
+(babel)             in language  on input line 627.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 627.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 627.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 627.
+[22]
+Overfull \hbox (28.70303pt too wide) in paragraph at lines 627--627
+>>>>>>> Репорт
+=======
+
+Overfull \hbox (28.70303pt too wide) in paragraph at lines 637--637
+>>>>>>> Revert "Репорт"
 []    \T2A/cmtt/m/n/12 11 Jan 2019 00:08:07 DEBUG org.subethamail.smtp.server.S
 ession - Server: 250 Ok[] 
  []
@@ -1375,8 +2093,25 @@ Overfull \hbox (28.70303pt too wide) in paragraph at lines 637--637
 ession - Server: 250 Ok[] 
  []
 
+<<<<<<< HEAD
 
+<<<<<<< HEAD
 Overfull \hbox (16.35605pt too wide) in paragraph at lines 637--637
+=======
+Overfull \hbox (16.35605pt too wide) in paragraph at lines 627--627
+>>>>>>> Репорт
+=======
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 637.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 637.
+Package babel Info: Redefining russian shorthand "|
+(babel)             in language  on input line 637.
+Package babel Info: Redefining russian shorthand "~
+(babel)             in language  on input line 637.
+[23]
+Overfull \hbox (16.35605pt too wide) in paragraph at lines 637--637
+>>>>>>> Revert "Репорт"
 []    \T2A/cmtt/m/n/12 11 Jan 2019 00:08:17 DEBUG org.subethamail.smtp.server.S
 ession - Client: QUIT[] 
  []
@@ -1398,6 +2133,8 @@ Package babel Info: Redefining russian shorthand "~
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 642.
 Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
 (babel)             in language  on input line 642.
 [25]
 {\cyrillictext \CYRG \cyrl \cyra \cyrv \cyra } 4.
@@ -1407,6 +2144,16 @@ Package babel Info: Redefining russian shorthand "~
 (babel)             in language  on input line 642.
 
 Underfull \hbox (badness 10000) in paragraph at lines 644--645
+=======
+(babel)             in language  on input line 632.
+[23]
+Underfull \hbox (badness 10000) in paragraph at lines 634--635
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 642.
+[24]
+Underfull \hbox (badness 10000) in paragraph at lines 644--645
+>>>>>>> Revert "Репорт"
 
  []
 
@@ -1418,8 +2165,18 @@ Package babel Info: Redefining russian shorthand "~
 Package babel Info: Redefining russian shorthand "|
 (babel)             in language  on input line 663.
 Package babel Info: Redefining russian shorthand "~
+<<<<<<< HEAD
+<<<<<<< HEAD
 (babel)             in language  on input line 663.
 [26
+=======
+(babel)             in language  on input line 653.
+[24
+>>>>>>> Репорт
+=======
+(babel)             in language  on input line 663.
+[25
+>>>>>>> Revert "Репорт"
 
 ]
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 663.
@@ -1427,7 +2184,15 @@ Package atveryend Info: Empty hook `AfterLastShipout' on input line 663.
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 663.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 663.
 Package rerunfilecheck Info: File `report.out' has not changed.
+<<<<<<< HEAD
+<<<<<<< HEAD
 (rerunfilecheck)             Checksum: 91755E0C4B0B705E2FB8A6A7DE96575A;8168.
+=======
+(rerunfilecheck)             Checksum: ABED739430D726E6F1811EDF19866640;6186.
+>>>>>>> Репорт
+=======
+(rerunfilecheck)             Checksum: FD6B3E1324DB8BAA25352C00E2FD3675;201.
+>>>>>>> Revert "Репорт"
 
 
 LaTeX Warning: There were multiply-defined labels.
@@ -1435,6 +2200,8 @@ LaTeX Warning: There were multiply-defined labels.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 663.
  ) 
 Here is how much of TeX's memory you used:
+<<<<<<< HEAD
+<<<<<<< HEAD
  21562 strings out of 494515
  390210 string characters out of 6173718
  465025 words of memory out of 5000000
@@ -1460,4 +2227,48 @@ PDF statistics:
  446 compressed objects within 5 object streams
  113 named destinations out of 1000 (max. 500000)
  386 words of extra memory for PDF output out of 10000 (max. 10000000)
+=======
+ 23683 strings out of 494397
+ 452626 string characters out of 6172287
+ 507750 words of memory out of 5000000
+ 26513 multiletter control sequences out of 15000+600000
+=======
+ 21525 strings out of 494515
+ 389474 string characters out of 6173718
+ 466009 words of memory out of 5000000
+ 24259 multiletter control sequences out of 15000+600000
+>>>>>>> Revert "Репорт"
+ 18178 words of font info for 40 fonts, out of 8000000 for 9000
+ 430 hyphenation exceptions out of 8191
+ 58i,8n,65p,1681b,676s stack positions out of 5000i,500n,10000p,200000b,80000s
+ </home/dmitriy/.texmf-var/fonts/pk/ljfour/lh/lh-t2a/larm1000.600pk> </home/d
+mitriy/.texmf-var/fonts/pk/ljfour/lh/lh-t2a/larm0700.600pk> </home/dmitriy/.tex
+mf-var/fonts/pk/ljfour/lh/lh-t2a/latt1200.600pk> </home/dmitriy/.texmf-var/font
+s/pk/ljfour/lh/lh-t2a/larm0800.600pk> </home/dmitriy/.texmf-var/fonts/pk/ljfour
+/lh/lh-t2a/lati1200.600pk> </home/dmitriy/.texmf-var/fonts/pk/ljfour/lh/lh-t2a/
+labx1440.600pk> </home/dmitriy/.texmf-var/fonts/pk/ljfour/lh/lh-t2a/labx1728.60
+0pk> </home/dmitriy/.texmf-var/fonts/pk/ljfour/lh/lh-t2a/larm1200.600pk> </home
+/dmitriy/.texmf-var/fonts/pk/ljfour/lh/lh-t2a/labx1200.600pk> </home/dmitriy/.t
+exmf-var/fonts/pk/ljfour/lh/lh-t2a/labx2488.600pk> </home/dmitriy/.texmf-var/fo
+nts/pk/ljfour/lh/lh-t2a/larm1440.600pk> </home/dmitriy/.texmf-var/fonts/pk/ljfo
+ur/lh/lh-t2a/larm2074.600pk></usr/share/texlive/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmmi12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfont
+s/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+r10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb
+></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/s
+hare/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb>
+Output written on report.pdf (26 pages, 494997 bytes).
+PDF statistics:
+<<<<<<< HEAD
+ 982 PDF objects out of 1000 (max. 8388607)
+ 408 compressed objects within 5 object streams
+ 109 named destinations out of 1000 (max. 500000)
+ 298 words of extra memory for PDF output out of 10000 (max. 10000000)
+>>>>>>> Репорт
+=======
+ 847 PDF objects out of 1000 (max. 8388607)
+ 302 compressed objects within 4 object streams
+ 112 named destinations out of 1000 (max. 500000)
+ 74 words of extra memory for PDF output out of 10000 (max. 10000000)
+>>>>>>> Revert "Репорт"
 
