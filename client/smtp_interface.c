@@ -338,7 +338,7 @@ int handleSendEHLO(struct FileDesc *connection)
 
     memset(message, '\0', 8 + len);
     sprintf(message, "EHLO %s\r\n", MY_DOMAIN);
-
+    sleep(5);
     int size = send(connection->id, message, len + 7, NULL);
 
     if (size == -1)

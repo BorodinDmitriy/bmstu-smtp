@@ -20,3 +20,4 @@ ERROR: Worker: SMTP_Control: handleResponseOfLetter: Fail message(250 Ok reset
 ) of response about letter from server 127.0.0.1.
 ERROR: Worker: SMTP_Control: handleGreeting: Fail to receive greeting from server 94.100.180.104. Errno: 111
 ERROR: Worker: SMTP_Control: handleGreeting: Fail to receive greeting from server 94.100.180.31. Errno: 111
+ERROR: Worker: SMTP_Control: handleGreeting: Fail to receive greeting from server 94.100.180.31. Errno: 111
