@@ -90,11 +90,12 @@ int run_process(struct process *pr) {
     		}
 		}
 
+		temp = pr->socket_set;
 		if (*(pr->mq) != NULL) {
 			FD_SET(*(pr->mq), &(pr->socket_set));
 		}
 
-		temp = pr->socket_set;
+		
 		// now we can use select with timeout
 		rc = select(pr->max_fd + 1, &(pr->socket_set), &temp, NULL, &tv);
 		if (rc == 0) {
