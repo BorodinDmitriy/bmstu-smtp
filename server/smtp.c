@@ -102,7 +102,7 @@ int run_process(struct process *pr) {
 
 		
 		// now we can use select with timeout
-		rc = select(pr->max_fd + 1, &(pr->socket_set), &temp, NULL, &tv);
+		rc = select(pr->max_fd + 1, &temp,  &(pr->socket_set), NULL, &tv);
 		if (rc == 0) {
 			// no sockets are ready - timeout
 			printf("no sockets are ready - timeout\n");
