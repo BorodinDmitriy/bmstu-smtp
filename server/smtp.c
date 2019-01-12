@@ -549,16 +549,18 @@ int handle_DATA(struct client_socket *c_sock, char *msg_buffer, char buffer_outp
 	if (c_sock->state == SOCKET_STATE_RECEPIENTS_SET) {
 		sprintf(buffer_output, HEADER_354_START);
     	printf("Server: %d, DATA: %s", c_sock->fd, buffer_output);
-    	c_sock->message->body = (char *)malloc(1);
-    	c_sock->message->body[0] = '\0';
-    	c_sock->message->body_length = 0;
-    	c_sock->input_message = 1;
-    	c_sock->state = SOCKET_STATE_WRITING_DATA;
+    	
     	if (c_sock->fd > 0) {
     		if (send(c_sock->fd, buffer_output, strlen(buffer_output), 0) < 0) {
     			if (errno == EWOULDBLOCK) {
 					return 1;
 				}
+    		} else {
+    			c_sock->message->body = (char *)malloc(1);
+    			c_sock->message->body[0] = '\0';
+    			c_sock->message->body_length = 0;
+    			c_sock->input_message = 1;
+    			c_sock->state = SOCKET_STATE_WRITING_DATA;
     		}
     	}
     
