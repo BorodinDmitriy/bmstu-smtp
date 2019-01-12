@@ -74,14 +74,20 @@ int run_process(struct process *pr) {
 		// first add listeners
 		if (pr->listeners_list != NULL) {
 			for (p = pr->listeners_list; p != NULL; p = p->next) {
-    			FD_SET(p->c_sock.fd, &(pr->socket_set));
+				if (p->c_sock.flag == 0)
+    				FD_SET(p->c_sock.fd, &(pr->socket_set));
+    			else 
+    				FD_SET(p->c_sock.fd, &temp);
     			//printf("lisening_socket = %d\n", p->c_sock.fd);
     		}
 		}
 		// then add client sockets if exist
 		if (pr->sock_list != NULL) {
 			for (p = pr->sock_list; p != NULL; p = p->next) {
-    			FD_SET(p->c_sock.fd, &(pr->socket_set));
+    			if (p->c_sock.flag == 0)
+    				FD_SET(p->c_sock.fd, &(pr->socket_set));
+    			else 
+    				FD_SET(p->c_sock.fd, &temp);
     			printf("client_socket%d = %d SOCKET_STATE = %d\n", getpid(), p->c_sock.fd, p->c_sock.state);
     			sprintf(logger_buffer, "client_socket%d = %d SOCKET_STATE = %d\n", getpid(), p->c_sock.fd, p->c_sock.state);
     			if (mq_send(pr->extra, logger_buffer, SERVER_BUFFER_SIZE, 0) < 0) {
@@ -90,7 +96,6 @@ int run_process(struct process *pr) {
     		}
 		}
 
-		temp = pr->socket_set;
 		if (*(pr->mq) != NULL) {
 			FD_SET(*(pr->mq), &(pr->socket_set));
 		}
