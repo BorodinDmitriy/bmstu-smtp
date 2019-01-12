@@ -44,6 +44,7 @@ int run_process(struct process *pr) {
 		fd_set temp;
 
 		FD_ZERO(&(pr->socket_set));
+		FD_ZERO(&temp);
 		// delete all closed sockets
 		if (pr->sock_list != NULL) {
 			int before = 0;
@@ -95,7 +96,7 @@ int run_process(struct process *pr) {
 
 		temp = pr->socket_set;
 		// now we can use select with timeout
-		rc = select(pr->max_fd + 1, &temp, NULL, NULL, &tv);
+		rc = select(pr->max_fd + 1, &(pr->socket_set), &temp, NULL, &tv);
 		if (rc == 0) {
 			// no sockets are ready - timeout
 			printf("no sockets are ready - timeout\n");
@@ -104,7 +105,7 @@ int run_process(struct process *pr) {
         		perror(logger_buffer);
     		}
 			for (p = pr->sock_list; p != NULL; p = p->next) {
-				if (!FD_ISSET(p->c_sock.fd, &temp)) {
+				if (!FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
 					p->c_sock.state = SOCKET_STATE_CLOSED;
 				}
 			}
@@ -112,7 +113,7 @@ int run_process(struct process *pr) {
 			// some sockets are ready
 			// check mqueue
 			if (*(pr->mq) != NULL) {
-				if (FD_ISSET(*(pr->mq), &temp)) {
+				if (FD_ISSET(*(pr->mq), &(pr->socket_set))) {
 					char msg_buffer[SERVER_BUFFER_SIZE];
 					memset(msg_buffer, 0x00, sizeof(msg_buffer));
         			int bytes_read = mq_receive(*(pr->mq), msg_buffer, SERVER_BUFFER_SIZE, NULL);
@@ -131,7 +132,7 @@ int run_process(struct process *pr) {
 			if (pr->listeners_list != NULL) {
 				// проходим по списку сокетов в поисках установленного соединения
 				for (p = pr->listeners_list; p != NULL; p = p->next) {
-					if (FD_ISSET(p->c_sock.fd, &temp)) {
+					if (FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
 
 						// принимаем соединение
     					new_socket = accept(p->c_sock.fd, (struct sockaddr *) &(pr->serv_address),  (socklen_t*) &(pr->addrlen));
@@ -192,8 +193,14 @@ int run_process(struct process *pr) {
 			// check clients
 			if (pr->sock_list != NULL) {
 				for (p = pr->sock_list; p != NULL; p = p->next) {
-					if (FD_ISSET(p->c_sock.fd, &temp)) {
+					if (FD_ISSET(p->c_sock.fd, &(pr->socket_set))) {
+						p->c_sock.flag = 0;
+        				// call smtp_handler for socket
+        				new_smtp_handler_with_states(&(p->c_sock));
+					}
 
+					if (FD_ISSET(p->c_sock.fd, &temp)) {
+						p->c_sock.flag = 1;
         				// call smtp_handler for socket
         				new_smtp_handler_with_states(&(p->c_sock));
 					}
