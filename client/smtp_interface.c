@@ -338,7 +338,6 @@ int handleSendEHLO(struct FileDesc *connection)
 
     memset(message, '\0', 8 + len);
     sprintf(message, "EHLO %s\r\n", MY_DOMAIN);
-    sleep(5);
     int size = send(connection->id, message, len + 7, NULL);
 
     if (size == -1)
@@ -477,7 +476,6 @@ int handleSendMailFrom(struct FileDesc *connection)
     sprintf(message, "MAIL FROM:<%s>\r\n", connection->meta_data.from);
     int len = strlen(message);
 
-    sleep(5);
     state = send(connection->id, message, len, NULL);
     if (state < 0)
     {
@@ -585,7 +583,6 @@ int handleSendRCPTto(struct FileDesc *connection)
     sprintf(message, "RCPT To: <%s>\r\n", connection->meta_data.to);
     len = strlen(message);
 
-    sleep(5);
     int size = send(connection->id, message, len, NULL);
     if (size < 0)
     {
@@ -691,7 +688,6 @@ int handleSendDATA(struct FileDesc *connection)
     memset(message, '\0', 7);
     sprintf(message, "DATA\r\n");
 
-    sleep(5);
     int size = send(connection->id, message, 7, NULL);
     if (size < 0)
     {
@@ -813,7 +809,6 @@ int handleSendLetter(struct FileDesc *connection)
 
         len = strlen(connection->meta_data.message);
 
-        sleep(5);
         size = send(connection->id, connection->meta_data.message, len, NULL);
 
         if (size < 0)
@@ -977,7 +972,6 @@ int handleSendQUIT(struct FileDesc *connection)
 
     int len = strlen(message);
 
-    sleep(5);
     int size = send(connection->id, message, len, NULL);
 
     if (size < 0)
@@ -1242,7 +1236,6 @@ int handleSolvableMistake(struct FileDesc *connection)
 
     int len = strlen(message);
     
-    sleep(5);
     int size = send(connection->id, message, len, NULL);
 
     if (size < 0)
