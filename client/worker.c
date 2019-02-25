@@ -74,7 +74,7 @@ void run(struct worker *worker_context, struct network_controller manager)
         listViewer = manager.socket_list;
         while (listViewer)
         {
-            fd_count = MAX(fd_count, listViewer->fd->id);
+            fd_count = MAX(fd_count, listViewer->fd->id) + 1;
             printf("\tWorker %d: domain %s state: %d\n",worker_context->workerId, listViewer->fd->domain, listViewer->fd->current_state);
             listViewer = listViewer->next;
         }
@@ -309,8 +309,8 @@ void processingTasks(struct worker *worker_context, struct network_controller *m
             continue;
         }
 
-        // FD_SET(socket_pointer->id, &manager->readers.set);
-        FD_SET(socket_pointer->id, &manager->writers.set);
+        FD_SET(socket_pointer->id, &manager->readers.set);
+        // FD_SET(socket_pointer->id, &manager->writers.set);
 
         socket_pointer->task_pool = worker_context->tasks;
         worker_context->tasks = worker_context->tasks->next;
